@@ -6,13 +6,14 @@ from tkinter import filedialog, messagebox, ttk
 
 from .core import VERSION, default_resource, make_backup, preview, preview_backup, restore_backup, scan
 from .midi_validation import validate_midi_workflow
+from .reapack_profile import inspect_registry, parse_profile
 
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("REAPER TimeCapsule " + VERSION)
-        self.geometry("920x520")
+        self.geometry("1080x570")
         self.source = tk.StringVar(value=str(default_resource()))
         self.archive = tk.StringVar()
         self.destination = tk.StringVar(value=str(Path.home() / "Desktop" / "TimeCapsule-Restored"))
@@ -34,6 +35,10 @@ class App(tk.Tk):
         for label, fn in (
             ("Scan / Preview", lambda: self._do(lambda: self._brief(preview(self.source.get())))),
             ("MIDI Audit", lambda: self._do(lambda: validate_midi_workflow(Path(self.source.get()), scan(Path(self.source.get()))))),
+            ("ReaPack Audit", lambda: self._do(lambda: {
+                "profile": parse_profile(Path(self.source.get()) / "reapack.ini"),
+                "registry": inspect_registry(Path(self.source.get()) / "ReaPack" / "registry.db"),
+            })),
             ("Backup", lambda: self._do(lambda: make_backup(self.source.get(), self.archive.get()))),
             ("Verify", lambda: self._do(lambda: preview_backup(self.archive.get()))),
             ("Restore", self._restore),
