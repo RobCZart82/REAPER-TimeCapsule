@@ -7,6 +7,7 @@ from .core import default_resource, make_backup, preview, preview_backup, restor
 from .midi_validation import validate_midi_workflow
 from .reapack_profile import inspect_registry, parse_profile
 from .config_migration import preview_migration
+from .theme_migration import preview_themes
 
 
 def main():
@@ -31,10 +32,20 @@ def main():
     migration_cmd.add_argument("target", type=Path)
     migration_cmd.add_argument("--source-version")
     migration_cmd.add_argument("--target-version")
+    theme_cmd = commands.add_parser("theme-preview", help="Read-only factory/user theme comparison")
+    theme_cmd.add_argument("source", type=Path)
+    theme_cmd.add_argument("factory", type=Path)
+    theme_cmd.add_argument("target", type=Path)
+    theme_cmd.add_argument("--source-version")
+    theme_cmd.add_argument("--factory-version")
     commands.add_parser("gui", help="Open desktop GUI")
     args = parser.parse_args()
     try:
-        if args.command == "config-preview":
+        if args.command == "theme-preview":
+            result = preview_themes(args.source, args.factory, args.target,
+                                    source_version=args.source_version,
+                                    factory_version=args.factory_version)
+        elif args.command == "config-preview":
             result = preview_migration(args.source, args.target,
                                        source_version=args.source_version,
                                        target_version=args.target_version)

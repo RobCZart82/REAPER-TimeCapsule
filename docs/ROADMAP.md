@@ -51,6 +51,15 @@
 - Issue #4 remains open: factory theme comparison, rollback and actual merge remain
   future work. No staging export or in-place writer is introduced.
 
+## Factory theme comparison follow-up
+- Read-only `theme-preview` compares explicit source/factory/target directories.
+- Byte-identical packed themes can be reviewed for factory reuse; modified and user
+  themes are marked for preservation. Existing target conflicts always need review.
+- Case-insensitive NFC filename matching with ambiguous-name rejection.
+- Unpacked dependencies, unknown files and symlinks stay review-only.
+- Backup and restore retain all previous behavior; no automatic deduplication.
+- Issue #4 remains open for actionable restore/rollback and unpacked dependency handling.
+
 ## Later
 - Native macOS app packaging and Windows executable + notarization/signing plans
 - Managed backups and rollback snapshots; external drive workflows

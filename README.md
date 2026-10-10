@@ -42,10 +42,18 @@ selection, optional version records and conflict counts.
 It never writes either file or the REAPER resource folder. No staging export or merge
 is implemented. See [configuration migration](docs/CONFIGURATION_MIGRATION.md).
 
+## Factory theme preview
+
+`theme-preview` compares explicit source, factory and target ColorThemes folders.
+It identifies byte-identical packed factory themes, modified variants, user themes
+and destination conflicts. It never copies, deletes or omits backup files. See
+[theme migration preview](docs/THEME_MIGRATION.md).
+
 ## Run
 
 ```bash
 python -m reaper_timecapsule config-preview old.ini clean.ini --source-version 7.82 --target-version 7.82
+python -m reaper_timecapsule theme-preview old/ColorThemes factory/ColorThemes clean/ColorThemes --source-version 7.82 --factory-version 7.82
 python -m reaper_timecapsule scan
 python -m reaper_timecapsule midi-audit
 python -m reaper_timecapsule reapack-audit
