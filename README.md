@@ -4,7 +4,7 @@ Cross-platform (macOS / Windows / Linux) **experimental** REAPER resource snapsh
 This is a **development preview**, not a complete one-click workflow migration utility.
 Do not use it as your only backup. Close REAPER before any resource snapshot.
 
-## Current milestone (`0.3.0-dev`)
+## Current milestone (`0.4.0-dev`)
 
 - Uses a policy engine to classify files as `keep`, `review`, `regenerate`, or `exclude`.
 - Preserves portable REAPER Scripts, MenuSets, KeyMaps, ReaPack state, SWS configuration,
@@ -18,6 +18,8 @@ Do not use it as your only backup. Close REAPER before any resource snapshot.
 - Restores only into a **nonexistent** destination folder by staging/rename; no overwrite,
   no automatic plugin installation, no silent merges into REAPER, no network downloads.
 - GUI uses Tkinter; Python 3.10+ required until native .app/.exe builds exist.
+- MIDI Editor dependency validator: compare menu Custom Action references with imported .ReaperKeyMap and reaper-kb.ini; report missing actions and missing/nonportable script paths. Results are visible in GUI, CLI and snapshot inventory.
+- The validator performs **static inspection only**: it cannot prove runtime script correctness, extension availability or automatic import success.
 - Read-only ReaPack/SWS/MIDI inventory embedded in snapshots: recognizable extension
   filenames, menu and keymap files, configured XML repository URLs (credentials redacted
   in the report). The original config is backed up, not edited.
@@ -28,6 +30,7 @@ Do not use it as your only backup. Close REAPER before any resource snapshot.
 
 ```bash
 python -m reaper_timecapsule scan
+python -m reaper_timecapsule midi-audit
 python -m reaper_timecapsule backup ~/Desktop/my-timecapsule.zip
 python -m reaper_timecapsule verify ~/Desktop/my-timecapsule.zip
 python -m reaper_timecapsule restore ~/Desktop/my-timecapsule.zip ~/Desktop/RecoveredTimeCapsule
