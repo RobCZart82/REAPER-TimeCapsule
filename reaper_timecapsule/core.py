@@ -14,8 +14,9 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
 from .rules import decide
+from .inventory import build_inventory
 
-VERSION = "0.2.0-dev"
+VERSION = "0.3.0-dev"
 FORMAT = "reaper-timecapsule"
 SCHEMA = 2
 MAX_MANIFEST_BYTES = 16 * 1024 * 1024
@@ -79,7 +80,7 @@ def preview(source: Path) -> dict:
     sizes = Counter()
     for x in items:
         sizes[x["policy"]] += x["size"]
-    return {"files": len(items), "counts": dict(counts), "bytes": dict(sizes), "items": items}
+    return {"files": len(items), "counts": dict(counts), "bytes": dict(sizes), "items": items, "inventory": build_inventory(Path(source), items)}
 
 
 def make_backup(source: Path, destination: Path) -> dict:
@@ -125,6 +126,7 @@ def make_backup(source: Path, destination: Path) -> dict:
                 "created_utc": datetime.now(timezone.utc).isoformat(),
                 "source_platform": platform.system(), "source_architecture": platform.machine(),
                 "strategy": "clean-migration", "files": manifest_files,
+                "inventory": build_inventory(source, items),
                 "omitted": [x for x in items if x["policy"] in ("exclude", "regenerate")],
                 "notes": "review items are backed up but never restored into active REAPER resources automatically",
             }
@@ -239,6 +241,7 @@ def restore_backup(archive: Path, destination: Path) -> dict:
             "restored_portable": counts["keep"],
             "isolated_for_review": counts["review"],
             "instructions": "Copy REAPER/ into a CLEAN, CLOSED REAPER resource directory only after reviewing conflicts. NeedsReview/ is NOT automatically installed.",
+            "inventory": manifest.get("inventory", {}),
         }
         (staging / "RESTORE_REPORT.json").write_text(json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
         if destination.exists():
@@ -254,4 +257,4 @@ def preview_backup(archive: Path) -> dict:
     manifest = verify_backup(archive)
     counts = Counter(x["policy"] for x in manifest["files"])
     omitted = Counter(x["policy"] for x in manifest["omitted"])
-    return {"saved": dict(counts), "omitted": dict(omitted), "created_utc": manifest["created_utc"]}
+    return {"saved": dict(counts), "omitted": dict(omitted), "created_utc": manifest["created_utc"], "inventory": manifest.get("inventory", {})}

@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 
 MAX_REAPACK_INI_BYTES = 2 * 1024 * 1024
 MAX_URLS = 1000
-URL_PATTERN = re.compile(r"https?://[^\\s<>\\\"']+", flags=re.IGNORECASE)
+URL_PATTERN = re.compile(r"https?://[^\s<>\"']+", flags=re.IGNORECASE)
 EXTENSION_SUFFIXES = (".dylib", ".dll", ".so")
 
 

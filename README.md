@@ -2,8 +2,9 @@
 
 Cross-platform (macOS / Windows / Linux) **experimental** REAPER resource snapshot tool.
 This is a **development preview**, not a complete one-click workflow migration utility.
+Do not use it as your only backup. Close REAPER before any resource snapshot.
 
-## First milestone (`0.2.0-dev`)
+## Current milestone (`0.3.0-dev`)
 
 - Uses a policy engine to classify files as `keep`, `review`, `regenerate`, or `exclude`.
 - Preserves portable REAPER Scripts, MenuSets, KeyMaps, ReaPack state, SWS configuration,
@@ -17,6 +18,11 @@ This is a **development preview**, not a complete one-click workflow migration u
 - Restores only into a **nonexistent** destination folder by staging/rename; no overwrite,
   no automatic plugin installation, no silent merges into REAPER, no network downloads.
 - GUI uses Tkinter; Python 3.10+ required until native .app/.exe builds exist.
+- Read-only ReaPack/SWS/MIDI inventory embedded in snapshots: recognizable extension
+  filenames, menu and keymap files, configured XML repository URLs (credentials redacted
+  in the report). The original config is backed up, not edited.
+- Repository enable/disable and ReaPack global options are **not parsed yet**;
+  no automatic synchronization, package installation or native extension activation.
 
 ## Run
 

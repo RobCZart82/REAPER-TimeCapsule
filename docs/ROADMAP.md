@@ -8,7 +8,13 @@
 - ReaPack / SWS settings preserved as source resources
 - macOS, Windows and Linux CI workflow (runs after repository push)
 
-## Next: 0.3
+## Completed in 0.3.0-dev
+- Read-only ReaPack XML repository URL inventory from reapack.ini; display redacts credentials
+- Inventory of native SWS/ReaPack plugin files without attempting installation
+- MIDI right-click menus and KeyMap file presence tracked in snapshot manifest
+- Recovery report records inventory for auditing
+
+## Next: 0.4
 - Parse real ReaPack state and compare enabled/disabled repositories with original
 - Detect exact installed ReaPack/SWS binaries, architecture and versions
 - Add clean installation + configuration merge with a per-key REAPER.ini allowlist
