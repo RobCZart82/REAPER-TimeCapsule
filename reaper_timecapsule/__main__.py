@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .core import default_resource, make_backup, preview, preview_backup, restore_backup, scan
 from .midi_validation import validate_midi_workflow
+from .reapack_profile import inspect_registry, parse_profile
 
 
 def main():
@@ -22,10 +23,17 @@ def main():
     restore_cmd.add_argument("destination", type=Path)
     midi_cmd = commands.add_parser("midi-audit", help="Validate MIDI menus, Custom Actions and script registrations")
     midi_cmd.add_argument("source", nargs="?", type=Path, default=default_resource())
+    rp_cmd = commands.add_parser("reapack-audit", help="Inspect ReaPack repository options and installed package registry")
+    rp_cmd.add_argument("source", nargs="?", type=Path, default=default_resource())
     commands.add_parser("gui", help="Open desktop GUI")
     args = parser.parse_args()
     try:
-        if args.command == "midi-audit":
+        if args.command == "reapack-audit":
+            result = {
+                "profile": parse_profile(args.source / "reapack.ini"),
+                "registry": inspect_registry(args.source / "ReaPack" / "registry.db"),
+            }
+        elif args.command == "midi-audit":
             result = validate_midi_workflow(args.source, scan(args.source))
         elif args.command == "scan":
             result = preview(args.source)
