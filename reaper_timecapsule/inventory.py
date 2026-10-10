@@ -10,6 +10,8 @@ import re
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from .midi_validation import validate_midi_workflow
+
 MAX_REAPACK_INI_BYTES = 2 * 1024 * 1024
 MAX_URLS = 1000
 URL_PATTERN = re.compile(r"https?://[^\s<>\"']+", flags=re.IGNORECASE)
@@ -95,7 +97,8 @@ def build_inventory(source: Path, items: list[dict]) -> dict:
             "keymap_files": keymap_files,
             "custom_actions_saved": "reaper-kb.ini" in portable,
             "custom_toolbar_settings_saved": "reaper-menu.ini" in portable,
-            "dependency_resolution": "not-yet-verified",
+            "dependency_resolution": "static-action-and-script-audit",
+            "validation": validate_midi_workflow(source, items),
         },
         "sws_settings": sorted(
             x for x in portable if x.lower() in ("s&m.ini", "br.ini", "sws-autocoloricon.ini")
