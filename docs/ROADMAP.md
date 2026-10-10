@@ -94,6 +94,12 @@
 - Competing empty directories/files preserved; unsupported-operation cleanup tested.
 - Publication APIs exercised on each native CI platform.
 
+## Release readiness: archive and I/O failure handling
+- Controlled malformed ZIP/JSON/encoding failures; duplicate manifest fields rejected.
+- Per-file metadata/identity checks detect changes during backup copying.
+- Disk-full, permissions and restore-write failures covered by cleanup tests.
+- Safe cancellation and whole-profile consistency remain separate work.
+
 ## Later
 - Native macOS app packaging and Windows executable + notarization/signing plans
 - Managed backups and rollback snapshots; external drive workflows
