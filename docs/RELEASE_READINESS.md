@@ -48,10 +48,22 @@ Synthetic archives exercise these cases without creating invalid filenames on
 Windows. Rejected archives are tested to fail before restore creates staging.
 Valid Unicode resources are verified and restored in the same cross-platform suite.
 
+## Completed: exclusive restore directory publication
+
+Restoration now publishes the verified staging directory with a no-replace native
+operation: macOS `renamex_np(RENAME_EXCL)`, Linux `renameat2(RENAME_NOREPLACE)`,
+and Windows `os.rename` (which refuses existing destinations). Competing empty
+directories and files are preserved. Unsupported platforms/filesystems fail closed;
+there is no ordinary POSIX rename fallback. Temporary restore directories are
+cleaned on handled failures. This does not guarantee power-loss durability or
+protection against hostile replacement of staging/parent paths.
+
+References: [Apple flags/API](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/stdio.h),
+[Linux flags](https://github.com/torvalds/linux/blob/master/include/uapi/linux/fs.h),
+[Python rename semantics](https://docs.python.org/3/library/os.html#os.rename).
+
 ## Still required before public beta
 
-- Resolve restore-directory publication races separately; backup hardening does
-  not change directory restoration's existing check-and-rename publication.
 - Extend destination-length/filesystem compatibility checks where needed.
 - Broaden tests for disk-full, permissions, cancellation and changing inputs.
 - Introduce a usable GUI flow with background work, progress and safe cancellation.
