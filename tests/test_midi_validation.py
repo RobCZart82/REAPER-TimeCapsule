@@ -76,6 +76,22 @@ class MIDIWorkflowValidationTests(unittest.TestCase):
         self.assertEqual(result["status"], "missing-dependencies")
         self.assertEqual(result["missing_custom_actions"][0]["command"], "_" + SECOND)
 
+    def test_large_chord_menu_all_120_references_resolve(self):
+        # Models the size of the user's chord/scale/arpeggio bundle without
+        # redistributing any of its third-party content.
+        menu = ["[MIDI piano roll context]"]
+        keymap = []
+        for i in range(1, 121):
+            guid = format(i, "032x")
+            menu.append(f"item_{i}=_{guid} Action {i}")
+            keymap.append(f'ACT 1 32060 "{guid}" "Custom: Synthetic {i}" 40001')
+        self.put("MenuSets/large.ReaperMenu", "\n".join(menu))
+        self.put("KeyMaps/large.ReaperKeyMap", "\n".join(keymap))
+        report = self.report()
+        self.assertEqual(report["menu_custom_references"], 120)
+        self.assertEqual(report["resolved_menu_references"], 120)
+        self.assertEqual(report["missing_custom_actions"], [])
+
     def test_empty_midi_inventory_not_claimed_to_be_complete(self):
         self.assertEqual(self.report()["status"], "needs-review")
 
