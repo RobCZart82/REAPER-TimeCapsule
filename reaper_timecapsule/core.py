@@ -152,6 +152,29 @@ def _validate_entry_info(info: zipfile.ZipInfo) -> None:
         raise ValueError("Archive file exceeds size limit")
 
 
+LEGACY_POLICY_VERSIONS = {"0.2.0-dev", "0.3.0-dev", "0.4.0-dev"}
+
+
+def _effective_policy(path: str, stored: str, version: str) -> str:
+    """Apply current safety rules to legacy archives without trusting old policy.
+
+    ReaPack/registry.db was KEEP through 0.4, but must now be REVIEW.
+    Likewise its downloaded cache used to be KEEP and is now REGENERATE.
+    Narrow compatibility exceptions prevent inadvertent policy promotion.
+    """
+    actual = decide(path).policy
+    if stored == actual:
+        return actual
+    if (
+        version in LEGACY_POLICY_VERSIONS
+        and path.lower().startswith("reapack/")
+        and stored == "keep"
+        and actual in ("review", "regenerate")
+    ):
+        return actual
+    raise ValueError("Snapshot restore policy mismatch: " + path)
+
+
 def verify_backup(archive: Path) -> dict:
     archive = Path(archive)
     with zipfile.ZipFile(archive) as z:
@@ -183,9 +206,7 @@ def verify_backup(archive: Path) -> dict:
                 raise ValueError("Invalid restore policy")
             # An archive cannot promote native binaries or machine-specific settings
             # from 'review' to 'keep' by changing the untrusted manifest.
-            expected_policy = decide(rel).policy
-            if expected_policy != item["policy"]:
-                raise ValueError("Snapshot restore policy mismatch: " + rel)
+            _effective_policy(rel, item["policy"], manifest.get("app_version", ""))
             if not isinstance(item.get("size"), int) or item["size"] < 0:
                 raise ValueError("Invalid size")
             if not isinstance(item.get("sha256"), str) or len(item["sha256"]) != 64:
@@ -230,8 +251,16 @@ def restore_backup(archive: Path, destination: Path) -> dict:
     try:
         with zipfile.ZipFile(archive) as z:
             for item in manifest["files"]:
+                # Old policy metadata is advisory: the CURRENT policy rules
+                # decide which destination is safe, even for legacy snapshots.
+                effective = _effective_policy(
+                    item["path"], item["policy"], manifest.get("app_version", "")
+                )
+                if effective in ("exclude", "regenerate"):
+                    counts["regenerate"] += 1
+                    continue
                 # Explicitly separate undecided settings to avoid accidentally activating them.
-                prefix = "REAPER" if item["policy"] == "keep" else "NeedsReview"
+                prefix = "REAPER" if effective == "keep" else "NeedsReview"
                 target = staging / prefix / PurePosixPath(item["path"])
                 target.parent.mkdir(parents=True, exist_ok=True)
                 with z.open("resources/" + item["path"]) as src, target.open("xb") as dst:
@@ -241,10 +270,11 @@ def restore_backup(archive: Path, destination: Path) -> dict:
                         dst.write(block)
                 if h.hexdigest() != item["sha256"]:
                     raise ValueError("Corrupt data detected during restore")
-                counts[item["policy"]] += 1
+                counts[effective] += 1
         info = {
             "restored_portable": counts["keep"],
             "isolated_for_review": counts["review"],
+            "legacy_cache_skipped": counts["regenerate"],
             "instructions": "Copy REAPER/ into a CLEAN, CLOSED REAPER resource directory only after reviewing conflicts. NeedsReview/ is NOT automatically installed.",
             "inventory": manifest.get("inventory", {}),
         }
