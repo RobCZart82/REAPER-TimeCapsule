@@ -18,10 +18,17 @@
 - Parse real ReaPack state and compare enabled/disabled repositories with original
 - Detect exact installed ReaPack/SWS binaries, architecture and versions
 - Add clean installation + configuration merge with a per-key REAPER.ini allowlist
-- Back up and validate Custom Action <-> ReaperMenu references
+- Enhance static action validation with REAPER runtime post-restore integration tests
 - Assess MIDI workflow bundle redistribution permission before shipping it
 - Snapshot exclusion policy UI and signed / auditable reports
 - Verify saved ReaPack repository URLs are still current; do not auto-sync without permission
+
+## Implemented in 0.4.0-dev (MIDI audit)
+- Static validation of MIDI piano roll context menu Custom Action references against imported/registered action definitions
+- Detection of missing scripts and registrations tied to old OS absolute paths
+- Identification of external commands requiring ReaPack/SWS verification
+- CLI `midi-audit` and GUI audit button; summary embedded in snapshot metadata
+- Synthetic tests for successful/missing/wrong-section actions and script portability
 
 ## Later
 - Native macOS app packaging and Windows executable + notarization/signing plans
