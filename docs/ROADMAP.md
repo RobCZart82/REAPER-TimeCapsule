@@ -89,6 +89,11 @@
 - No automatic filename rewriting; valid Unicode resource paths are preserved.
 - Older incompatible archives fail closed; length/filesystem limits remain future work.
 
+## Release readiness: exclusive restore publication
+- Native exclusive directory rename on macOS/Linux/Windows; no overwrite fallback.
+- Competing empty directories/files preserved; unsupported-operation cleanup tested.
+- Publication APIs exercised on each native CI platform.
+
 ## Later
 - Native macOS app packaging and Windows executable + notarization/signing plans
 - Managed backups and rollback snapshots; external drive workflows

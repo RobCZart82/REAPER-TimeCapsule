@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
 from .rules import decide
+from .publication import publish_directory
 from .inventory import build_inventory
 
 VERSION = "0.8.0-dev"
@@ -319,9 +320,7 @@ def restore_backup(archive: Path, destination: Path) -> dict:
             "inventory": manifest.get("inventory", {}),
         }
         (staging / "RESTORE_REPORT.json").write_text(json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
-        if destination.exists():
-            raise FileExistsError("Destination appeared during restore")
-        staging.rename(destination)
+        publish_directory(staging, parent / destination.name)
         return {"destination": str(destination), **info}
     finally:
         if staging.exists():
