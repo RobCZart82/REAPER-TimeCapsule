@@ -73,7 +73,7 @@ def _script_resolution(script_path: str, known_files: set[str]) -> str:
         path = path[1:-1]
     if not path:
         return "missing-path"
-    if PureWindowsPath(path).is_absolute() or Path(path).is_absolute() or path.startswith("~"):
+    if PureWindowsPath(path).is_absolute() or PurePosixPath(path).is_absolute() or path.startswith("~"):
         return "absolute-path-requires-remapping"
     normalized = path.replace("\\", "/")
     parts = PurePosixPath(normalized).parts
