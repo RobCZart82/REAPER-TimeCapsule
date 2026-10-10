@@ -57,6 +57,35 @@ class ReaPackProfileTests(unittest.TestCase):
         self.assertTrue(options["expand_search_synonyms"]["value"])
         self.assertEqual(options["install_new_on_sync"]["origin"], "explicit")
 
+    def test_ten_repository_profile_preserves_disabled_entries(self):
+        # Synthetic data matching the 10-row shape of the user-provided
+        # ReaPack repository manager screenshot, not a copied private INI.
+        rows = [
+            ("ReaPack", "https://reapack.com/index.xml", 1),
+            ("ReaTeam Scripts", "https://github.com/ReaTeam/ReaScripts/raw/master/index.xml", 1),
+            ("ReaTeam JSFX", "https://github.com/ReaTeam/JSFX/raw/master/index.xml", 1),
+            ("ReaTeam Themes", "https://github.com/ReaTeam/Themes/raw/master/index.xml", 0),
+            ("ReaTeam LangPacks", "https://github.com/ReaTeam/LangPacks/raw/master/index.xml", 0),
+            ("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", 1),
+            ("MPL Scripts", "https://github.com/MichaelPilyavskiy/ReaScripts/raw/master/index.xml", 1),
+            ("X-Raym Scripts", "https://github.com/X-Raym/REAPER-ReaScripts/raw/master/index.xml", 1),
+            ("FTC Tools", "https://raw.githubusercontent.com/iliaspoulakis/Reaper-Tools/master/index.xml", 1),
+            ("TK Scripts", "https://raw.githubusercontent.com/TouristKiller/TK-Scripts/master/index.xml", 1),
+        ]
+        ini_text = "[general]\\nversion=4\\n[remotes]\\nsize=10\\n" + "".join(
+            f"remote{i}={name}|{url}|{enabled}|2\\n" for i, (name, url, enabled) in enumerate(rows)
+        )
+        # The code for this test is serialized as a GitHub text file; use real
+        # newlines rather than literal backslash-n escape sequences.
+        ini_text = ini_text.replace("\\\\n", "\\n")
+        report = parse_profile(self.put("reapack.ini", ini_text))
+        self.assertEqual(report["status"], "parsed")
+        self.assertEqual(report["repository_count"], 10)
+        self.assertEqual(report["enabled_count"], 8)
+        self.assertEqual(report["disabled_count"], 2)
+        self.assertEqual([x["name"] for x in report["repositories"] if not x["enabled"]],
+                         ["ReaTeam Themes", "ReaTeam LangPacks"])
+
     def test_source_defaults_preserved_when_missing(self):
         ini = self.put("reapack.ini", "[general]\nversion=4\n[remotes]\nsize=0\n")
         parsed = parse_profile(ini)
