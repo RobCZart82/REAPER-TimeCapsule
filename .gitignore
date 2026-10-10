@@ -1,0 +1,27 @@
+# Never commit personal REAPER settings, backups, or license material
+*.dmg
+*.zip
+*.7z
+*.rpp
+*.RPP
+*.rk
+*.ReaperKeyMap
+*.ReaperMenu
+*.ReaperThemeZip
+*.pem
+*.key
+.env
+.env.*
+backup/
+backups/
+snapshots/
+user_data/
+REAPER/
+NeedsReview/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+build/
+dist/
+*.egg-info/
+.DS_Store
