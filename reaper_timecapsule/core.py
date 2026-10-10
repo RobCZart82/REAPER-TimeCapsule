@@ -181,6 +181,11 @@ def verify_backup(archive: Path) -> dict:
                 raise ValueError("Unsafe archive path")
             if item.get("policy") not in ("keep", "review"):
                 raise ValueError("Invalid restore policy")
+            # An archive cannot promote native binaries or machine-specific settings
+            # from 'review' to 'keep' by changing the untrusted manifest.
+            expected_policy = decide(rel).policy
+            if expected_policy != item["policy"]:
+                raise ValueError("Snapshot restore policy mismatch: " + rel)
             if not isinstance(item.get("size"), int) or item["size"] < 0:
                 raise ValueError("Invalid size")
             if not isinstance(item.get("sha256"), str) or len(item["sha256"]) != 64:
