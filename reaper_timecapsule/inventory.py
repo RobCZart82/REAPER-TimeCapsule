@@ -75,7 +75,7 @@ def build_inventory(source: Path, items: list[dict]) -> dict:
         else:
             family = "Other"
         native.append({"filename": basename, "family": family, "restore": "manual-review"})
-    profile = parse_profile(source / "reapack.ini") if "reapack.ini" in paths else parse_profile(source / "reapack.ini")
+    profile = parse_profile(source / "reapack.ini")
     registry = inspect_registry(source / "ReaPack" / "registry.db")
     # Legacy URL-only scan remains a compatibility fallback when an INI
     # predates the 1.x [remotes] section or uses an unknown format.
@@ -98,7 +98,7 @@ def build_inventory(source: Path, items: list[dict]) -> dict:
             "registry": registry,
             "repository_states": (
                 "parsed-from-reapack-ini" if profile["status"] == "parsed"
-                else "unverified-original-settings-saved"
+                else "not-parsed-preserved-in-original-settings"
             ),
             "global_options": profile["options"],
             "automatic_sync": False,
