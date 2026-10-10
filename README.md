@@ -18,6 +18,8 @@ Do not use it as your only backup. Close REAPER before any resource snapshot.
 - Restores only into a **nonexistent** destination folder by staging/rename; no overwrite,
   no automatic plugin installation, no silent merges into REAPER, no network downloads.
 - GUI uses Tkinter; Python 3.10+ required until native .app/.exe builds exist.
+- GUI backup, verify and restore run in the background with a busy indicator.
+  Only one operation runs at a time; closing is blocked while it is active.
 - MIDI Editor dependency validator: compare menu Custom Action references with imported .ReaperKeyMap and reaper-kb.ini; report missing actions and missing/nonportable script paths. Results are visible in GUI, CLI and snapshot inventory.
 - The validator performs **static inspection only**: it cannot prove runtime script correctness, extension availability or automatic import success.
 - Read-only ReaPack/SWS/MIDI inventory embedded in snapshots: recognizable extension
