@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import json
+import zipfile
 from pathlib import Path
 
 from reaper_timecapsule.core import make_backup, preview, preview_backup, restore_backup
@@ -63,6 +65,23 @@ class RecoveryInventoryTests(unittest.TestCase):
         self.assertTrue((recovered / "REAPER/Scripts/midi.lua").exists())
         self.assertTrue((recovered / "NeedsReview/UserPlugins/reaper_sws-arm64.dylib").exists())
         self.assertFalse((recovered / "REAPER/UserPlugins/reaper_sws-arm64.dylib").exists())
+
+    def test_cannot_promote_native_extension_to_portable(self):
+        self.put("UserPlugins/reaper_sws-arm64.dylib")
+        archive = self.base / "snapshot.zip"
+        make_backup(self.source, archive)
+        with zipfile.ZipFile(archive) as z:
+            entries = {name: z.read(name) for name in z.namelist()}
+        manifest = json.loads(entries["manifest.json"])
+        self.assertEqual(manifest["files"][0]["policy"], "review")
+        manifest["files"][0]["policy"] = "keep"
+        entries["manifest.json"] = json.dumps(manifest).encode("utf-8")
+        with zipfile.ZipFile(archive, "w") as z:
+            for name, payload in entries.items():
+                z.writestr(name, payload)
+        from reaper_timecapsule.core import verify_backup
+        with self.assertRaises(ValueError):
+            verify_backup(archive)
 
 
 if __name__ == "__main__":
