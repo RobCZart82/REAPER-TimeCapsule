@@ -14,7 +14,7 @@
 - MIDI right-click menus and KeyMap file presence tracked in snapshot manifest
 - Recovery report records inventory for auditing
 
-## Next: 0.4
+## Outstanding work from the early roadmap
 - Support ReaPack v2 if/when its storage format is documented; compare repository state with a clean destination
 - Detect exact installed ReaPack/SWS binaries, architecture and versions
 - Add clean installation + configuration merge with a per-key REAPER.ini allowlist
@@ -48,8 +48,8 @@
 - GUI Config Preview with explicit file selection, cancellation and version prompts.
 - Change counts distinguish conflicts, unchanged, source-only and target-only entries.
 - Parser rejects ambiguous indentation and unsupported control characters.
-- Issue #4 remains open: factory theme comparison, rollback and actual merge remain
-  future work. No staging export or in-place writer is introduced.
+- Issue #4 remains open: rollback and actual merge remain future work; factory
+  comparison is available through the separate follow-up below. No staging export or in-place writer is introduced.
 
 ## Factory theme comparison follow-up
 - Read-only `theme-preview` compares explicit source/factory/target directories.
@@ -59,6 +59,21 @@
 - Unpacked dependencies, unknown files and symlinks stay review-only.
 - Backup and restore retain all previous behavior; no automatic deduplication.
 - Issue #4 remains open for actionable restore/rollback and unpacked dependency handling.
+
+## Implemented in 0.7 (selective preference staging)
+- Separate CLI opt-in export with exact changed approved key selection.
+- Exclusive new ZIP creation in a dedicated external TimeCapsule-Staging folder.
+- Selected preference DATA and reverse values only; no full INI or unknown values.
+- Input-content fingerprints; no writes to source/target or active resource files.
+- Partial write failure cleanup of the archive owned by this operation.
+
+## Implemented in 0.8.0-dev (staging verification)
+- Read-only bounded ZIP verification without extraction.
+- Exact members, checksum/content checks and current allowlist enforcement.
+- Reject duplicate entries/JSON fields, unsupported values, versions and forged keys.
+- Optional target fingerprint check detects changes after staging.
+- These two milestones ship together; no apply/deploy command is provided.
+- Full rollback snapshots, executable migration and staging GUI remain future work.
 
 ## Later
 - Native macOS app packaging and Windows executable + notarization/signing plans
