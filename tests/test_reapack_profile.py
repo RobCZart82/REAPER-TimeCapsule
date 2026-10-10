@@ -72,12 +72,12 @@ class ReaPackProfileTests(unittest.TestCase):
             ("FTC Tools", "https://raw.githubusercontent.com/iliaspoulakis/Reaper-Tools/master/index.xml", 1),
             ("TK Scripts", "https://raw.githubusercontent.com/TouristKiller/TK-Scripts/master/index.xml", 1),
         ]
-        ini_text = "[general]\\nversion=4\\n[remotes]\\nsize=10\\n" + "".join(
-            f"remote{i}={name}|{url}|{enabled}|2\\n" for i, (name, url, enabled) in enumerate(rows)
-        )
-        # The code for this test is serialized as a GitHub text file; use real
-        # newlines rather than literal backslash-n escape sequences.
-        ini_text = ini_text.replace("\\\\n", "\\n")
+        ini_text = "\n".join([
+            "[general]", "version=4", "[remotes]", "size=10",
+            *(f"remote{i}={name}|{url}|{enabled}|2"
+              for i, (name, url, enabled) in enumerate(rows)),
+            "",
+        ])
         report = parse_profile(self.put("reapack.ini", ini_text))
         self.assertEqual(report["status"], "parsed")
         self.assertEqual(report["repository_count"], 10)
