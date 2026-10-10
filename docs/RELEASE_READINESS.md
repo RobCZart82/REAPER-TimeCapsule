@@ -24,11 +24,35 @@ Tests exercise competing file/directory creation at the actual publication call,
 dangling targets, unsupported-operation cleanup and successful archive verification.
 The same tests run in the macOS/Windows/Linux Python 3.10/3.12 CI matrix.
 
+## Completed: portable archive namespace preflight
+
+Verification checks every indexed resource path before restore staging begins.
+It rejects Windows device names (including extensions and superscript COM/LPT
+variants), forbidden characters, controls, trailing spaces/dots, surrogate code
+points, case-insensitive/NFC-equivalent collisions and file/directory prefix
+conflicts. Shared directories must use consistent spelling. These rules apply on
+all platforms; no files are silently renamed or dropped.
+
+The Windows name rules follow [Microsoft filename documentation](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).
+NFC plus casefold matching is a deliberately conservative project portability
+policy, not an exact model of every filesystem. Ordinary Unicode names remain
+supported. Total destination-path length, filesystem component-size limits and
+legacy 8.3 aliases are not fully modeled and remain validation work.
+
+Older snapshots containing newly rejected names fail verification; retain the
+original backup and resolve source naming manually before making a new one. Backup
+publication also verifies the completed ZIP, so incompatible source names prevent
+publication. The inventory scan alone does not apply this namespace preflight.
+
+Synthetic archives exercise these cases without creating invalid filenames on
+Windows. Rejected archives are tested to fail before restore creates staging.
+Valid Unicode resources are verified and restored in the same cross-platform suite.
+
 ## Still required before public beta
 
 - Resolve restore-directory publication races separately; backup hardening does
   not change directory restoration's existing check-and-rename publication.
-- Reject cross-platform ambiguous/reserved archive names before restore.
+- Extend destination-length/filesystem compatibility checks where needed.
 - Broaden tests for disk-full, permissions, cancellation and changing inputs.
 - Introduce a usable GUI flow with background work, progress and safe cancellation.
 - Validate supported resources in real temporary REAPER profiles on macOS/Windows.

@@ -83,6 +83,12 @@
 - Restore directory publication, cross-platform archive-name validation, GUI progress,
   real REAPER tests and native packaging remain release blockers.
 
+## Release readiness: portable archive paths
+- Preflight all indexed paths before restore creates a staging directory.
+- Reject Windows reserved/invalid names, case/NFC collisions and file-directory conflicts.
+- No automatic filename rewriting; valid Unicode resource paths are preserved.
+- Older incompatible archives fail closed; length/filesystem limits remain future work.
+
 ## Later
 - Native macOS app packaging and Windows executable + notarization/signing plans
 - Managed backups and rollback snapshots; external drive workflows
