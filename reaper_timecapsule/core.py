@@ -9,6 +9,7 @@ import shutil
 import stat
 import tempfile
 import zipfile
+import unicodedata
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
@@ -49,6 +50,34 @@ def _valid_path(path: str) -> bool:
     if path.startswith("/") or path.endswith("/"):
         return False
     return all(p not in ("", ".", "..") for p in path.split("/"))
+
+
+WINDOWS_RESERVED_NAMES = {'con', 'prn', 'aux', 'nul'} | {
+    prefix + digit for prefix in ('com', 'lpt') for digit in '123456789¹²³'
+}
+
+
+def _validate_portable_paths(paths) -> None:
+    """Conservative cross-platform namespace preflight, without renaming data."""
+    prefixes = {}
+    for path in paths:
+        if not _valid_path(path):
+            raise ValueError("Unsafe archive path")
+        original = path.split('/')
+        normalized = []
+        for index, part in enumerate(original):
+            if (part.endswith((' ', '.')) or any(char in '<>:"\\|?*' for char in part)
+                    or any(ord(char) < 32 or 0xD800 <= ord(char) <= 0xDFFF for char in part)
+                    or part.split('.')[0].rstrip(' ').casefold() in WINDOWS_RESERVED_NAMES):
+                raise ValueError("Archive contains a nonportable filename")
+            normalized.append(unicodedata.normalize('NFC', part).casefold())
+            identity = tuple(normalized)
+            spelling = tuple(original[:index + 1])
+            is_file = index == len(original) - 1
+            existing = prefixes.get(identity)
+            if existing is not None and existing != (spelling, is_file):
+                raise ValueError("Archive paths collide across platforms")
+            prefixes[identity] = spelling, is_file
 
 
 def scan(source: Path) -> list[dict]:
@@ -201,6 +230,10 @@ def verify_backup(archive: Path) -> dict:
         files = manifest.get("files")
         if not isinstance(files, list) or len(files) > MAX_FILES:
             raise ValueError("Invalid file index")
+        # Validate the complete namespace before hashing or creating restore paths.
+        if any(not isinstance(item, dict) for item in files):
+            raise ValueError("Invalid file record")
+        _validate_portable_paths(item.get("path") for item in files)
         expected = {"manifest.json"}
         total_bytes = 0
         for item in files:

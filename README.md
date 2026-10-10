@@ -84,6 +84,13 @@ this publication method). On failure, choose a supported local filesystem; there
 is no overwrite-capable fallback. You can manually copy an already verified ZIP
 elsewhere afterwards. See [release readiness](docs/RELEASE_READINESS.md).
 
+## Portable archive filenames
+
+Verification and restore reject Windows-invalid resource names, case/Unicode
+collisions and file/directory conflicts on every platform before restoring files.
+No automatic renaming occurs. Older archives with such names must be reviewed;
+keep the original backup. See [release readiness](docs/RELEASE_READINESS.md).
+
 ## Migration safety
 
 Restore produces `RecoveredTimeCapsule/REAPER/` for portable files, plus
