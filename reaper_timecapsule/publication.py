@@ -11,6 +11,8 @@ def publish_directory(source, destination):
         # Windows os.rename raises if the destination exists.
         os.rename(source, destination)
         return
+    if sys.platform != 'darwin' and not sys.platform.startswith('linux'):
+        raise OSError(errno.ENOTSUP, 'Exclusive restore publication unavailable on this platform')
     libc = ctypes.CDLL(None, use_errno=True)
     if sys.platform == 'darwin':
         function = getattr(libc, 'renamex_np', None)
