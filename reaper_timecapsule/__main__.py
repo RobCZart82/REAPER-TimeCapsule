@@ -3,7 +3,8 @@ import argparse
 import json
 from pathlib import Path
 
-from .core import default_resource, make_backup, preview, preview_backup, restore_backup
+from .core import default_resource, make_backup, preview, preview_backup, restore_backup, scan
+from .midi_validation import validate_midi_workflow
 
 
 def main():
@@ -19,10 +20,14 @@ def main():
     restore_cmd = commands.add_parser("restore", help="Restore to a NEW folder, no active overwrite")
     restore_cmd.add_argument("archive", type=Path)
     restore_cmd.add_argument("destination", type=Path)
+    midi_cmd = commands.add_parser("midi-audit", help="Validate MIDI menus, Custom Actions and script registrations")
+    midi_cmd.add_argument("source", nargs="?", type=Path, default=default_resource())
     commands.add_parser("gui", help="Open desktop GUI")
     args = parser.parse_args()
     try:
-        if args.command == "scan":
+        if args.command == "midi-audit":
+            result = validate_midi_workflow(args.source, scan(args.source))
+        elif args.command == "scan":
             result = preview(args.source)
         elif args.command == "backup":
             result = make_backup(args.source, args.archive)

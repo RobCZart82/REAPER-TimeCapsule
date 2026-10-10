@@ -4,14 +4,15 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-from .core import VERSION, default_resource, make_backup, preview, preview_backup, restore_backup
+from .core import VERSION, default_resource, make_backup, preview, preview_backup, restore_backup, scan
+from .midi_validation import validate_midi_workflow
 
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("REAPER TimeCapsule " + VERSION)
-        self.geometry("840x460")
+        self.geometry("920x520")
         self.source = tk.StringVar(value=str(default_resource()))
         self.archive = tk.StringVar()
         self.destination = tk.StringVar(value=str(Path.home() / "Desktop" / "TimeCapsule-Restored"))
@@ -32,6 +33,7 @@ class App(tk.Tk):
         row.pack(anchor="w", pady=17)
         for label, fn in (
             ("Scan / Preview", lambda: self._do(lambda: self._brief(preview(self.source.get())))),
+            ("MIDI Audit", lambda: self._do(lambda: validate_midi_workflow(Path(self.source.get()), scan(Path(self.source.get()))))),
             ("Backup", lambda: self._do(lambda: make_backup(self.source.get(), self.archive.get()))),
             ("Verify", lambda: self._do(lambda: preview_backup(self.archive.get()))),
             ("Restore", self._restore),
