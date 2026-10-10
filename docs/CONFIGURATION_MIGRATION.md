@@ -71,6 +71,6 @@ The existing CI runs them on macOS/Windows/Linux with Python 3.10 and 3.12.
 
 Factory theme identity comparison and preservation of customized variants, explicit
 conflict resolution, rollback snapshots and an actual configuration merge remain
-unimplemented. Issue #4 must remain open. A future opt-in staging exporter needs
-separate destination protections and review; this milestone deliberately has no
-exporter or writer. Never use this preview as a replacement for a backup.
+unimplemented. Issue #4 must remain open. The later 0.7/0.8 [staging commands](CONFIGURATION_STAGING.md) export selected
+preference DATA only, with separate destination protections and verification.
+There is still no staged INI or active configuration writer. Never use this preview as a replacement for a backup.

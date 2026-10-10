@@ -1,5 +1,6 @@
 """Read-only, fail-closed reaper.ini comparison. No writer or merge API."""
 import re
+import hashlib
 from pathlib import Path
 from types import MappingProxyType
 
@@ -17,7 +18,7 @@ BLOCKED = re.compile(
     r'linux|win32|win64|macos|osx|hardware', re.I)
 
 
-def _read(path):
+def _read(path, *, with_digest=False):
     path = Path(path)
     if path.is_symlink() or not path.is_file():
         raise ValueError('Configuration must be a regular non-symlink file')
@@ -61,7 +62,7 @@ def _read(path):
             raise ValueError(f'Malformed configuration at line {number}')
     if not sections:
         raise ValueError('Configuration has no sections')
-    return entries
+    return (entries, hashlib.sha256(raw).hexdigest()) if with_digest else entries
 
 
 def preview_migration(source, target, *, source_version=None, target_version=None):
@@ -72,6 +73,10 @@ def preview_migration(source, target, *, source_version=None, target_version=Non
     still a proposal requiring review, never permission to overwrite a target.
     """
     old, new = _read(source), _read(target)
+    return _compare_entries(old, new, source_version, target_version)
+
+
+def _compare_entries(old, new, source_version, target_version):
     known_version = bool(source_version and target_version and
                          re.fullmatch(r'(?:[5-9]|[1-9][0-9]+)\.[0-9]+', source_version) and
                          source_version == target_version)

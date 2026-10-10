@@ -8,6 +8,7 @@ from .midi_validation import validate_midi_workflow
 from .reapack_profile import inspect_registry, parse_profile
 from .config_migration import preview_migration
 from .theme_migration import preview_themes
+from .config_staging import export_preferences, verify_staging
 
 
 def main():
@@ -38,10 +39,27 @@ def main():
     theme_cmd.add_argument("target", type=Path)
     theme_cmd.add_argument("--source-version")
     theme_cmd.add_argument("--factory-version")
+    staging_cmd = commands.add_parser("config-stage", help="Opt-in export of selected preference DATA only")
+    staging_cmd.add_argument("source", type=Path)
+    staging_cmd.add_argument("target", type=Path)
+    staging_cmd.add_argument("archive", type=Path)
+    staging_cmd.add_argument("--select", action="append", required=True)
+    staging_cmd.add_argument("--source-version", required=True)
+    staging_cmd.add_argument("--target-version", required=True)
+    staging_cmd.add_argument("--opt-in", action="store_true")
+    staging_verify = commands.add_parser("verify-stage", help="Read-only staging integrity and policy check")
+    staging_verify.add_argument("archive", type=Path)
+    staging_verify.add_argument("--target", type=Path)
     commands.add_parser("gui", help="Open desktop GUI")
     args = parser.parse_args()
     try:
-        if args.command == "theme-preview":
+        if args.command == "config-stage":
+            result = export_preferences(args.source, args.target, args.archive,
+                                        selections=args.select, source_version=args.source_version,
+                                        target_version=args.target_version, opt_in=args.opt_in)
+        elif args.command == "verify-stage":
+            result = verify_staging(args.archive, target=args.target)
+        elif args.command == "theme-preview":
             result = preview_themes(args.source, args.factory, args.target,
                                     source_version=args.source_version,
                                     factory_version=args.factory_version)

@@ -4,7 +4,7 @@ Cross-platform (macOS / Windows / Linux) **experimental** REAPER resource snapsh
 This is a **development preview**, not a complete one-click workflow migration utility.
 Do not use it as your only backup. Close REAPER before any resource snapshot.
 
-## Current milestone (`0.6.0-dev`)
+## Current milestone (`0.8.0-dev`)
 
 - Uses a policy engine to classify files as `keep`, `review`, `regenerate`, or `exclude`.
 - Preserves portable REAPER Scripts, MenuSets, KeyMaps, ReaPack state, SWS configuration,
@@ -39,8 +39,9 @@ JSON diff. Only exact approved section/key/value combinations can be candidates;
 unknown settings require review and hardware/platform/cache/private state is excluded.
 The GUI **Config Preview** button provides the same comparison with explicit file
 selection, optional version records and conflict counts.
-It never writes either file or the REAPER resource folder. No staging export or merge
-is implemented. See [configuration migration](docs/CONFIGURATION_MIGRATION.md).
+Preview never writes either file or the REAPER resource folder. No active merge
+is implemented. Separate opt-in preference DATA export and read-only verification
+are available; see [staging and verification](docs/CONFIGURATION_STAGING.md). See [configuration migration](docs/CONFIGURATION_MIGRATION.md).
 
 ## Factory theme preview
 
@@ -49,11 +50,22 @@ It identifies byte-identical packed factory themes, modified variants, user them
 and destination conflicts. It never copies, deletes or omits backup files. See
 [theme migration preview](docs/THEME_MIGRATION.md).
 
+## Preference staging and verification (0.7 / 0.8)
+
+`config-stage` requires explicit opt-in and exact changed preference selections.
+It creates a new `.timecapsule-stage.zip` under a dedicated `TimeCapsule-Staging`
+folder outside input and recognized REAPER directories. It contains selected
+preference DATA, reverse values and fingerprints, not an installable reaper.ini.
+`verify-stage` checks integrity, approval policy and optionally the current target
+baseline. Neither command applies settings or supports full rollback.
+
 ## Run
 
 ```bash
 python -m reaper_timecapsule config-preview old.ini clean.ini --source-version 7.82 --target-version 7.82
 python -m reaper_timecapsule theme-preview old/ColorThemes factory/ColorThemes clean/ColorThemes --source-version 7.82 --factory-version 7.82
+python -m reaper_timecapsule config-stage old.ini clean.ini TimeCapsule-Staging/review.timecapsule-stage.zip --select REAPER/tinttcp --source-version 7.82 --target-version 7.82 --opt-in
+python -m reaper_timecapsule verify-stage TimeCapsule-Staging/review.timecapsule-stage.zip --target clean.ini
 python -m reaper_timecapsule scan
 python -m reaper_timecapsule midi-audit
 python -m reaper_timecapsule reapack-audit
