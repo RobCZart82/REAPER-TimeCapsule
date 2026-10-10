@@ -88,7 +88,7 @@ def make_backup(source: Path, destination: Path) -> dict:
     destination = Path(destination).expanduser().absolute()
     if source == destination or source in destination.parents:
         raise ValueError("Backup ZIP cannot be inside the source directory")
-    if destination.exists():
+    if destination.exists() or destination.is_symlink():
         raise FileExistsError("Refusing to overwrite an existing backup")
     destination.parent.mkdir(parents=True, exist_ok=True)
     items = scan(source)
@@ -132,10 +132,17 @@ def make_backup(source: Path, destination: Path) -> dict:
             }
             out.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
         verify_backup(Path(staging))
-        # Do not overwrite an already existing archive, including a concurrent creation.
-        if destination.exists():
-            raise FileExistsError("Backup target appeared during creation")
-        os.rename(staging, destination)
+        # Atomic exclusive publication: linking fails if ANY destination entry
+        # exists, including a concurrently created file or dangling symlink.
+        # Staging is in the same directory/filesystem. Never fall back to rename
+        # or copying: unsupported filesystems must fail without risking overwrite.
+        try:
+            os.link(staging, destination)
+        except FileExistsError:
+            raise
+        except OSError as exc:
+            raise OSError("Cannot safely publish backup: choose a writable destination "
+                          "filesystem supporting hard links") from exc
         return {"archive": str(destination), "saved": len(selected), "omitted": len(items) - len(selected)}
     finally:
         if os.path.exists(staging):

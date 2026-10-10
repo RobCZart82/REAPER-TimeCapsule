@@ -75,6 +75,14 @@
 - These two milestones ship together; no apply/deploy command is provided.
 - Full rollback snapshots, executable migration and staging GUI remain future work.
 
+## Release readiness: backup publication hardening
+- Replace check-then-rename backup publication with atomic exclusive hard-link creation.
+- Preserve concurrent destination files/directories and reject dangling symlink targets.
+- Unsupported destination filesystems fail closed, without rename/copy fallback.
+- Regression tests cover concurrent creation, failure cleanup and verified success.
+- Restore directory publication, cross-platform archive-name validation, GUI progress,
+  real REAPER tests and native packaging remain release blockers.
+
 ## Later
 - Native macOS app packaging and Windows executable + notarization/signing plans
 - Managed backups and rollback snapshots; external drive workflows

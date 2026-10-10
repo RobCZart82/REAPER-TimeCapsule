@@ -78,6 +78,11 @@ python -m unittest discover -s tests -v
 
 Optional `--source /path/to/REAPER` with `backup`, or a source argument with `scan`.
 **Close REAPER before backup or restore.**
+Backup creation requires a writable destination filesystem with hard-link support
+for atomic no-overwrite publication (FAT/exFAT destinations are not supported by
+this publication method). On failure, choose a supported local filesystem; there
+is no overwrite-capable fallback. You can manually copy an already verified ZIP
+elsewhere afterwards. See [release readiness](docs/RELEASE_READINESS.md).
 
 ## Migration safety
 
