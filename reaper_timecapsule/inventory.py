@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from .midi_validation import validate_midi_workflow
+from .reapack_profile import inspect_registry, parse_profile
 
 MAX_REAPACK_INI_BYTES = 2 * 1024 * 1024
 MAX_URLS = 1000
@@ -74,7 +75,13 @@ def build_inventory(source: Path, items: list[dict]) -> dict:
         else:
             family = "Other"
         native.append({"filename": basename, "family": family, "restore": "manual-review"})
-    repo_urls = _public_repo_urls(source / "reapack.ini") if "reapack.ini" in paths else []
+    profile = parse_profile(source / "reapack.ini")
+    registry = inspect_registry(source / "ReaPack" / "registry.db")
+    # Legacy URL-only scan remains a compatibility fallback when an INI
+    # predates the 1.x [remotes] section or uses an unknown format.
+    repo_urls = ([x["index_url"] for x in profile["repositories"]]
+                 if profile["status"] == "parsed" else
+                 _public_repo_urls(source / "reapack.ini") if "reapack.ini" in paths else [])
     menu_files = sorted(
         x for x in portable if x.lower().startswith("menusets/") and x.lower().endswith(".reapermenu")
     )
@@ -87,8 +94,13 @@ def build_inventory(source: Path, items: list[dict]) -> dict:
             "settings_file_saved": "reapack.ini" in paths,
             "data_files_saved": sum(1 for x in portable if x.lower().startswith("reapack/")),
             "repository_index_urls": repo_urls,
-            "repository_states": "not-parsed-preserved-in-original-settings",
-            "global_options": "not-parsed-preserved-in-original-settings",
+            "profile": profile,
+            "registry": registry,
+            "repository_states": (
+                "parsed-from-reapack-ini" if profile["status"] == "parsed"
+                else "not-parsed-preserved-in-original-settings"
+            ),
+            "global_options": profile["options"],
             "automatic_sync": False,
         },
         "native_extensions": native,

@@ -60,6 +60,11 @@ def decide(rel_path: str) -> Decision:
         fnmatchcase(name, x) for x in REGENERATE_PATTERNS
     ):
         return Decision("regenerate", "cache or generated index should be rebuilt")
+    if lower[0] == "reapack" and len(lower) > 1:
+        if lower[1] == "cache" or name == "registry.db-shm":
+            return Decision("regenerate", "ReaPack cache or ephemeral SQLite shared memory")
+        if name in ("registry.db", "registry.db-wal", "registry.db-journal"):
+            return Decision("review", "installed package registry may be stale after migration")
     if any(p in REVIEW_DIRS for p in lower[:-1]):
         return Decision("review", "native extension or machine-dependent data")
     if len(parts) == 1 and name in REVIEW_ROOT:

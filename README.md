@@ -4,7 +4,7 @@ Cross-platform (macOS / Windows / Linux) **experimental** REAPER resource snapsh
 This is a **development preview**, not a complete one-click workflow migration utility.
 Do not use it as your only backup. Close REAPER before any resource snapshot.
 
-## Current milestone (`0.4.0-dev`)
+## Current milestone (`0.5.0-dev`)
 
 - Uses a policy engine to classify files as `keep`, `review`, `regenerate`, or `exclude`.
 - Preserves portable REAPER Scripts, MenuSets, KeyMaps, ReaPack state, SWS configuration,
@@ -23,14 +23,21 @@ Do not use it as your only backup. Close REAPER before any resource snapshot.
 - Read-only ReaPack/SWS/MIDI inventory embedded in snapshots: recognizable extension
   filenames, menu and keymap files, configured XML repository URLs (credentials redacted
   in the report). The original config is backed up, not edited.
-- Repository enable/disable and ReaPack global options are **not parsed yet**;
-  no automatic synchronization, package installation or native extension activation.
+- **ReaPack 1.x profile reader** reads actual repository names, order, URLs,
+  enabled states, per-repository auto-install overrides and global options
+  from `reapack.ini`; unknown formats are flagged rather than guessed.
+- **Installed packages inventory** is read from the ReaPack SQLite registry in
+  read-only mode. On clean restore the old registry is isolated in
+  `NeedsReview/` and downloaded `ReaPack/cache/` indexes are regenerated.
+- Never starts a ReaPack synchronization, writes the installed-package
+  registry or installs a native extension without approval.
 
 ## Run
 
 ```bash
 python -m reaper_timecapsule scan
 python -m reaper_timecapsule midi-audit
+python -m reaper_timecapsule reapack-audit
 python -m reaper_timecapsule backup ~/Desktop/my-timecapsule.zip
 python -m reaper_timecapsule verify ~/Desktop/my-timecapsule.zip
 python -m reaper_timecapsule restore ~/Desktop/my-timecapsule.zip ~/Desktop/RecoveredTimeCapsule
@@ -57,4 +64,6 @@ This app isn't affiliated with or endorsed by Cockos / REAPER.
 ## Development status
 
 Repository is intended to start **private**; source license and third-party
-redistribution review are pending. See [roadmap](docs/ROADMAP.md).
+redistribution review are pending. See [roadmap](docs/ROADMAP.md),
+[ReaPack Smart Recovery](docs/REAPACK_SMART_RECOVERY.md) and
+[MIDI Workflow Recovery](docs/MIDI_WORKFLOW_RECOVERY.md).

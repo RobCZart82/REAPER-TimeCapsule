@@ -3,7 +3,10 @@
 | Example | Policy | Reason |
 | --- | --- | --- |
 | `Scripts/`, `MenuSets/`, `KeyMaps/`, `Data/toolbar_icons/` | keep | Personalized actions, menus and icons |
-| `ReaPack/`, `reapack.ini` | keep | Offline package records, repositories, options |
+| `reapack.ini` | keep | ReaPack repository names, URLs, enable states and options |
+| `ReaPack/registry.db` | review | Historical installed package database could be stale or platform-specific |
+| `ReaPack/cache/**` | regenerate | Downloaded XML indexes, not personal workflow |
+| `ReaPack/registry.db-shm` | regenerate | SQLite ephemeral shared memory |
 | `S&M.ini`, `BR.ini`, `sws-autocoloricon.ini` | keep | SWS settings |
 | `LangPack/`, `ColorThemes/`, `Effects/`, `presets/` | keep | Installed/customized resources; factory comparison TODO |
 | `reaper-kb.ini`, `reaper-menu.ini`, `reaper-mouse.ini` | keep | Actions, menus, mouse modifiers |

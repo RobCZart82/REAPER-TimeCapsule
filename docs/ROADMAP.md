@@ -15,7 +15,7 @@
 - Recovery report records inventory for auditing
 
 ## Next: 0.4
-- Parse real ReaPack state and compare enabled/disabled repositories with original
+- Support ReaPack v2 if/when its storage format is documented; compare repository state with a clean destination
 - Detect exact installed ReaPack/SWS binaries, architecture and versions
 - Add clean installation + configuration merge with a per-key REAPER.ini allowlist
 - Enhance static action validation with REAPER runtime post-restore integration tests
@@ -29,6 +29,15 @@
 - Identification of external commands requiring ReaPack/SWS verification
 - CLI `midi-audit` and GUI audit button; summary embedded in snapshot metadata
 - Synthetic tests for successful/missing/wrong-section actions and script portability
+
+## Implemented in 0.5.0-dev (ReaPack Smart Recovery: inspection)
+- Parse ReaPack 1.x configured repository list and enabled/disabled states from the
+  verified `[remotes] remoteN=name|URL|enabled|override` format.
+- Preserve global option values with explicit-vs-default provenance.
+- Read the installed package inventory from `ReaPack/registry.db` in SQLite
+  read-only mode; never silently copy a stale database into an active fresh REAPER.
+- Exclude old `ReaPack/cache/` downloaded indexes from clean migrations.
+- Add `reapack-audit` CLI / GUI button and cross-platform regression tests.
 
 ## Later
 - Native macOS app packaging and Windows executable + notarization/signing plans
