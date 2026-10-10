@@ -10,6 +10,7 @@ import stat
 import tempfile
 import zipfile
 import unicodedata
+import zlib
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
@@ -142,12 +143,18 @@ def make_backup(source: Path, destination: Path) -> dict:
                 bytes_written = 0
                 entry = "resources/" + item["path"]
                 with p.open("rb") as src, out.open(entry, "w") as dst:
+                    before = os.fstat(src.fileno())
                     for block in iter(lambda: src.read(BLOCK_SIZE), b""):
                         bytes_written += len(block)
                         if bytes_written > MAX_SINGLE_FILE:
                             raise ValueError("Changed source exceeds size limit")
                         hash_value.update(block)
                         dst.write(block)
+                    after = os.fstat(src.fileno())
+                    current = p.stat()
+                    identity = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns)
+                    if identity(before) != identity(after) or identity(after) != identity(current):
+                        raise ValueError("Source changed during backup: " + item["path"])
                 if bytes_written != item["size"]:
                     raise ValueError("Source changed during backup: " + item["path"])
                 manifest_files.append({**item, "sha256": hash_value.hexdigest()})
@@ -212,7 +219,25 @@ def _effective_policy(path: str, stored: str, version: str) -> str:
     raise ValueError("Snapshot restore policy mismatch: " + path)
 
 
+def _unique_manifest_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate manifest field")
+        result[key] = value
+    return result
+
+
 def verify_backup(archive: Path) -> dict:
+    """Normalize malformed archive/encoding errors for API, GUI and CLI callers."""
+    try:
+        return _verify_backup(archive)
+    except (zipfile.BadZipFile, zipfile.LargeZipFile, UnicodeError,
+            json.JSONDecodeError, EOFError, zlib.error, RuntimeError, NotImplementedError):
+        raise ValueError("Invalid or unsupported backup archive") from None
+
+
+def _verify_backup(archive: Path) -> dict:
     archive = Path(archive)
     with zipfile.ZipFile(archive) as z:
         infos = z.infolist()
@@ -225,7 +250,9 @@ def verify_backup(archive: Path) -> dict:
         _validate_entry_info(manifest_info)
         if manifest_info.file_size > MAX_MANIFEST_BYTES:
             raise ValueError("Manifest exceeds size limit")
-        manifest = json.loads(z.read(manifest_info))
+        manifest = json.loads(z.read(manifest_info), object_pairs_hook=_unique_manifest_object)
+        if not isinstance(manifest, dict):
+            raise ValueError("Manifest must be an object")
         if manifest.get("format") != FORMAT or manifest.get("schema") != SCHEMA:
             raise ValueError("Unsupported archive format or schema")
         files = manifest.get("files")

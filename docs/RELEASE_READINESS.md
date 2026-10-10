@@ -62,6 +62,21 @@ References: [Apple flags/API](https://github.com/apple-oss-distributions/xnu/blo
 [Linux flags](https://github.com/torvalds/linux/blob/master/include/uapi/linux/fs.h),
 [Python rename semantics](https://docs.python.org/3/library/os.html#os.rename).
 
+## Completed: handled archive/I/O failures
+
+Malformed ZIPs, unsupported compression/encryption, invalid manifest encoding/JSON,
+non-object manifests and duplicate manifest fields now fail with a controlled
+validation error instead of exposing parser/ZIP tracebacks through the CLI. I/O
+errors keep their original error type. Synthetic disk-full and permission failures
+exercise backup/restore temporary cleanup and preservation of original inputs.
+
+Backup compares each open file's identity, size and modification time before/after
+copying and against the current pathname. Detected same-size modification or
+replacement aborts publication. This is per-file detection, not a transactional
+snapshot or a guarantee against modifications preserving metadata. Close REAPER
+and use stable inputs. Crash cleanup and hostile filesystem replacement remain
+outside these guarantees.
+
 ## Still required before public beta
 
 - Extend destination-length/filesystem compatibility checks where needed.
