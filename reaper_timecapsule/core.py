@@ -16,7 +16,7 @@ from pathlib import Path, PurePosixPath
 from .rules import decide
 from .inventory import build_inventory
 
-VERSION = "0.3.0-dev"
+VERSION = "0.4.0-dev"
 FORMAT = "reaper-timecapsule"
 SCHEMA = 2
 MAX_MANIFEST_BYTES = 16 * 1024 * 1024
