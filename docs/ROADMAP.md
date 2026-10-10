@@ -45,6 +45,9 @@
 - Version mismatch/unknown, missing keys and unsupported values require review.
 - Fail-closed malformed input handling; no raw unknown values in reports/errors.
 - Synthetic cross-platform tests run on the existing macOS/Windows/Linux matrix.
+- GUI Config Preview with explicit file selection, cancellation and version prompts.
+- Change counts distinguish conflicts, unchanged, source-only and target-only entries.
+- Parser rejects ambiguous indentation and unsupported control characters.
 - Issue #4 remains open: factory theme comparison, rollback and actual merge remain
   future work. No staging export or in-place writer is introduced.
 

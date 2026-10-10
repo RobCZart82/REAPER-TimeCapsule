@@ -37,6 +37,8 @@ Do not use it as your only backup. Close REAPER before any resource snapshot.
 `config-preview` compares two explicitly selected INI files and outputs a redacted
 JSON diff. Only exact approved section/key/value combinations can be candidates;
 unknown settings require review and hardware/platform/cache/private state is excluded.
+The GUI **Config Preview** button provides the same comparison with explicit file
+selection, optional version records and conflict counts.
 It never writes either file or the REAPER resource folder. No staging export or merge
 is implemented. See [configuration migration](docs/CONFIGURATION_MIGRATION.md).
 

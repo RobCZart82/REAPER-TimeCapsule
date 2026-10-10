@@ -2,10 +2,11 @@
 import json
 from pathlib import Path
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from .core import VERSION, default_resource, make_backup, preview, preview_backup, restore_backup, scan
 from .midi_validation import validate_midi_workflow
+from .config_migration import preview_migration
 from .reapack_profile import inspect_registry, parse_profile
 
 
@@ -39,6 +40,7 @@ class App(tk.Tk):
                 "profile": parse_profile(Path(self.source.get()) / "reapack.ini"),
                 "registry": inspect_registry(Path(self.source.get()) / "ReaPack" / "registry.db"),
             })),
+            ("Config Preview", self._config_preview),
             ("Backup", lambda: self._do(lambda: make_backup(self.source.get(), self.archive.get()))),
             ("Verify", lambda: self._do(lambda: preview_backup(self.archive.get()))),
             ("Restore", self._restore),
@@ -66,6 +68,42 @@ class App(tk.Tk):
             self.log.see("end")
         except Exception as exc:
             messagebox.showerror("TimeCapsule error", str(exc))
+
+    def _config_preview(self):
+        """Explicit selection only; cancellation never starts comparison."""
+        options = {"parent": self, "filetypes": [("INI files", "*.ini"), ("All files", "*")]}
+        source = filedialog.askopenfilename(title="Select old reaper.ini (read-only)", **options)
+        if not source:
+            return
+        target = filedialog.askopenfilename(title="Select clean target reaper.ini (read-only)", **options)
+        if not target:
+            return
+        source_version = simpledialog.askstring(
+            "Source REAPER version", "Version from your source installation records (e.g. 7.82).\n"
+            "Leave blank if unknown; approved preferences will require review.", parent=self)
+        if source_version is None:
+            return
+        target_version = simpledialog.askstring(
+            "Target REAPER version", "Version from your target installation records (e.g. 7.82).\n"
+            "Leave blank if unknown. Preview does not modify either configuration.", parent=self)
+        if target_version is None:
+            return
+        self._do(lambda: self._configuration_report(preview_migration(
+            source, target, source_version=source_version.strip() or None,
+            target_version=target_version.strip() or None)))
+
+    @staticmethod
+    def _configuration_report(report):
+        """Keep safety and conflict information visible in the existing report pane."""
+        return {
+            "Configuration preview": "Read-only; neither file has been modified.",
+            "Version provenance": "Caller supplied; executable versions are not verified.",
+            "Version compatible": report["version_compatible"],
+            "Summary": report["summary"],
+            "Changes": report["changes"],
+            "Entries": report["entries"],
+            "Next step": "Review conflicts manually. No merge or export is available.",
+        }
 
     def _restore(self):
         if messagebox.askyesno("Restore", "Restore to a NEW folder? Existing REAPER files will NOT be modified."):

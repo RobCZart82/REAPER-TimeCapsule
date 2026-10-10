@@ -102,6 +102,21 @@ class ConfigurationMigrationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             preview_migration(link, self.new)
 
+    def test_control_characters_and_ambiguous_headers_fail_closed(self):
+        for data in ('[REAPER]\nx=PRIVATE\x1b[31m', '[REAPER]\ntinttcp=0\n tinttcp=1',
+                     '[REAPER]\nx=1\n[extra]=PRIVATE', '[[REAPER]]\ntinttcp=0',
+                     '[REAPER]\nkey[alias]=PRIVATE', '[REAPER]\nkey\talias=PRIVATE'):
+            with self.subTest(data=data):
+                self.write(data)
+                with self.assertRaises(ValueError) as error:
+                    self.preview()
+                self.assertNotIn('PRIVATE', str(error.exception))
+
+    def test_changes_summary_includes_unchanged_and_conflicts(self):
+        report = self.preview()
+        self.assertEqual(report['changes'], {'same': 1, 'conflict': 1,
+                                             'source_only': 0, 'target_only': 0})
+
     def test_cli_json_and_safe_error(self):
         command = [sys.executable, '-m', 'reaper_timecapsule', 'config-preview',
                    str(self.old), str(self.new), '--source-version', '7.82', '--target-version', '7.82']
