@@ -4,6 +4,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
+from .background import BackgroundTask
 from .core import VERSION, default_resource, make_backup, preview, preview_backup, restore_backup, scan
 from .midi_validation import validate_midi_workflow
 from .config_migration import preview_migration
@@ -15,6 +16,9 @@ class App(tk.Tk):
         super().__init__()
         self.title("REAPER TimeCapsule " + VERSION)
         self.geometry("1080x570")
+        self.runner = BackgroundTask()
+        self.interactive = []
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.source = tk.StringVar(value=str(default_resource()))
         self.archive = tk.StringVar()
         self.destination = tk.StringVar(value=str(Path.home() / "Desktop" / "TimeCapsule-Restored"))
@@ -29,8 +33,11 @@ class App(tk.Tk):
             row = ttk.Frame(body)
             row.pack(fill="x", pady=5)
             ttk.Label(row, text=label, width=26).pack(side="left")
-            ttk.Entry(row, textvariable=variable).pack(side="left", fill="x", expand=True)
-            ttk.Button(row, text="Browse", command=lambda v=variable, c=chooser: v.set(c() or v.get())).pack(side="left", padx=8)
+            entry = ttk.Entry(row, textvariable=variable)
+            entry.pack(side="left", fill="x", expand=True)
+            browse = ttk.Button(row, text="Browse", command=lambda v=variable, c=chooser: v.set(c() or v.get()))
+            browse.pack(side="left", padx=8)
+            self.interactive.extend((entry, browse))
         row = ttk.Frame(body)
         row.pack(anchor="w", pady=17)
         for label, fn in (
@@ -41,13 +48,19 @@ class App(tk.Tk):
                 "registry": inspect_registry(Path(self.source.get()) / "ReaPack" / "registry.db"),
             })),
             ("Config Preview", self._config_preview),
-            ("Backup", lambda: self._do(lambda: make_backup(self.source.get(), self.archive.get()))),
-            ("Verify", lambda: self._do(lambda: preview_backup(self.archive.get()))),
+            ("Backup", lambda: self._start_io("backup")),
+            ("Verify", lambda: self._start_io("verify")),
             ("Restore", self._restore),
         ):
-            ttk.Button(row, text=label, command=fn).pack(side="left", padx=5)
+            button = ttk.Button(row, text=label, command=fn)
+            button.pack(side="left", padx=5)
+            self.interactive.append(button)
         ttk.Label(body, text="REAPER must be closed. Restore NEVER overwrites an existing folder.").pack(anchor="w")
         ttk.Label(body, text="Machine-dependent and uncertain files are isolated under NeedsReview/.").pack(anchor="w")
+        self.status = tk.StringVar(value="Ready")
+        ttk.Label(body, textvariable=self.status).pack(anchor="w")
+        self.progress = ttk.Progressbar(body, mode="indeterminate")
+        self.progress.pack(fill="x", pady=4)
         self.log = tk.Text(body, height=10, wrap="word")
         self.log.pack(fill="both", expand=True, pady=10)
         self.log.insert("end", "Scan the source before creating a backup.\n")
@@ -105,6 +118,55 @@ class App(tk.Tk):
             "Next step": "Review conflicts manually. No merge or export is available.",
         }
 
+    def _set_busy(self, busy, label=""):
+        for widget in self.interactive:
+            widget.configure(state="disabled" if busy else "normal")
+        self.status.set(label if busy else "Ready")
+        if busy:
+            self.progress.start(12)
+        else:
+            self.progress.stop()
+
+    def _start_io(self, operation):
+        if self.runner.active:
+            return
+        # Capture Tk values on the main thread. Workers see ordinary strings only.
+        source, archive, destination = self.source.get(), self.archive.get(), self.destination.get()
+        actions = {
+            "backup": lambda: make_backup(source, archive),
+            "verify": lambda: preview_backup(archive),
+            "restore": lambda: restore_backup(archive, destination),
+        }
+        self._set_busy(True, operation.capitalize() + " in progress — please wait")
+        try:
+            self.runner.submit(actions[operation])
+        except Exception as exc:
+            self._set_busy(False)
+            messagebox.showerror("TimeCapsule error", str(exc))
+            return
+        self.after(100, self._poll_io)
+
+    def _poll_io(self):
+        result = self.runner.poll()
+        if result is None:
+            self.after(100, self._poll_io)
+            return
+        self._set_busy(False)
+        kind, payload = result
+        if kind == "error":
+            self.status.set("Operation failed")
+            messagebox.showerror("TimeCapsule error", str(payload))
+        else:
+            self.status.set("Operation completed")
+            self._do(lambda: payload)
+
+    def _on_close(self):
+        if self.runner.active:
+            messagebox.showinfo("Operation in progress", "Wait for the operation to finish before closing. "
+                                "Safe cancellation is not yet available.")
+            return
+        self.destroy()
+
     def _restore(self):
         if messagebox.askyesno("Restore", "Restore to a NEW folder? Existing REAPER files will NOT be modified."):
-            self._do(lambda: restore_backup(self.archive.get(), self.destination.get()))
+            self._start_io("restore")

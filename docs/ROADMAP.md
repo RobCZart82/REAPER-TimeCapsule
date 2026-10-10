@@ -100,6 +100,12 @@
 - Disk-full, permissions and restore-write failures covered by cleanup tests.
 - Safe cancellation and whole-profile consistency remain separate work.
 
+## Release readiness: responsive GUI I/O
+- Background backup/verify/restore with main-thread Tk reads and result rendering.
+- Single-job exclusion, input/button locking and indeterminate busy indicator.
+- Active-job close guard; no forced cancellation of filesystem writes.
+- Safe cancellation, progress counts, background audits and native visual QA remain.
+
 ## Later
 - Native macOS app packaging and Windows executable + notarization/signing plans
 - Managed backups and rollback snapshots; external drive workflows

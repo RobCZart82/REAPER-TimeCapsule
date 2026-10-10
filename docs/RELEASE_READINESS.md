@@ -77,11 +77,25 @@ snapshot or a guarantee against modifications preserving metadata. Close REAPER
 and use stable inputs. Crash cleanup and hostile filesystem replacement remain
 outside these guarantees.
 
+## Completed: responsive GUI backup/verify/restore
+
+These three I/O operations use a single background worker. Tk field values are
+captured on the UI thread; workers do not access Tk. Results/errors are delivered
+through a queue and rendered by UI polling. Inputs and operation buttons are
+locked until completion, with an indeterminate busy indicator. It does not show
+percent completion or an ETA. Other audits/scans still run synchronously.
+
+Window closing is blocked during active work to avoid interrupting a write.
+Safe cancellation is not implemented; users must wait. Headless worker/GUI tests
+cover single-job exclusion, captured inputs, pending/success/error handling, failed
+thread startup and the close guard. Native screen layout and dialogs have not been
+visually validated by these tests.
+
 ## Still required before public beta
 
 - Extend destination-length/filesystem compatibility checks where needed.
 - Broaden tests for disk-full, permissions, cancellation and changing inputs.
-- Introduce a usable GUI flow with background work, progress and safe cancellation.
+- Complete the GUI flow, background audits/scans, meaningful progress and safe cancellation.
 - Validate supported resources in real temporary REAPER profiles on macOS/Windows.
 - Build and test standalone macOS/Windows distributions without Python installed.
 - Choose source license, record dependency licenses and settle signing/release policy.
