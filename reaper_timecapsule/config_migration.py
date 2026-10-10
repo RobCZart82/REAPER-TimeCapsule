@@ -29,18 +29,22 @@ def _read(path):
         text = raw.decode('utf-8-sig')
     except UnicodeError:
         raise ValueError('Configuration must be UTF-8; convert a private copy first') from None
-    if '\x00' in text:
-        raise ValueError('Configuration contains NUL bytes')
+    if any(ord(char) < 32 and char not in '\r\n\t' for char in text):
+        raise ValueError('Configuration contains unsupported control characters')
     section = None
     sections = set()
     entries = {}
     for number, line in enumerate(text.splitlines(), 1):
+        original = line
         line = line.strip()
         if not line or line.startswith((';', '#')):
             continue
+        if original[:1].isspace():
+            raise ValueError(f'Indented or continued entry at line {number}')
         if line.startswith('[') and line.endswith(']'):
             section = line[1:-1].strip().casefold()
-            if not section or section == 'default' or section in sections:
+            if (not section or section == 'default' or section in sections
+                    or any(char in section for char in '[]=\t')):
                 raise ValueError(f'Ambiguous section at line {number}')
             sections.add(section)
         elif line.startswith('['):
@@ -49,7 +53,7 @@ def _read(path):
             key, value = line.split('=', 1)
             key = key.strip().casefold()
             identity = (section, key)
-            if not key or identity in entries:
+            if not key or identity in entries or any(char in key for char in '[]\t'):
                 raise ValueError(f'Ambiguous key at line {number}')
             entries[identity] = value.strip()
         else:
@@ -95,5 +99,7 @@ def preview_migration(source, target, *, source_version=None, target_version=Non
         rows.append(row)
     return dict(schema=1, read_only=True, writes_performed=False,
                 version_compatible=known_version, entries=rows,
+                changes={change: sum(r['change'] == change for r in rows)
+                         for change in ('same', 'conflict', 'source_only', 'target_only')},
                 summary={status: sum(r['status'] == status for r in rows)
                          for status in ('candidate', 'review', 'exclude')})

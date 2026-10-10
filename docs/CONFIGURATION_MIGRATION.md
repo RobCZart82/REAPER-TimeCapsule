@@ -1,10 +1,13 @@
 # Intelligent Configuration Migration — 0.6.0-dev
 
-This milestone is a **read-only comparison**, available through CLI and the Python
+This milestone is a **read-only comparison**, available through CLI, the GUI **Config Preview** button and the Python
 `preview_migration` API. It does not modify either input, merge configuration,
 export a staged INI, invoke REAPER, inspect a DMG, or scan the user's resource folder.
-The GUI does not yet expose this command. JSON is printed to stdout; callers may
-save that redacted report themselves outside the active resource folder.
+The GUI asks for both files explicitly, then for source and target versions. Blank
+versions mean unknown; canceling any dialog stops the comparison. Results appear
+in the existing report pane with status and change counts. CLI JSON is printed to
+stdout; callers may save that redacted report themselves outside the active
+resource folder.
 
 ```sh
 python -m reaper_timecapsule config-preview old.ini clean.ini \
@@ -51,14 +54,17 @@ and key names remain visible, so treat reports as private metadata.
 - UTF-8 with optional BOM, LF/CRLF and full-line `;`/`#` comments supported.
 - Maximum 4 MiB per input. Legacy encodings require conversion of a private copy.
 - Duplicate case-insensitive sections/keys, DEFAULT inheritance, NUL, bare keys,
-  malformed section headers and continuation lines fail closed.
+  malformed section headers, indented entries/continuation lines and unsupported
+  control characters fail closed. Convert indented INIs in a private copy before use.
 - No interpolation, inline-comment stripping, execution, network or write calls.
 - Parsing errors disclose line numbers, not input content.
 - Inputs should be stable private copies. There is no transactional snapshot or
   guarantee against another process changing files while they are read.
 
 Tests use only synthetic data, including macOS, Windows and UNC paths, version
-changes, sensitive values, malformed files, CLI failures and byte/mtime preservation.
+changes, sensitive values, malformed files, CLI failures and byte/mtime preservation. Headless GUI interaction tests cover all cancellation
+points, blank versions, sensitive-value omission and safe error reporting. These
+mocked interaction tests do not verify native dialog rendering or screen layout.
 The existing CI runs them on macOS/Windows/Linux with Python 3.10 and 3.12.
 
 ## Remaining scope of issue #4
