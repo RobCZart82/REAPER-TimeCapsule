@@ -4,7 +4,7 @@ Cross-platform (macOS / Windows / Linux) **experimental** REAPER resource snapsh
 This is a **development preview**, not a complete one-click workflow migration utility.
 Do not use it as your only backup. Close REAPER before any resource snapshot.
 
-## Current milestone (`0.5.0-dev`)
+## Current milestone (`0.6.0-dev`)
 
 - Uses a policy engine to classify files as `keep`, `review`, `regenerate`, or `exclude`.
 - Preserves portable REAPER Scripts, MenuSets, KeyMaps, ReaPack state, SWS configuration,
@@ -32,9 +32,18 @@ Do not use it as your only backup. Close REAPER before any resource snapshot.
 - Never starts a ReaPack synchronization, writes the installed-package
   registry or installs a native extension without approval.
 
+## Intelligent Configuration Migration (read-only preview)
+
+`config-preview` compares two explicitly selected INI files and outputs a redacted
+JSON diff. Only exact approved section/key/value combinations can be candidates;
+unknown settings require review and hardware/platform/cache/private state is excluded.
+It never writes either file or the REAPER resource folder. No staging export or merge
+is implemented. See [configuration migration](docs/CONFIGURATION_MIGRATION.md).
+
 ## Run
 
 ```bash
+python -m reaper_timecapsule config-preview old.ini clean.ini --source-version 7.82 --target-version 7.82
 python -m reaper_timecapsule scan
 python -m reaper_timecapsule midi-audit
 python -m reaper_timecapsule reapack-audit

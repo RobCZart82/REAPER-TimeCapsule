@@ -39,6 +39,15 @@
 - Exclude old `ReaPack/cache/` downloaded indexes from clean migrations.
 - Add `reapack-audit` CLI / GUI button and cross-platform regression tests.
 
+## Implemented in 0.6.0-dev (Intelligent Configuration Migration: preview)
+- Explicit-file, read-only reaper.ini diff with exact per-section/key/value allowlist.
+- Appearance candidates, excluded machine/private state, unknown-key review.
+- Version mismatch/unknown, missing keys and unsupported values require review.
+- Fail-closed malformed input handling; no raw unknown values in reports/errors.
+- Synthetic cross-platform tests run on the existing macOS/Windows/Linux matrix.
+- Issue #4 remains open: factory theme comparison, rollback and actual merge remain
+  future work. No staging export or in-place writer is introduced.
+
 ## Later
 - Native macOS app packaging and Windows executable + notarization/signing plans
 - Managed backups and rollback snapshots; external drive workflows

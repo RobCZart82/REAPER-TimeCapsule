@@ -6,6 +6,7 @@ from pathlib import Path
 from .core import default_resource, make_backup, preview, preview_backup, restore_backup, scan
 from .midi_validation import validate_midi_workflow
 from .reapack_profile import inspect_registry, parse_profile
+from .config_migration import preview_migration
 
 
 def main():
@@ -25,10 +26,19 @@ def main():
     midi_cmd.add_argument("source", nargs="?", type=Path, default=default_resource())
     rp_cmd = commands.add_parser("reapack-audit", help="Inspect ReaPack repository options and installed package registry")
     rp_cmd.add_argument("source", nargs="?", type=Path, default=default_resource())
+    migration_cmd = commands.add_parser("config-preview", help="Read-only reaper.ini migration diff")
+    migration_cmd.add_argument("source", type=Path)
+    migration_cmd.add_argument("target", type=Path)
+    migration_cmd.add_argument("--source-version")
+    migration_cmd.add_argument("--target-version")
     commands.add_parser("gui", help="Open desktop GUI")
     args = parser.parse_args()
     try:
-        if args.command == "reapack-audit":
+        if args.command == "config-preview":
+            result = preview_migration(args.source, args.target,
+                                       source_version=args.source_version,
+                                       target_version=args.target_version)
+        elif args.command == "reapack-audit":
             result = {
                 "profile": parse_profile(args.source / "reapack.ini"),
                 "registry": inspect_registry(args.source / "ReaPack" / "registry.db"),
