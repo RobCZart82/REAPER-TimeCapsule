@@ -9,6 +9,7 @@ with embedded credentials or query tokens.
 from __future__ import annotations
 
 import configparser
+from contextlib import closing
 from pathlib import Path
 import re
 import sqlite3
@@ -236,7 +237,7 @@ def inspect_registry(database_path: Path) -> dict:
     # database-controlled string into SQL.
     uri = database_path.resolve().as_uri() + "?mode=ro&immutable=1"
     try:
-        with sqlite3.connect(uri, uri=True, timeout=1.0) as db:
+        with closing(sqlite3.connect(uri, uri=True, timeout=1.0)) as db:
             db.execute("PRAGMA query_only=ON")
             names = {x[0] for x in db.execute(
                 "SELECT name FROM sqlite_master WHERE type='table'"
