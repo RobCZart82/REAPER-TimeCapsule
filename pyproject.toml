@@ -14,3 +14,6 @@ keywords = ["reaper", "backup", "restore", "ReaPack", "SWS"]
 
 [tool.setuptools.packages.find]
 include = ["reaper_timecapsule*"]
+
+[tool.setuptools.package-data]
+reaper_timecapsule = ["assets/*"]

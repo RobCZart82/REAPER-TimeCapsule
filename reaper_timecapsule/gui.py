@@ -10,12 +10,17 @@ from .core import VERSION, default_resource, make_backup, preview, preview_backu
 from .midi_validation import validate_midi_workflow
 from .config_migration import preview_migration
 from .reapack_profile import inspect_registry, parse_profile
+from .about import AboutWindow, brand_image
 
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("REAPER TimeCapsule " + VERSION)
+        self.app_icon = brand_image(self, 'timecapsule-128.png')
+        self.small_icon = brand_image(self, 'timecapsule-32.png')
+        self.iconphoto(True, self.app_icon, self.small_icon)
+        self.about_window = None
         self.runner = BackgroundTask()
         self.interactive = []
         self.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -24,7 +29,10 @@ class App(tk.Tk):
         self.destination = tk.StringVar(value=str(Path.home() / "Desktop" / "TimeCapsule-Restored"))
         body = ttk.Frame(self, padding=(25, 20))
         body.pack(fill="both", expand=True)
-        ttk.Label(body, text="REAPER TimeCapsule — Smart Backup", font=("Arial", 17, "bold")).pack(anchor="w", pady=(0, 14))
+        header = ttk.Frame(body)
+        header.pack(fill="x", pady=(0, 14))
+        ttk.Label(header, text="REAPER TimeCapsule — Smart Backup", font=("Arial", 17, "bold")).pack(side="left")
+        ttk.Button(header, text="About", command=self._show_about).pack(side="right")
         paths = ttk.Frame(body)
         paths.pack(fill="x")
         paths.columnconfigure(1, weight=1)
@@ -125,6 +133,13 @@ class App(tk.Tk):
             scrollbar.grid_remove()
         elif visible and not scrollbar.grid_info():
             scrollbar.grid()
+
+    def _show_about(self):
+        if self.about_window is not None and self.about_window.winfo_exists():
+            self.about_window.lift()
+            return self.about_window
+        self.about_window = AboutWindow(self)
+        return self.about_window
 
     def _begin_vertical_resize(self, event):
         self._resize_start = (event.y_root, self.winfo_height())

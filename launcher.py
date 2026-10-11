@@ -62,6 +62,16 @@ def self_test(report):
             raise AssertionError('Cancellation failed')
         app = App()
         wait_for_geometry(app, app.default_width, app.minimum_height)
+        about = app._show_about()
+        app.update()
+        assert app._show_about() is about
+        assert all(image.width() > 0 and image.height() > 0 for image in about.images.values())
+        about.event_generate('<Escape>')
+        app.update()
+        if about.winfo_exists():
+            about.destroy()
+        assert app._show_about() is not about
+        app.about_window.destroy()
         assert tuple(map(int, app.resizable())) == (1, 1)
         width, height = app.winfo_width(), app.winfo_height()
         first, last = app.action_buttons[0], app.action_buttons[-1]

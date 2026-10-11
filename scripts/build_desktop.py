@@ -20,7 +20,10 @@ def main():
     if sys.platform not in ('darwin', 'win32'):
         raise SystemExit('Desktop beta builds support macOS and Windows')
     run(sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir', '--windowed',
-        '--noupx', '--name', NAME, '--add-data', 'LICENSE:.', '--add-data', 'README.md:.', 'launcher.py')
+        '--noupx', '--name', NAME, '--icon', str(ROOT / 'reaper_timecapsule/assets' /
+         ('timecapsule.icns' if sys.platform == 'darwin' else 'timecapsule.ico')),
+        '--add-data', 'reaper_timecapsule/assets:reaper_timecapsule/assets',
+        '--add-data', 'LICENSE:.', '--add-data', 'README.md:.', 'launcher.py')
     executable = (ROOT / 'dist' / (NAME + '.app') / 'Contents/MacOS' / NAME if sys.platform == 'darwin'
                   else ROOT / 'dist' / NAME / (NAME + '.exe'))
     report = ROOT / 'work' / 'bundled-selftest.json'

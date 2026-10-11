@@ -58,7 +58,9 @@ minimum width that keeps the action row visible. Shared columns align the resour
 fields and Browse buttons. Output lines do not wrap; horizontal and vertical
 scrollbars appear only when needed. The bottom ↓ handle expands the output area
 without changing the current width. These layout changes are not included in
-the published 0.9.0-beta.2 packages.
+the published 0.9.0-beta.2 packages. Main also adds a floppy application icon
+with the REAPER symbol and a non-modal About window using the creator's GYR mark
+and handwritten signature, without a civil-name text credit.
 
 ## System requirements
 

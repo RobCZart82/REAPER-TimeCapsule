@@ -59,7 +59,9 @@ a minimális szélesség láthatóan tartja a gombsort. Közös oszlopok igazít
 útvonalmezőket és a Browse gombokat. A kimeneti sorok nem tördelődnek; a vízszintes
 és függőleges görgetősáv csak szükség esetén jelenik meg. Az alsó ↓ fogantyú
 a jelenlegi szélesség megtartásával növeli a kiírás területét. Ezek az elrendezési
-változások még nincsenek benne a publikált 0.9.0-beta.2 csomagokban.
+változások még nincsenek benne a publikált 0.9.0-beta.2 csomagokban. A main ágon
+floppy alkalmazásikon is készül a REAPER jelével, valamint nem modális About ablak
+a készítő GYR-logójával és kézírásos szignójával, szöveges polgári név nélkül.
 
 ## Rendszerkövetelmények
 
