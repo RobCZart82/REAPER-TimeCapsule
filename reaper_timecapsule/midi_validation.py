@@ -233,6 +233,14 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
 
     return {
         "status": status,
+        "toolbar_icon_dependencies": {
+            "status": "not-checked",
+            "reason": "Toolbar button-to-icon bindings are not parsed; icon-file presence does not prove that referenced icons resolve.",
+        },
+        "runtime_validation": {
+            "status": "not-performed",
+            "reason": "No REAPER action registration, extension loading, script execution or toolbar activation was tested.",
+        },
         "action_definitions": len(definitions),
         "script_registrations_checked": checked_scripts,
         "menu_custom_references": sum(x["command"].startswith("_") for x in references),
@@ -252,5 +260,5 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
             {"command": a, "reason": why} for a, why in sorted(script_problems)[:MAX_ISSUES]
         ],
         "parse_problems": problems[:MAX_ISSUES],
-        "note": "Static inspection only: verify action registration and native extensions in REAPER after installing.",
+        "note": "Static inspection only. Toolbar/icon bindings are not checked; verify action registration, icons and native extensions in REAPER after installing.",
     }
