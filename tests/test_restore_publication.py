@@ -31,6 +31,19 @@ class RestorePublicationTests(unittest.TestCase):
         self.assertEqual(list(self.destination.iterdir()), [])
         self.assertEqual(list(self.root.glob('.timecapsule-restore-*')), [])
 
+    def test_restore_rejects_empty_or_directory_snapshot_before_staging(self):
+        for archive in ('', self.root):
+            with self.subTest(archive=archive):
+                with self.assertRaisesRegex(ValueError, 'snapshot ZIP|snapshot path'):
+                    restore_backup(archive, self.destination)
+                self.assertFalse(self.destination.exists())
+                self.assertEqual(list(self.root.glob('.timecapsule-restore-*')), [])
+
+    def test_verify_rejects_directory_with_actionable_message(self):
+        from reaper_timecapsule.core import verify_backup
+        with self.assertRaisesRegex(ValueError, 'snapshot path must be a ZIP file'):
+            verify_backup(self.root)
+
     def test_competing_file_is_preserved(self):
         def compete(source, target):
             Path(target).write_bytes(b'competitor')

@@ -397,10 +397,24 @@ def _unique_manifest_object(pairs):
 def verify_backup(archive: Path, *, control=None) -> dict:
     """Normalize malformed archive/encoding errors for API, GUI and CLI callers."""
     try:
-        return _verify_backup(archive, control=control)
+        return _verify_backup(_require_snapshot_file(archive), control=control)
     except (zipfile.BadZipFile, zipfile.LargeZipFile, UnicodeError,
             json.JSONDecodeError, EOFError, zlib.error, RuntimeError, NotImplementedError):
         raise ValueError("Invalid or unsupported backup archive") from None
+
+
+def _require_snapshot_file(archive) -> Path:
+    """Resolve a selected snapshot and reject empty paths/directories clearly."""
+    raw_path = os.fspath(archive)
+    if not raw_path or not raw_path.strip():
+        raise ValueError("Choose an existing snapshot ZIP file first.")
+    try:
+        path = Path(raw_path).expanduser().resolve(strict=True)
+    except FileNotFoundError:
+        raise ValueError("The selected snapshot ZIP file does not exist.") from None
+    if not path.is_file():
+        raise ValueError("The selected snapshot path must be a ZIP file, not a folder.")
+    return path
 
 
 def _verify_backup(archive: Path, *, control=None) -> dict:
@@ -488,7 +502,7 @@ def restore_backup(archive: Path, destination: Path, *, control=None, portable_n
 
     Never merges into a running REAPER config, overwrites, or installs native plugins.
     """
-    archive = Path(archive).expanduser().resolve(strict=True)
+    archive = _require_snapshot_file(archive)
     destination = Path(destination).expanduser().absolute()
     manifest = verify_backup(archive, control=control)
     checkpoint(control, "Preparing restore")
