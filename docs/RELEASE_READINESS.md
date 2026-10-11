@@ -10,11 +10,10 @@ Time Capsule publishes it using an exclusive hard-link creation. If another proc
 has created the target file, directory or symlink, publication fails and that entry
 is preserved. The temporary link is then removed; successful publication leaves
 one verified archive. There is no check-then-rename replacement window for backup
-ZIP publication and no rename/copy fallback.
+ZIP publication. Development builds now permit a native **exclusive** rename on non-link volumes; plain overwrite-capable rename/copy is never used.
 
-A writable filesystem supporting hard links is required. FAT/exFAT and some network
-or restricted filesystems may not support this operation, so backup creation there
-fails with an explanation. Create and verify on a supported local filesystem, then
+A writable filesystem supporting hard links or native exclusive rename is required.
+Real FAT/exFAT validation remains outstanding; unsupported operations fail closed. Create and verify on a supported local filesystem, then
 manually copy the completed ZIP elsewhere if needed. No claim of crash durability
 or protection against hostile concurrent replacement of staging paths is made.
 A process crash may leave a temporary file. Permission and cleanup failures can

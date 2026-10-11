@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import errno
 import json
 import os
 import platform
@@ -19,7 +20,7 @@ from pathlib import Path, PurePosixPath
 
 from .rules import decide
 from .resource_budget import preflight_zip, require_space
-from .publication import publish_directory
+from .publication import publish_directory, publish_file, require_path_capacity
 from .operation import checkpoint
 from .inventory import build_inventory, inventory_input_limit
 from .safe_paths import trusted_resource_file
@@ -305,7 +306,9 @@ def make_backup(source: Path, destination: Path, *, control=None, native_names=F
                         raise ValueError("Source changed during backup: " + item["path"])
                 if bytes_written != item["size"]:
                     raise ValueError("Source changed during backup: " + item["path"])
-                record = {**item, "sha256": hash_value.hexdigest()}
+                record = {**item, "sha256": hash_value.hexdigest(),
+                          "source_metadata": {"mtime_ns": before.st_mtime_ns,
+                                              "permissions": stat.S_IMODE(before.st_mode)}}
                 if native_names:
                     record["archive_member"] = entry
                 manifest_files.append(record)
@@ -330,14 +333,17 @@ def make_backup(source: Path, destination: Path, *, control=None, native_names=F
         # Atomic exclusive publication: linking fails if ANY destination entry
         # exists, including a concurrently created file or dangling symlink.
         # Staging is in the same directory/filesystem. Never fall back to rename
-        # or copying: unsupported filesystems must fail without risking overwrite.
+        # or copying. Non-link volumes may use the native exclusive-rename primitive.
         try:
             os.link(staging, destination)
         except FileExistsError:
             raise
         except OSError as exc:
-            raise OSError("Cannot safely publish backup: choose a writable destination "
-                          "filesystem supporting hard links") from exc
+            if (exc.errno not in (errno.ENOTSUP, errno.EOPNOTSUPP, errno.EPERM, errno.ENOSYS)
+                    and getattr(exc, "winerror", None) not in (1, 50)):
+                raise
+            # Never plain POSIX rename or copy: only a no-replace native primitive.
+            publish_file(staging, destination)
         return {"archive": str(destination), "saved": len(selected), "omitted": len(items) - len(selected),
                 "skipped_entries": [x for x in items if x.get("kind") in ("link", "special")]}
     finally:
@@ -496,6 +502,21 @@ def restore_backup(archive: Path, destination: Path, *, control=None, portable_n
     parent = destination.parent.resolve(strict=True)
     if not parent.is_dir():
         raise ValueError("Restore parent must be a directory")
+    relative_targets = []
+    for item in manifest['files']:
+        effective = _effective_policy(item['path'], item['policy'], manifest.get('app_version', ''))
+        if effective in ('exclude', 'regenerate'):
+            continue
+        if native_names and portable_names:
+            relative = 'NeedsReview/RecoveredResources/' + _archive_member(item, 3).split('/')[-1]
+        else:
+            relative = ('REAPER/' if effective == 'keep' else 'NeedsReview/') + item['path']
+        # Include both the published path and a conservative temporary-name allowance.
+        relative_targets.extend([destination.name + '/' + relative,
+                                 '.timecapsule-restore-' + 'x' * 32 + '/' + relative])
+    relative_targets.extend([destination.name + '/RESTORE_REPORT.json',
+                             '.timecapsule-restore-' + 'x' * 32 + '/RESTORE_REPORT.json'])
+    require_path_capacity(parent, relative_targets)
     require_space(parent, sum(item["size"] for item in manifest["files"])
                   + len(manifest["files"]) * 4096 + MAX_MANIFEST_BYTES)
     staging = Path(tempfile.mkdtemp(prefix=".timecapsule-restore-", dir=parent))
@@ -543,6 +564,7 @@ def restore_backup(archive: Path, destination: Path, *, control=None, portable_n
             "legacy_cache_skipped": counts["regenerate"],
             "instructions": "Copy REAPER/ into a CLEAN, CLOSED REAPER resource directory only after reviewing conflicts. NeedsReview/ is NOT automatically installed.",
             "inventory": manifest.get("inventory", {}),
+            "metadata_policy": "Source timestamp/permissions are informational; restore uses new-file defaults.",
             "filename_mapping": mappings,
             "filename_recovery": "isolated-portable-names" if mappings else "original-names",
         }

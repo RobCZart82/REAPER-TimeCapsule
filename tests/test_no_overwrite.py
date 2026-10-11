@@ -64,7 +64,7 @@ class AtomicBackupPublicationTests(unittest.TestCase):
         import errno
         from unittest.mock import patch
         with patch('reaper_timecapsule.core.os.link', side_effect=OSError(errno.ENOTSUP, 'No hard links')), \
-             patch('reaper_timecapsule.core.os.rename', side_effect=AssertionError('unsafe fallback')):
+             patch('reaper_timecapsule.core.publish_file', side_effect=OSError(errno.ENOTSUP, 'No exclusive rename')):
             with self.assertRaises(OSError):
                 make_backup(self.source, self.archive)
         self.assertFalse(self.archive.exists())
