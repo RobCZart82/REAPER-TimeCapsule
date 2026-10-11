@@ -84,8 +84,16 @@ Ezek a változások a main ágon vannak, még nem a publikált bétában.
 - A háttérben futó Backup, Verify és Restore fázisonként mutatja az előrehaladást,
   és biztonságos pontokon megszakítható a Cancel gombbal. Egyszerre egy művelet fut;
   bezárás előtt meg kell várni a befejezést vagy a takarítást.
+- A grafikus Scan / Preview, MIDI Audit és ReaPack Audit közös háttérfeldolgozóban fut,
+  és biztonságos ellenőrzési pontokon megszakítható. A csak megjelenítésre szolgáló
+  GUI-jelentés legfeljebb 256 KiB, legfeljebb 8 KiB-os részekben jelenik meg; a hosszú
+  értékek és listák rövidülhetnek. A teljes felmérési szabálylista a **File policies**
+  nézetben érhető el, a parancssori jelentés nem rövidül.
 - A statikus MIDI Audit összeveti a menük Custom Action hivatkozásait a keymapekkel
-  és a `reaper-kb.ini` fájllal; jelzi a hiányzó műveleteket és scriptfájlokat, illetve a nem hordozható scriptútvonalakat.
+  és a `reaper-kb.ini` fájllal; jelzi a duplikált/ütköző definíciókat, függőségi
+  ciklusokat, hiányzó műveleteket vagy scriptfájlokat, nem hordozható scriptútvonalakat,
+  fel nem oldott hivatkozásokat és ellenőrizetlen numerikus vagy kiegészítőparancsokat.
+  Az eszköztár/ikon kötéseit nem ellenőrzi, és műveleteket nem futtat a REAPER-ben.
 - A ReaPack 1.x audit kiolvassa a repositoryk nevét, sorrendjét, URL-jét, engedélyezési
   állapotát, egyedi automatikus telepítési felülbírálásait és globális beállításait.
   A telepített csomagok, verziók és rögzített verziók leltára csak olvasással készül az SQLite-nyilvántartásból.
@@ -185,9 +193,10 @@ maradnak; a hordozható mentés az archívum létrehozása előtt leáll. Nincs 
 kihagyás vagy átnevezés.
 
 A megszakítás biztonságos ellenőrzési pontokra vár, és a végső közzététel után is
-érkezhet; a már elkészült eredményt sikeresként jelzi. Az előrehaladás fázisonkénti,
-nem teljes százalék vagy időbecslés. Az auditok és más felmérések szinkron módon futnak.
-Nincs teljes tranzakciós pillanatkép, áramkimaradás elleni tartóssági vagy rosszindulatú
+érkezhet; a már elkészült eredményt sikeresként jelzi. A megszakítási kérés várhat egy
+folyamatban lévő rendszeroldali fájlolvasásra; a szálat nem állítja le kényszerítve.
+Az előrehaladás fázisonkénti, nem teljes százalék vagy időbecslés. Nincs teljes
+tranzakciós pillanatkép, áramkimaradás elleni tartóssági vagy rosszindulatú
 fájlrendszerverseny elleni garancia; a szokatlan fájlrendszerek és útvonalhossz-korlátok további ellenőrzést igényelnek.
 
 A statikus audit és sikeres CI nem igazolja minden script, téma, kiegészítő vagy
