@@ -1,7 +1,8 @@
 # Application branding
 
 The floppy artwork is an original vector composition for TimeCapsule. Its label
-uses the REAPER symbol cropped from Cockos' public website header:
+uses a vector interpretation of the REAPER symbol, following the owner-supplied
+floppy references and Cockos' public website header:
 https://www.reaper.fm/v5img/logo.jpg (retrieved 2026-10-11).
 REAPER name and logo remain the marks of their respective owner. Their use
 identifies compatibility; it does not imply endorsement or transfer their rights
@@ -17,5 +18,7 @@ are preserved. No civil name is added as About-window text.
 SVG files are retained as editable artwork sources. PNGs are pre-rendered for Tk
 (no SVG rendering dependency at runtime). High-density images are downsampled 2:1
 for About. ICO includes 16–256px sizes; ICNS includes standard macOS sizes. The
-1024px PNG is the shared source for both platform icons. Raster exports were made
-with resvg-js 2.6.2 and Pillow; those tools are not bundled in the application.
+editable SVG is rendered independently at 16–1024px, with a blue shell, upper
+metal shutter and large symbol on the lower paper label. ICO and ICNS embed those
+individual PNG sizes, including Retina variants. Raster exports were made with
+resvg-js 2.6.2; it is not bundled in the application.
