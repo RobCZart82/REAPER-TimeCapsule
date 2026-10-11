@@ -150,12 +150,13 @@ class ConfigurationStagingTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 verify_staging(self.archive)
 
-    def test_partial_write_failure_cleans_up_owned_archive(self):
+    def test_partial_write_exception_cleans_up_owned_archive(self):
         original_open = Path.open
         archive_path = self.archive
         class BrokenWriter:
-            def __init__(self, stream):
+            def __init__(self, stream, failure):
                 self.stream = stream
+                self.failure = failure
             def __enter__(self):
                 return self
             def __exit__(self, *args):
@@ -164,14 +165,16 @@ class ConfigurationStagingTests(unittest.TestCase):
                 return self.stream.fileno()
             def write(self, content):
                 self.stream.write(content[:8])
-                raise OSError('simulated full disk')
-        def open_file(path, mode='r', *args, **kwargs):
-            stream = original_open(path, mode, *args, **kwargs)
-            return BrokenWriter(stream) if path == archive_path and mode == 'xb' else stream
-        with patch.object(Path, 'open', open_file):
-            with self.assertRaises(OSError):
-                self.export()
-        self.assertFalse(self.archive.exists())
+                raise self.failure('simulated interrupted write')
+        for failure in (OSError, RuntimeError, KeyboardInterrupt):
+            with self.subTest(failure=failure.__name__):
+                def open_file(path, mode='r', *args, **kwargs):
+                    stream = original_open(path, mode, *args, **kwargs)
+                    return BrokenWriter(stream, failure) if path == archive_path and mode == 'xb' else stream
+                with patch.object(Path, 'open', open_file):
+                    with self.assertRaises(failure):
+                        self.export()
+                self.assertFalse(self.archive.exists())
 
     def test_duplicate_manifest_fields_rejected(self):
         self.export()

@@ -102,7 +102,7 @@ def export_preferences(source, target, archive, *, selections, source_version=No
             metadata = os.fstat(stream.fileno())
             owned = metadata.st_dev, metadata.st_ino
             stream.write(buffer.getvalue())
-    except OSError:
+    except BaseException:
         if owned is not None:
             try:
                 metadata = destination.lstat()

@@ -32,9 +32,10 @@ any directory named REAPER, or directories with recognized resource/install mark
 Custom resource/install layouts without these markers cannot be identified with
 certainty: choose a dedicated external working directory. Inputs and destination
 parents must remain stable; this is not protection against hostile concurrent
-filesystem replacement. A failed write attempts to remove only its own partially
-created archive. A process crash can leave a partial archive; verification rejects
-it. No automatic REAPER-folder writes exist.
+filesystem replacement. A write exception or handled interruption removes the
+partially created archive only if its file identity still matches the file this
+operation created. A process crash can leave a partial archive; verification
+rejects it. No automatic REAPER-folder writes exist.
 
 ## Package contents
 
