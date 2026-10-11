@@ -1,4 +1,4 @@
-# ReaPack Smart Recovery (TimeCapsule 0.5.0-dev)
+# ReaPack Smart Recovery (Time Capsule 0.5.0-dev)
 
 ## Why the ReaPack registry cannot be blindly copied
 
@@ -7,7 +7,7 @@ ReaPack and platform-specific extension binaries yet. Restoring an old
 `ReaPack/registry.db` directly can mark packages as installed even when their
 files have not been restored or are incompatible with the new OS/CPU.
 
-TimeCapsule therefore **does not automatically activate an old registry.db**.
+Time Capsule therefore **does not automatically activate an old registry.db**.
 It retains the original registry in `NeedsReview/` and records a read-only list
 of installed package identifiers in the snapshot inventory.
 
@@ -22,7 +22,7 @@ According to upstream ReaPack 1.x source:
 - `[install]` contains `autoinstall`, `prereleases`, `promptobsolete`.
 - `[browser]` contains `synonyms`.
 - Global defaults in the 1.x source are auto-install off, pre-releases off,
-  obsolete-package prompt on, synonyms on. TimeCapsule distinguishes explicit
+  obsolete-package prompt on, synonyms on. Time Capsule distinguishes explicit
   values from defaults, and refuses to guess malformed values.
 - `ReaPack/registry.db` is a SQLite database with `entries` (package,
   version, flags) and `files` (installed file ownership).
@@ -61,7 +61,7 @@ The snapshot `manifest.json` additionally records:
 - Parse warnings when a file is absent, corrupt, too large or unknown.
 
 The original `reapack.ini` is copied **unchanged** into the private
-TimeCapsule ZIP. It may contain proxy configuration or other sensitive
+Time Capsule ZIP. It may contain proxy configuration or other sensitive
 values: treat the ZIP as private and encrypt it for long-term storage.
 Never upload personal snapshots to a public repository.
 
@@ -84,7 +84,7 @@ download packages or install executable extensions.
 ### In a new REAPER installation
 
 1. Install the destination-architecture ReaPack and SWS versions from their
-   official projects (until TimeCapsule's guided installer is implemented).
+   official projects (until Time Capsule's guided installer is implemented).
 2. Import/restore the compatible ReaPack settings, preserving repository
    enabled/disabled states.
 3. Inspect the saved package inventory and decide which packages to reinstall.

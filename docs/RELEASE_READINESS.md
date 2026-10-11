@@ -6,7 +6,7 @@ folder. Automatic active-configuration migration is outside the first beta scope
 ## Completed: atomic backup publication
 
 After building and verifying a private temporary ZIP in the destination directory,
-TimeCapsule publishes it using an exclusive hard-link creation. If another process
+Time Capsule publishes it using an exclusive hard-link creation. If another process
 has created the target file, directory or symlink, publication fails and that entry
 is preserved. The temporary link is then removed; successful publication leaves
 one verified archive. There is no check-then-rename replacement window for backup

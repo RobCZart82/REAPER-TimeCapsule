@@ -12,7 +12,7 @@ from .config_staging import export_preferences, verify_staging
 
 
 def main():
-    parser = argparse.ArgumentParser(description="REAPER TimeCapsule - safe backup and restore")
+    parser = argparse.ArgumentParser(description="REAPER Time Capsule - safe backup and restore")
     commands = parser.add_subparsers(dest="command", required=True)
     scan_cmd = commands.add_parser("scan", help="Preview backup policies")
     scan_cmd.add_argument("source", nargs="?", type=Path, default=default_resource())

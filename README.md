@@ -1,4 +1,8 @@
-# REAPER TimeCapsule
+# REAPER Time Capsule
+
+Official application name: **REAPER Time Capsule**. Development builds use this
+name; the published beta download filenames below retain their original names.
+[Current audit review and priorities](docs/AUDIT_REVIEW_2026-10-11.md).
 
 **Preserve your REAPER setup. Restore with confidence.**
 
@@ -8,7 +12,7 @@ settings that need manual review.
 
 [Magyar](README_HU.md)
 
-![REAPER TimeCapsule 0.9.0-beta.2 on macOS showing Scan / Preview results](docs/screenshots/timecapsule-scan-preview-0.9.0-beta.2-macos.png)
+![REAPER Time Capsule 0.9.0-beta.2 on macOS showing Scan / Preview results](docs/screenshots/timecapsule-scan-preview-0.9.0-beta.2-macos.png)
 
 *Actual macOS screenshot supplied by the project owner, October 11, 2026.
 Scan / Preview lists a filename portability issue; this is not a completed backup.*
@@ -80,7 +84,7 @@ throughout the operation. Portable REAPER installations need their own resource 
    application's companion files together. Start the included `.app` on macOS or
    `REAPER-TimeCapsule.exe` inside its application folder on Windows.
 2. Close REAPER. Find its resource directory through REAPER's resource-path menu
-   and choose that directory in TimeCapsule.
+   and choose that directory in Time Capsule.
 3. Use **Scan / Preview**, then **Choose new backup ZIP** to select a new archive
    outside the resource directory. Choose **Backup** and wait for verification.
 4. Use **Open existing snapshot** and **Verify** to inspect a saved archive.
@@ -115,7 +119,7 @@ settings or provides full rollback.
 Recovery never overwrites an existing destination or merges into the active
 REAPER directory. Old VST/AU/CLAP scan caches and downloaded ReaPack indexes are
 regenerated; the old installed-package registry is isolated in `NeedsReview/`.
-TimeCapsule does not synchronize ReaPack, edit its registry, install plugins or
+Time Capsule does not synchronize ReaPack, edit its registry, install plugins or
 native extensions, transfer licenses or download components automatically.
 
 Registration/license files and obvious credentials are excluded from backups by
@@ -192,7 +196,7 @@ startup checks. This does not replace full REAPER integration testing.
 Developed by **RobCZart82**. Report bugs in [GitHub Issues](https://github.com/RobCZart82/REAPER-TimeCapsule/issues)
 with the version, OS, architecture and reproduction steps using reduced or synthetic examples.
 
-TimeCapsule source is [GPL-3.0-only](LICENSE), provided without warranty.
+Time Capsule source is [GPL-3.0-only](LICENSE), provided without warranty.
 Bundled runtimes retain their own terms; see [third-party notices](THIRD_PARTY_NOTICES.md).
 REAPER, proprietary plugins, third-party script bundles, personal profiles and
 registration keys are not distributed with this project. The project is not
