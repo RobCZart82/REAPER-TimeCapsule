@@ -74,6 +74,8 @@ def self_test(report):
         app.about_window.destroy()
         assert tuple(map(int, app.resizable())) == (1, 1)
         width, height = app.winfo_width(), app.winfo_height()
+        assert app.resize_hint.winfo_ismapped()
+        assert app.resize_hint.winfo_rooty() + app.resize_hint.winfo_height() <= app.winfo_rooty() + height
         first, last = app.action_buttons[0], app.action_buttons[-1]
         left_margin = first.winfo_rootx() - app.winfo_rootx()
         right_margin = app.winfo_rootx() + width - last.winfo_rootx() - last.winfo_width()

@@ -89,6 +89,12 @@ class App(tk.Tk):
         self.progress.pack(fill="x", pady=4)
         self.cancel_button = ttk.Button(body, text="Cancel operation", command=self._cancel_io, state="disabled")
         self.cancel_button.pack(anchor="w")
+        # Reserve the footer before the expanding output at the default height.
+        self.resize_hint = ttk.Label(body, text="↓  Drag down to show more output",
+                                     anchor="center", cursor="sb_v_double_arrow")
+        self.resize_hint.pack(side="bottom", fill="x")
+        self.resize_hint.bind("<ButtonPress-1>", self._begin_vertical_resize)
+        self.resize_hint.bind("<B1-Motion>", self._drag_vertical_resize)
         output = ttk.Frame(body)
         output.pack(fill="both", expand=True, pady=10)
         output.columnconfigure(0, weight=1)
@@ -110,11 +116,6 @@ class App(tk.Tk):
         self.log.configure(yscrollcommand=lambda first, last: self._scroll_visibility(self.vertical_scroll, first, last),
                            xscrollcommand=lambda first, last: self._scroll_visibility(self.horizontal_scroll, first, last))
         self.log.insert("end", "Scan the source before creating a backup.\n")
-        self.resize_hint = ttk.Label(body, text="↓  Drag down to show more output",
-                                     anchor="center", cursor="sb_v_double_arrow")
-        self.resize_hint.pack(fill="x")
-        self.resize_hint.bind("<ButtonPress-1>", self._begin_vertical_resize)
-        self.resize_hint.bind("<B1-Motion>", self._drag_vertical_resize)
         # Start afresh each time; no window geometry is read or persisted.
         # Keep the previously approved width: move the row's 5px end gaps
         # into the shared body padding so all left/right edges align.
