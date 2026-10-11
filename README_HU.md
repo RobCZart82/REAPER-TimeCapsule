@@ -41,6 +41,22 @@ A kiadáshoz [SHA-256 ellenőrzőösszegek](https://github.com/RobCZart82/REAPER
 és platformonkénti buildleírások is tartoznak. A Windows-forrás CRLF sorvégeket használ.
 A `main` ágon folyó fejlesztés eltérhet a már kiadott csomagoktól.
 
+
+### Fejlesztés: bejárási és célútvonal-védelem
+
+A könyvtárbejárási és fájlmetaadat-olvasási hibák megszakítják a felmérést/mentést;
+a hibás felmérésből nem készül sikeresként publikált archívum. A szimbolikus linkek,
+Windows reparse pontok és speciális elemek kihagyásként szerepelnek a
+`skipped_entries` jelentésben és a manifest kihagyott listájában. Célpontjukat nem
+követjük vagy másoljuk; a nulla méret azt jelenti, hogy a cél tartalmát nem mértük
+fel. Ezeket a kihagyásokat ellenőrizd, mielőtt a mentésre hagyatkozol.
+
+A mentés feloldja és rögzíti a tényleges célmappát, elutasítja a forrásba vezető
+aliasokat, és az exkluzív publikálás előtt újra ellenőrzi a célmappát. Ez nem
+tranzakciós fájlrendszer-pillanatkép vagy védelem tetszőleges ellenséges
+könyvtárcserével szemben. A leltár konzisztenciája és az olvasók útvonalhatárai
+külön javítások maradnak. Ezek a változások a main ágon vannak, nem a publikált bétában.
+
 ## Funkciók
 
 - Fájlszabályok sorolják az erőforrásokat `keep`, `review`, `regenerate` vagy `exclude` kategóriába.

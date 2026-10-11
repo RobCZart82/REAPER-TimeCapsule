@@ -16,4 +16,6 @@ class SymlinkTests(unittest.TestCase):
             except OSError:
                 self.skipTest("Symlinks not permitted on this platform")
             result = preview(src)
-            self.assertEqual(result["files"], 0)
+            self.assertEqual(result["files"], 1)
+            self.assertEqual(result["skipped_entries"][0]["path"], "linked.txt")
+            self.assertEqual(result["skipped_entries"][0]["policy"], "exclude")

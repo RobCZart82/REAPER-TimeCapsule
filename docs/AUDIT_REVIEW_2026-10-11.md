@@ -83,3 +83,24 @@ compatible; historical downloads are not replaced by a naming update.
 CLI-súgóban, következő natív alkalmazásfájlokban és dokumentációban. A repository
 URL-je, Python-modul, archívumformátum, stagingmappa-szerződés és korábbi bétafájlok
 neve kompatibilitási okból megmarad; a régi letöltéseket az átnevezés nem cseréli le.
+
+## First reliability fix / első megbízhatósági javítás
+
+TC-001, TC-002 and the destination-alias case in TC-010 are implemented in the
+first fix: traversal errors propagate, links/reparse/special entries are explicitly
+reported without following them, destination aliases into the source are rejected,
+and external destination aliases are pinned before work. Six new synthetic
+regressions complement the existing no-overwrite and cleanup tests.
+
+TC-001, TC-002 és TC-010 célalias-esete javítva: bejárási hibák továbbadása,
+link/reparse/speciális elemek jelentése követés nélkül, forrásba mutató célaliasok
+elutasítása és külső célalias rögzítése. Hat új szintetikus regressziós teszt
+kiegészíti a meglévő felülírásvédelmi és takarítási teszteket.
+
+TC-004/TC-006/TC-005 inventory and preview fixes remain next. Arbitrary hostile
+filesystem replacement, bind-mount identity and transactional source consistency
+are not guaranteed by this first fix. No automatic link-target backup is added.
+
+TC-004/TC-006/TC-005 leltár- és előnézet-javítás következik. Ez az első kör nem
+ígér védelmet tetszőleges ellenséges fájlrendszercserére, bind-mount azonosságra
+vagy tranzakciós forráskonzisztenciára. Linkcélok automatikus mentése nem került be.

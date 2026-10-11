@@ -90,22 +90,45 @@ def scan(source: Path, *, control=None) -> list[dict]:
     if not source.is_dir():
         raise ValueError("Source must be a directory")
     result = []
-    for base, folders, files in os.walk(source, followlinks=False):
+
+    def walk_error(error):
+        raise OSError(error.errno, "Cannot scan source directory: " + str(error), error.filename) from error
+
+    def excluded_link(path, metadata):
+        # Windows junctions/reparse points are not reliably covered by is_symlink.
+        linked = stat.S_ISLNK(metadata.st_mode) or bool(
+            getattr(metadata, 'st_file_attributes', 0) & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0))
+        if linked:
+            result.append({"path": path.relative_to(source).as_posix(), "size": 0,
+                           "policy": "exclude", "reason": "Link/reparse point omitted; target not read",
+                           "kind": "link"})
+        return linked
+
+    for base, folders, files in os.walk(source, followlinks=False, onerror=walk_error):
         checkpoint(control, "Scanning")
-        folders[:] = sorted(
-            x for x in folders if not (Path(base) / x).is_symlink() and x not in (".git", "__pycache__", ".svn")
-        )
+        traversed = []
+        for name in sorted(folders):
+            checkpoint(control, "Scanning")
+            path = Path(base) / name
+            metadata = path.lstat()  # Propagate permission/disappearance errors.
+            if not excluded_link(path, metadata) and name not in (".git", "__pycache__", ".svn"):
+                traversed.append(name)
+        folders[:] = traversed
         for filename in sorted(files):
             checkpoint(control, "Scanning")
             path = Path(base) / filename
-            if path.is_symlink() or not path.is_file():
+            metadata = path.lstat()
+            if excluded_link(path, metadata):
                 continue
             rel = path.relative_to(source).as_posix()
-            # Native names (e.g. macOS AU presets containing ':') are valid
-            # inventory input. Archive portability is a separate preflight.
+            if not stat.S_ISREG(metadata.st_mode):
+                result.append({"path": rel, "size": 0, "policy": "exclude",
+                               "reason": "Special filesystem entry omitted; content not read",
+                               "kind": "special"})
+                continue
+            # Native names are inventory input; portability is a separate preflight.
             rule = decide(rel)
-            size = path.stat().st_size
-            result.append({"path": rel, "size": size, "policy": rule.policy, "reason": rule.reason})
+            result.append({"path": rel, "size": metadata.st_size, "policy": rule.policy, "reason": rule.reason})
     return result
 
 
@@ -131,7 +154,8 @@ def preview(source: Path) -> dict:
         issues.append({"reason": str(exc)})
     return {"files": len(items), "counts": dict(counts), "bytes": dict(sizes), "items": items,
             "inventory": build_inventory(Path(source).expanduser().resolve(strict=True), items),
-            "portable_names_ready": not issues, "portability_issues": issues}
+            "portable_names_ready": not issues, "portability_issues": issues,
+            "skipped_entries": [x for x in items if x.get("kind") in ("link", "special")]}
 
 
 def make_backup(source: Path, destination: Path, *, control=None) -> dict:
@@ -142,6 +166,11 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
         raise ValueError("Backup ZIP cannot be inside the source directory")
     if destination.exists() or destination.is_symlink():
         raise FileExistsError("Refusing to overwrite an existing backup")
+    # Resolve the parent, not the filename: existing/dangling targets must
+    # retain the exclusive-publication protection above.
+    destination = destination.parent.resolve() / destination.name
+    if source == destination.parent or source in destination.parent.parents:
+        raise ValueError("Backup ZIP cannot be inside the source directory")
     items = scan(source, control=control)
     selected = [x for x in items if x["policy"] in ("keep", "review")]
     try:
@@ -156,6 +185,18 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
         if x["size"] > MAX_SINGLE_FILE:
             raise ValueError("Single file too large: " + x["path"])
     destination.parent.mkdir(parents=True, exist_ok=True)
+    parent_identity = destination.parent.stat()
+
+    def validate_destination_parent():
+        current_parent = destination.parent.resolve(strict=True)
+        current = destination.parent.stat()
+        if (current_parent != destination.parent or
+                (current.st_dev, current.st_ino) != (parent_identity.st_dev, parent_identity.st_ino)):
+            raise ValueError("Backup destination directory changed during backup")
+        if current_parent == source or source in current_parent.parents:
+            raise ValueError("Backup ZIP cannot be inside the source directory")
+
+    validate_destination_parent()
     fd, staging = tempfile.mkstemp(prefix=".timecapsule-", suffix=".zip", dir=destination.parent)
     os.close(fd)
     manifest_files = []
@@ -202,6 +243,7 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
             out.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
         verify_backup(Path(staging), control=control)
         checkpoint(control, "Publishing backup")
+        validate_destination_parent()
         # Atomic exclusive publication: linking fails if ANY destination entry
         # exists, including a concurrently created file or dangling symlink.
         # Staging is in the same directory/filesystem. Never fall back to rename
@@ -213,7 +255,8 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
         except OSError as exc:
             raise OSError("Cannot safely publish backup: choose a writable destination "
                           "filesystem supporting hard links") from exc
-        return {"archive": str(destination), "saved": len(selected), "omitted": len(items) - len(selected)}
+        return {"archive": str(destination), "saved": len(selected), "omitted": len(items) - len(selected),
+                "skipped_entries": [x for x in items if x.get("kind") in ("link", "special")]}
     finally:
         if os.path.exists(staging):
             os.unlink(staging)
