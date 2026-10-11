@@ -35,16 +35,52 @@ def _text(source: Path, relative: str, problems: list[dict]) -> str | None:
         return None
 
 
-def _action_records(text: str) -> dict[tuple[int, str], dict]:
-    actions: dict[tuple[int, str], dict] = {}
-    for line in text.splitlines():
-        m = RE_ACTION.match(line.strip())
+def _action_records(text: str, filename: str, problems: list[dict]):
+    records = []
+    for number, line in enumerate(text.splitlines(), 1):
+        stripped = line.strip()
+        m = RE_ACTION.match(stripped)
         if not m:
+            if re.match(r'^(ACT|SCR)\s', stripped, re.IGNORECASE) and len(problems) < MAX_ISSUES:
+                problems.append({"file": filename, "line": number, "problem": "Unrecognized action record"})
             continue
         kind, section, action_id, tail = m.groups()
         key = (int(section), "_" + action_id.lower())
-        actions[key] = {"kind": kind.upper(), "tail": tail or ""}
-    return actions
+        records.append((key, {"kind": kind.upper(), "tail": tail or "",
+                              "file": filename, "line": number}))
+    return records
+
+
+def _action_cycles(graph):
+    """Iterative DFS: deep action chains cannot exhaust Python recursion."""
+    state, cycles = {}, []
+    count = 0
+    for origin in sorted(graph):
+        if state.get(origin):
+            continue
+        path, positions = [origin], {origin: 0}
+        state[origin] = 1
+        stack = [(origin, iter(sorted(graph[origin])))]
+        while stack:
+            node, neighbours = stack[-1]
+            child = next(neighbours, None)
+            if child is None:
+                stack.pop()
+                state[node] = 2
+                positions.pop(node)
+                path.pop()
+            elif state.get(child) == 1:
+                count += 1
+                if len(cycles) < MAX_ISSUES:
+                    cycle = path[positions[child]:] + [child]
+                    cycles.append({"section": child[0], "commands": [x[1] for x in cycle[:MAX_ISSUES]],
+                                   "length": len(cycle), "truncated": len(cycle) > MAX_ISSUES})
+            elif child in graph and not state.get(child):
+                state[child] = 1
+                positions[child] = len(path)
+                path.append(child)
+                stack.append((child, iter(sorted(graph[child]))))
+    return cycles, count
 
 
 def _menu_records(text: str, filename: str) -> list[dict]:
@@ -63,7 +99,7 @@ def _menu_records(text: str, filename: str) -> list[dict]:
         # cannot be mapped to 32060 safely without additional context.
         if not section_name.lower().startswith("midi piano roll"):
             continue
-        if command.startswith("_"):
+        if command.startswith("_") or command.isdecimal() and int(command) > 0:
             entries.append({"file": filename, "section": 32060, "command": command.lower()})
     return entries
 
@@ -106,10 +142,20 @@ def validate_midi_workflow(source: Path, items: list[dict]) -> dict:
     action_files = keymap_files + (["reaper-kb.ini"] if "reaper-kb.ini" in saved else [])
 
     definitions: dict[tuple[int, str], dict] = {}
+    all_records, duplicates = [], []
     for filename in action_files:
         contents = _text(source, filename, problems)
         if contents is not None:
-            definitions.update(_action_records(contents))
+            for key, record in _action_records(contents, filename, problems):
+                previous = definitions.get(key)
+                if previous is not None:
+                    duplicates.append({"section": key[0], "command": key[1],
+                                       "first_file": previous["file"], "first_line": previous["line"],
+                                       "file": record["file"], "line": record["line"],
+                                       "conflicting": (previous["kind"], previous["tail"]) != (record["kind"], record["tail"])})
+                else:
+                    definitions[key] = record
+                all_records.append((key, record))
 
     references = []
     for filename in menu_files:
@@ -118,11 +164,14 @@ def validate_midi_workflow(source: Path, items: list[dict]) -> dict:
             references.extend(_menu_records(contents, filename))
 
     external = set()
+    numeric = set()
     missing = set()
     resolved = 0
     for reference in references:
         command = reference["command"]
-        if not RE_GUID.fullmatch(command):
+        if command.isdecimal():
+            numeric.add((reference["section"], command))
+        elif not RE_GUID.fullmatch(command):
             external.add(command)
         elif (reference["section"], command) in definitions:
             resolved += 1
@@ -132,7 +181,8 @@ def validate_midi_workflow(source: Path, items: list[dict]) -> dict:
     unverified = set()
     script_problems = set()
     checked_scripts = 0
-    for (section, command), definition in definitions.items():
+    graph = {key: set() for key in definitions}
+    for (section, command), definition in all_records:
         if definition["kind"] == "SCR":
             checked_scripts += 1
             resolution = _script_resolution(definition["tail"], saved)
@@ -140,18 +190,29 @@ def validate_midi_workflow(source: Path, items: list[dict]) -> dict:
                 script_problems.add((command, resolution))
         else:
             for token in definition["tail"].split():
+                if token.isdecimal():
+                    numeric.add((section, token))
+                    continue
                 if not token.startswith("_"):
+                    if len(problems) < MAX_ISSUES:
+                        problems.append({"file": definition["file"], "line": definition["line"],
+                                         "problem": "Unrecognized action dependency"})
                     continue
                 token = token.casefold()
                 if RE_GUID.fullmatch(token):
                     if (section, token) not in definitions:
                         missing.add(("Custom Action " + command, token))
+                    else:
+                        graph[(section, command)].add((section, token))
                 else:
                     unverified.add(token)
 
-    if missing or script_problems:
+    cycles, cycle_count = _action_cycles(graph)
+    if cycle_count or any(x["conflicting"] for x in duplicates):
+        status = "invalid-action-graph"
+    elif missing or script_problems:
         status = "missing-dependencies"
-    elif problems or unverified or external or not references:
+    elif problems or unverified or external or numeric or duplicates or not references:
         status = "needs-review"
     else:
         status = "ok"
@@ -160,7 +221,14 @@ def validate_midi_workflow(source: Path, items: list[dict]) -> dict:
         "status": status,
         "action_definitions": len(definitions),
         "script_registrations_checked": checked_scripts,
-        "menu_custom_references": len(references),
+        "menu_custom_references": sum(x["command"].startswith("_") for x in references),
+        "duplicate_definitions": duplicates[:MAX_ISSUES],
+        "dependency_cycles": cycles,
+        "unverified_numeric_commands": [{"section": section, "command": cmd}
+                                        for section, cmd in sorted(numeric)[:MAX_ISSUES]],
+        "issue_counts": {"duplicates": len(duplicates), "cycles": cycle_count,
+                         "unverified_numeric": len(numeric), "missing": len(missing),
+                         "script_issues": len(script_problems)},
         "resolved_menu_references": resolved,
         "missing_custom_actions": [
             {"file": f, "command": a} for f, a in sorted(missing)[:MAX_ISSUES]

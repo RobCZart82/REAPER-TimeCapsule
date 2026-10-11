@@ -242,3 +242,5 @@ A csomagolt futtatókörnyezetek saját feltételeiket őrzik; lásd a [külső 
 A projekt nem terjeszt REAPER-t, saját tulajdonú plugineket, külső scriptcsomagokat,
 személyes profilokat vagy regisztrációs kulcsokat. Nem áll kapcsolatban a Cockos / REAPER-rel,
 és nem rendelkezik annak hivatalos támogatásával.
+
+A MIDI Audit már jelzi a duplikált/ütköző definíciókat, függőségi ciklusokat és ellenőrizetlen numerikus parancsokat. Egy menühivatkozás feloldása nem igazolja a műveletlánc REAPER-beli működését. Hiteles futásidejű műveletkatalógus nélkül a numerikus parancsok ellenőrizetlenek maradnak.

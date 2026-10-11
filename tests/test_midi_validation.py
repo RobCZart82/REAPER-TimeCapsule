@@ -33,7 +33,8 @@ class MIDIWorkflowValidationTests(unittest.TestCase):
         self.assertEqual(result["menu_custom_references"], 1)
         self.assertEqual(result["resolved_menu_references"], 1)
         self.assertEqual(result["missing_custom_actions"], [])
-        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["status"], "needs-review")
+        self.assertEqual(len(result["unverified_numeric_commands"]), 4)
 
     def test_menu_missing_action(self):
         self.put("MenuSets/midi.ReaperMenu", "[MIDI piano roll context]\nitem_1=_" + GUID + " Scale\n")
@@ -98,3 +99,50 @@ class MIDIWorkflowValidationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MIDIGraphTests(unittest.TestCase):
+    setUp = MIDIWorkflowValidationTests.setUp
+    put = MIDIWorkflowValidationTests.put
+    report = MIDIWorkflowValidationTests.report
+    def test_duplicate_inside_one_file_is_reported_not_overwritten(self):
+        self.put('reaper-kb.ini', f'ACT 1 32060 "{GUID}" "A" 40001\nACT 1 32060 "{GUID}" "B" _{SECOND}\n')
+        report = self.report()
+        self.assertEqual(report['status'], 'invalid-action-graph')
+        self.assertTrue(report['duplicate_definitions'][0]['conflicting'])
+        self.assertEqual(report['missing_custom_actions'][0]['command'], '_' + SECOND)
+
+    def test_identical_export_and_live_definition_requires_review(self):
+        record = f'ACT 1 32060 "{GUID}" "A" 40001\n'
+        self.put('reaper-kb.ini', record)
+        self.put('KeyMaps/test.ReaperKeyMap', record)
+        report = self.report()
+        self.assertFalse(report['duplicate_definitions'][0]['conflicting'])
+        self.assertEqual(report['status'], 'needs-review')
+
+    def test_numeric_dependency_is_unverified_even_if_implausible(self):
+        self.put('reaper-kb.ini', f'ACT 1 32060 "{GUID}" "A" 999999999\n')
+        self.assertEqual(self.report()['unverified_numeric_commands'], [{'section': 32060, 'command': '999999999'}])
+
+    def test_nested_action_cycle_is_reported(self):
+        self.put('reaper-kb.ini', f'ACT 1 32060 "{GUID}" "A" _{SECOND}\nACT 1 32060 "{SECOND}" "B" _{GUID}\n')
+        report = self.report()
+        self.assertEqual(report['status'], 'invalid-action-graph')
+        self.assertEqual(report['dependency_cycles'][0]['length'], 3)
+
+    def test_same_identifier_in_other_section_is_not_duplicate(self):
+        self.put('reaper-kb.ini', f'ACT 1 32060 "{GUID}" "A" 40001\nACT 1 0 "{GUID}" "B" 40001\n')
+        self.assertEqual(self.report()['duplicate_definitions'], [])
+
+    def test_deep_chain_uses_no_recursion_and_reports_missing_leaf(self):
+        records = [f'ACT 1 32060 "{i:032x}" "A" _{i+1:032x}' for i in range(1, 1600)]
+        self.put('reaper-kb.ini', '\n'.join(records))
+        report = self.report()
+        self.assertEqual(report['status'], 'missing-dependencies')
+        self.assertEqual(report['dependency_cycles'], [])
+
+    def test_truncation_keeps_total_numeric_issue_count(self):
+        self.put('reaper-kb.ini', f'ACT 1 32060 "{GUID}" "A" ' + ' '.join(str(i) for i in range(1, 151)))
+        report = self.report()
+        self.assertEqual(report['issue_counts']['unverified_numeric'], 150)
+        self.assertEqual(len(report['unverified_numeric_commands']), 100)
