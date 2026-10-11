@@ -253,3 +253,5 @@ A mentés és visszaállítás előkészítése most konzervatív szabadhely-bec
 A visszaállítási útvonalakat még az előkészítés előtt konzervatív fájlrendszerkorlátokhoz ellenőrizzük. Az eredeti időbélyegek és jogosultságok tájékoztató metaadatként mentődnek; a visszaállítás nem aktivál futtatási jogosultságot, és nem másol ACL-t vagy kiterjesztett attribútumot. Lásd a [fájlrendszeres közzétételt](docs/FILESYSTEM_PUBLICATION.md).
 
 A Scan / Preview után a **File policies…** gomb csak olvasó, kereshető szabálylistát nyit, laponként 200 sorral. A szűrés és a külön kérhető privát JSON-export háttérben fut. A jelentés megőrzi a vizsgálat eredetét, teljességét, szabályindokait, hordozhatósági problémáit és kézi lépéseit; helyi magánadat, nem az élő profil tranzakciós pillanatképének bizonyítéka.
+
+Ellenőrzött kapszulából a `recovery-plan capsule.zip` csak olvasó [MIDI/ReaPack-helyreállítási tervet](docs/RECOVERY_PLANNING.md) készít. Ellenőrzéshez megőrzi a repository-állapotokat/csomagrögzítéseket, és jelzi a megoldatlan függőségeket, régi leltárt és hiányzó futás közbeni integrációt. Nem telepít és nem ír erőforrást.

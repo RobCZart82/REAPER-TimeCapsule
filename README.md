@@ -246,3 +246,5 @@ Backup/restore staging now checks conservative free-space estimates. ZIP inspect
 Recovery paths are checked against conservative filesystem limits before staging. Original timestamps and permissions are saved as informational metadata; restoring does not activate executable bits or copy ACLs/extended attributes. See [filesystem publication](docs/FILESYSTEM_PUBLICATION.md).
 
 After Scan / Preview, **File policies…** opens a read-only searchable policy list with 200 rows per page. Filtering and explicit private JSON export run in the background. Reports preserve scan provenance, completeness, policy reasons, portability issues and manual steps; they are local private data, not proof of a transactional live snapshot.
+
+A verified capsule can produce a read-only [MIDI/ReaPack recovery plan](docs/RECOVERY_PLANNING.md) with `recovery-plan capsule.zip`. It preserves repository states/package pins for review and marks unresolved dependencies, legacy inventory and missing runtime integration. No installation or resource write is performed.
