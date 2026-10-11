@@ -36,12 +36,19 @@ are recorded as **unverified**, not assumed available. Script presence does
 not imply the script runs correctly, and matching Custom Action IDs do not
 prove the toolbar/menu has been activated by REAPER.
 
+The JSON report states `toolbar_icon_dependencies.status` as
+`not-checked` and `runtime_validation.status` as `not-performed`. The saved
+toolbar button-to-icon mapping is not currently parsed, so an icon directory or
+matching action ID must not be treated as proof that every toolbar icon resolves.
+The audit remains static and never executes scripts or loads extensions.
+
 ## Scope / known limitations
 
 - No automatic import or action-ID remapping in this release.
 - Other REAPER action sections beyond the MIDI piano-roll context are not
   automatically linked to context 32060.
 - Dynamic scripts that construct commands at runtime are not analyzed.
+- Toolbar button-to-icon references and missing icon files are not yet analyzed.
 - Old absolute script paths are reported, not rewritten.
 - Some REAPER custom-action formats could require additional parsing.
 - A user-supplied Chords/Scales/Arps menu and matching KeyMap were validated

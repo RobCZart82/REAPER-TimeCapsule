@@ -34,6 +34,7 @@ class MIDIWorkflowValidationTests(unittest.TestCase):
         self.assertEqual(result["resolved_menu_references"], 1)
         self.assertEqual(result["missing_custom_actions"], [])
         self.assertEqual(result["status"], "needs-review")
+        self.assertEqual(result["toolbar_icon_dependencies"]["status"], "not-checked")
         self.assertEqual(len(result["unverified_numeric_commands"]), 4)
 
     def test_menu_missing_action(self):
@@ -94,7 +95,10 @@ class MIDIWorkflowValidationTests(unittest.TestCase):
         self.assertEqual(report["missing_custom_actions"], [])
 
     def test_empty_midi_inventory_not_claimed_to_be_complete(self):
-        self.assertEqual(self.report()["status"], "needs-review")
+        result = self.report()
+        self.assertEqual(result["status"], "needs-review")
+        self.assertEqual(result["toolbar_icon_dependencies"]["status"], "not-checked")
+        self.assertEqual(result["runtime_validation"]["status"], "not-performed")
 
 
 if __name__ == "__main__":
