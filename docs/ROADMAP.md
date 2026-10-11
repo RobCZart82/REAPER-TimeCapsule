@@ -1,123 +1,108 @@
-# Roadmap / fejlesztési lépések
+# REAPER Time Capsule development roadmap
 
-## Implemented in 0.2.0-dev
-- Per-file backup policies with preview (keep/review/regenerate/exclude)
-- Cross-platform REAPER resource-directory detection (default installations)
-- No-overwrite compressed backup and SHA-256 manifest verification
-- Safe restore into a NEW directory with machine-specific files isolated
-- ReaPack / SWS settings preserved as source resources
-- macOS, Windows and Linux CI workflow (runs after repository push)
+This page describes current `main` capabilities and the remaining work before a
+broader public release. It is not a release announcement. The owner asked to keep
+accumulating reviewed changes on `main` and publish a later beta only after several
+development steps are complete.
 
-## Completed in 0.3.0-dev
-- Read-only ReaPack XML repository URL inventory from reapack.ini; display redacts credentials
-- Inventory of native SWS/ReaPack plugin files without attempting installation
-- MIDI right-click menus and KeyMap file presence tracked in snapshot manifest
-- Recovery report records inventory for auditing
+## Current capabilities
 
-## Outstanding work from the early roadmap
-- Support ReaPack v2 if/when its storage format is documented; compare repository state with a clean destination
-- Detect exact installed ReaPack/SWS binaries, architecture and versions
-- Add clean installation + configuration merge with a per-key REAPER.ini allowlist
-- Enhance static action validation with REAPER runtime post-restore integration tests
-- Assess MIDI workflow bundle redistribution permission before shipping it
-- Snapshot exclusion policy UI and signed / auditable reports
-- Verify saved ReaPack repository URLs are still current; do not auto-sync without permission
+- Scan a REAPER resource folder, explain file policies, create and verify a
+  checksummed capsule, and restore into a new folder without replacing an existing
+  destination.
+- Report traversal errors, links, reparse points and unsupported names rather than
+  silently following or dropping them. Native-name capsule mode is an explicit
+  alternative; portable recovery isolates nonportable resources and records their
+  mapping.
+- Build ReaPack 1.x profile and installed-package reports from recognized
+  `reapack.ini` and SQLite formats. Repository order/enabled states and global
+  options are inspected read-only; old registry/cache state is not activated.
+- Run static MIDI menu and Custom Action checks for duplicate IDs, dependency
+  cycles, unresolved references, script paths and unverified numeric/extension
+  commands. The audit does not install or execute anything.
+- Compare `reaper.ini` files read-only using an exact two-preference allowlist;
+  unknown and machine-specific state stays review/excluded. An opt-in staging ZIP
+  can carry only selected approved preference data and reverse values. Verification
+  is read-only; no command applies this data to REAPER.
+- Compare packed themes with an explicitly supplied factory reference without
+  copying or deleting anything.
+- Run long operations in a background worker. Large GUI output is shortened in a
+  display-only copy and rendered in bounded chunks; full scan policy rows remain in
+  File policies and CLI report output is complete.
+- Build unsigned macOS and Windows beta packages. Linux is source-only. GPL-3.0-only
+  and bilingual user documentation have been selected/prepared.
 
-## Implemented in 0.4.0-dev (MIDI audit)
-- Static validation of MIDI piano roll context menu Custom Action references against imported/registered action definitions
-- Detection of missing scripts and registrations tied to old OS absolute paths
-- Identification of external commands requiring ReaPack/SWS verification
-- CLI `midi-audit` and GUI audit button; summary embedded in snapshot metadata
-- Synthetic tests for successful/missing/wrong-section actions and script portability
+See [the current audit status](AUDIT_REVIEW_2026-10-11.md), [release readiness](RELEASE_READINESS.md)
+and the linked issue for each remaining area.
 
-## Implemented in 0.5.0-dev (ReaPack Smart Recovery: inspection)
-- Parse ReaPack 1.x configured repository list and enabled/disabled states from the
-  verified `[remotes] remoteN=name|URL|enabled|override` format.
-- Preserve global option values with explicit-vs-default provenance.
-- Read the installed package inventory from `ReaPack/registry.db` in SQLite
-  read-only mode; never silently copy a stale database into an active fresh REAPER.
-- Exclude old `ReaPack/cache/` downloaded indexes from clean migrations.
-- Add `reapack-audit` CLI / GUI button and cross-platform regression tests.
+## Ordered development work
 
-## Implemented in 0.6.0-dev (Intelligent Configuration Migration: preview)
-- Explicit-file, read-only reaper.ini diff with exact per-section/key/value allowlist.
-- Appearance candidates, excluded machine/private state, unknown-key review.
-- Version mismatch/unknown, missing keys and unsupported values require review.
-- Fail-closed malformed input handling; no raw unknown values in reports/errors.
-- Synthetic cross-platform tests run on the existing macOS/Windows/Linux matrix.
-- GUI Config Preview with explicit file selection, cancellation and version prompts.
-- Change counts distinguish conflicts, unchanged, source-only and target-only entries.
-- Parser rejects ambiguous indentation and unsupported control characters.
-- Issue #4 remains open: rollback and actual merge remain future work; factory
-  comparison is available through the separate follow-up below. No staging export or in-place writer is introduced.
+### 1. GUI large-report follow-up
 
-## Factory theme comparison follow-up
-- Read-only `theme-preview` compares explicit source/factory/target directories.
-- Byte-identical packed themes can be reviewed for factory reuse; modified and user
-  themes are marked for preservation. Existing target conflicts always need review.
-- Case-insensitive NFC filename matching with ambiguous-name rejection.
-- Unpacked dependencies, unknown files and symlinks stay review-only.
-- Backup and restore retain all previous behavior; no automatic deduplication.
-- Issue #4 remains open for actionable restore/rollback and unpacked dependency handling.
+- The UI-freeze fix is on `main` in PR #44: bound display data to 256 KiB and insert
+  no more than 8 KiB per UI callback.
+- Test large MIDI/ReaPack reports in the packaged macOS and Windows builds, including
+  vertical and horizontal scrolling. Synthetic UI tests cannot confirm native Tk
+  behavior on every machine.
+- If the GUI report cap is reached, direct users to the complete local CLI report;
+  never silently imply the shortened display is the complete audit.
 
-## Implemented in 0.7 (selective preference staging)
-- Separate CLI opt-in export with exact changed approved key selection.
-- Exclusive new ZIP creation in a dedicated external `TimeCapsule-Staging` folder.
-- Selected preference DATA and reverse values only; no full INI or unknown values.
-- Input-content fingerprints; no writes to source/target or active resource files.
-- Partial write failure cleanup of the archive owned by this operation.
+### 2. ReaPack scope and compatibility
 
-## Implemented in 0.8.0-dev (staging verification)
-- Read-only bounded ZIP verification without extraction.
-- Exact members, checksum/content checks and current allowlist enforcement.
-- Reject duplicate entries/JSON fields, unsupported values, versions and forged keys.
-- Optional target fingerprint check detects changes after staging.
-- These two milestones ship together; no apply/deploy command is provided.
-- Full rollback snapshots, executable migration and staging GUI remain future work.
+- Keep the verified read-only ReaPack 1.x profile parser and SQLite inventory.
+- The read-only ReaPack 1.x work tracked in issue #2 is implemented; keep 2.x,
+  package installation and synchronization as separate future work.
+- ReaPack 2.x support needs its own verified source-format review and fixtures.
+- No repository sync, package download, registry activation or extension install
+  without a separately designed explicit opt-in workflow.
 
-## Release readiness: backup publication hardening
-- Replace check-then-rename backup publication with atomic exclusive hard-link creation.
-- Preserve concurrent destination files/directories and reject dangling symlink targets.
-- Unsupported destination filesystems fail closed, without rename/copy fallback.
-- Regression tests cover concurrent creation, failure cleanup and verified success.
-- Restore directory publication, cross-platform archive-name validation, GUI progress,
-  real REAPER tests and native packaging remain release blockers.
+### 3. MIDI workflow completeness
 
-## Release readiness: portable archive paths
-- Preflight all indexed paths before restore creates a staging directory.
-- Reject Windows reserved/invalid names, case/NFC collisions and file-directory conflicts.
-- No automatic filename rewriting; valid Unicode resource paths are preserved.
-- Older incompatible archives fail closed; length/filesystem limits remain future work.
+- Extend static checking to toolbar/icon references only where the native file
+  format and path rules are supported by reliable evidence.
+- Keep missing extension binaries, command registration and script execution as
+  unverified/manual steps; never execute scripts during an audit.
+- Design an isolated disposable REAPER integration test environment before making
+  claims that a restored MIDI workflow works end-to-end. Do not commit user bundles
+  or copyrighted third-party scripts without redistribution permission.
 
-## Release readiness: exclusive restore publication
-- Native exclusive directory rename on macOS/Linux/Windows; no overwrite fallback.
-- Competing empty directories/files preserved; unsupported-operation cleanup tested.
-- Publication APIs exercised on each native CI platform.
+### 4. Configuration migration safety
 
-## Release readiness: archive and I/O failure handling
-- Controlled malformed ZIP/JSON/encoding failures; duplicate manifest fields rejected.
-- Per-file metadata/identity checks detect changes during backup copying.
-- Disk-full, permissions and restore-write failures covered by cleanup tests.
-- Safe cancellation and whole-profile consistency remain separate work.
+- Keep preview and staging verification read-only; continue excluding platform,
+  hardware/device, plugin/cache, license and unknown settings.
+- Expand the preference allowlist only with exact section/key/value/version
+  evidence and isolated runtime validation. Similar names or theme directives are
+  not enough.
+- Any future apply command requires a separate reviewable design for explicit opt-in,
+  an external backup/rollback snapshot, current-target fingerprint and conflict
+  handling, atomic replacement, cancellation recovery and tests against temporary
+  synthetic files. Never use the developer's real REAPER config as a test input.
+- Keep issue #4 open until rollback and a fully tested apply/recovery workflow exist.
 
-## Release readiness: responsive GUI I/O
-- Background backup/verify/restore with main-thread Tk reads and result rendering.
-- Single-job exclusion, input/button locking and indeterminate busy indicator.
-- Active-job close guard; no forced cancellation of filesystem writes.
-- Safe cancellation, progress counts, background audits and native visual QA remain.
+### 5. Prepare the next beta after implementation accumulates
 
-## Later
-- Native macOS app packaging and Windows executable + notarization/signing plans
-- Managed backups and rollback snapshots; external drive workflows
-- Portable REAPER resource installs; compare factory theme files against a matching build
-- Automatic integration tests on a *temporary* REAPER installation
+- Update both-language PDFs and screenshots to match the then-current GUI and
+  explain first-launch macOS Gatekeeper steps without recommending disabling
+  platform protections.
+- Validate the exact release candidate on clean macOS and Windows environments,
+  including the large-report GUI, file chooser behavior, backup/verify/restore,
+  app icon and About dialog.
+- Reconcile version, changelog, README/About screenshots, artifact checksums and
+  documented platform/filesystem limitations. Build the release from the reviewed
+  `main` commit and retain the unsigned-beta disclosure.
+- Do not publish a new release until these checks are complete and the accumulated
+  milestones are ready.
 
-## Security constraints
-- No upload of personal resource directories or license keys to GitHub
-- No silent overwrite of user's active REAPER directory
-- No executing untrusted scripts during archive inspection
+## Guarantees and limits
 
-## Reliability audit
-
-See [the checked audit findings](AUDIT_REVIEW_2026-10-11.md) for confirmed
-reliability defects and the recommended order before broader release work.
+- No automatic overwrite of an active REAPER resource folder; restore targets a new
+  location.
+- No executing untrusted scripts, installing extensions, downloading ReaPack
+  packages, or uploading personal REAPER profiles, license files or DMGs.
+- Checksums are not encryption, signatures or proof of origin. Capsules can contain
+  private configuration and filenames and should be stored accordingly.
+- Filesystem capacity checks are estimates. Crash durability, every removable or
+  network filesystem, complete metadata preservation and every customized REAPER
+  environment are not guaranteed.
+- Green synthetic CI is necessary but does not replace clean-machine or isolated
+  real-REAPER acceptance testing.

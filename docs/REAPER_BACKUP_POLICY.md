@@ -8,7 +8,7 @@
 | `ReaPack/cache/**` | regenerate | Downloaded XML indexes, not personal workflow |
 | `ReaPack/registry.db-shm` | regenerate | SQLite ephemeral shared memory |
 | `S&M.ini`, `BR.ini`, `sws-autocoloricon.ini` | keep | SWS settings |
-| `LangPack/`, `ColorThemes/`, `Effects/`, `presets/` | keep | Installed/customized resources; factory comparison TODO |
+| `LangPack/`, `ColorThemes/`, `Effects/`, `presets/` | keep | Installed/customized resources; packed themes can be compared with an explicitly supplied factory copy |
 | `reaper-kb.ini`, `reaper-menu.ini`, `reaper-mouse.ini` | keep | Actions, menus, mouse modifiers |
 | `reaper.ini`, `reaper-midihw.ini`, `reaper-wndpos.ini` | review | May hold hardware, monitor or path-specific settings |
 | `UserPlugins/` | review | Binary ABI and third-party redistribution require checking |
@@ -17,6 +17,8 @@
 | `reaper-license.rk`, `reaper-reginfo*.ini` | exclude | REAPER registration material |
 | unknown files | review | Avoid silently losing potentially personal data |
 
-**Warning:** 0.2 is intentionally conservative. Until tested against user-specific
-REAPER installations, it cannot guarantee complete automated restoration of every
-workflow dependency or every SWS/ReaPack setting.
+**Warning:** Policies are cautious defaults, not proof that every saved item will
+work after recovery. Factory-theme comparison is read-only and advisory; it never
+omits a resource. MIDI actions, plugin binaries, ReaPack packages and hardware
+settings require manual review. Restore remains isolated in a new directory and
+does not install or activate workflow dependencies.
