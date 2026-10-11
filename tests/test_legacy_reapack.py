@@ -6,7 +6,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from reaper_timecapsule.core import make_backup, restore_backup, verify_backup
+from reaper_timecapsule.core import make_backup, restore_backup, verify_backup, preview_backup
 
 
 class LegacyReaPackArchiveTests(unittest.TestCase):
@@ -22,6 +22,7 @@ class LegacyReaPackArchiveTests(unittest.TestCase):
                 entries = {name: zip_in.read(name) for name in zip_in.namelist()}
             manifest = json.loads(entries["manifest.json"].decode("utf-8"))
             manifest["app_version"] = "0.4.0-dev"
+            manifest.pop("inventory_basis", None)
             for item in manifest["files"]:
                 if item["path"] == "ReaPack/registry.db":
                     item["policy"] = "keep"
@@ -40,6 +41,12 @@ class LegacyReaPackArchiveTests(unittest.TestCase):
                 for name, data in entries.items():
                     z.writestr(name, data)
             self.assertEqual(verify_backup(archive)["schema"], 2)
+            before = preview_backup(archive)
+            self.assertEqual(before['stored_saved'], {'keep': 2})
+            self.assertEqual(before['saved'], {'review': 1, 'regenerate': 1})
+            self.assertEqual(len(before['policy_changes']), 2)
+            self.assertTrue(all(x['reason'] for x in before['policy_changes']))
+            self.assertEqual(before['inventory_basis'], 'legacy-unverified-source-inventory')
             out = base / "Recovered"
             report = restore_backup(archive, out)
             self.assertEqual(report["isolated_for_review"], 1)

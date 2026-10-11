@@ -11,6 +11,7 @@ import tempfile
 import zipfile
 import unicodedata
 import zlib
+from contextlib import ExitStack
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
@@ -18,7 +19,8 @@ from pathlib import Path, PurePosixPath
 from .rules import decide
 from .publication import publish_directory
 from .operation import checkpoint
-from .inventory import build_inventory
+from .inventory import build_inventory, inventory_input_limit
+from .safe_paths import trusted_resource_file
 
 VERSION = "0.9.0-beta.2"
 FORMAT = "reaper-timecapsule"
@@ -203,26 +205,37 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
     completed = 0
     total = sum(item["size"] for item in selected)
     try:
-        with zipfile.ZipFile(staging, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6, allowZip64=True) as out:
+        with tempfile.TemporaryDirectory(prefix="timecapsule-inventory-") as snapshot_name, \
+                zipfile.ZipFile(staging, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6, allowZip64=True) as out:
+            snapshot = Path(snapshot_name)
             for item in selected:
                 checkpoint(control, "Copying backup", completed, total)
-                p = source.joinpath(*item["path"].split("/"))
+                p = trusted_resource_file(source, item["path"])
                 if p.is_symlink() or not p.is_file():
                     raise ValueError("Source changed during backup: " + item["path"])
                 # Copy once while hashing, so the digest refers to ZIP contents, not a later file state.
                 hash_value = hashlib.sha256()
                 bytes_written = 0
                 entry = "resources/" + item["path"]
-                with p.open("rb") as src, out.open(entry, "w") as dst:
+                limit = inventory_input_limit(item["path"])
+                copied = snapshot / item["path"] if limit and item["size"] <= limit else None
+                if copied:
+                    copied.parent.mkdir(parents=True, exist_ok=True)
+                with ExitStack() as streams:
+                    src = streams.enter_context(p.open("rb"))
+                    dst = streams.enter_context(out.open(entry, "w"))
+                    inventory_copy = streams.enter_context(copied.open("xb")) if copied else None
                     before = os.fstat(src.fileno())
                     for block in iter(lambda: src.read(BLOCK_SIZE), b""):
                         checkpoint(control, "Copying backup", completed, total)
                         bytes_written += len(block)
                         completed += len(block)
-                        if bytes_written > MAX_SINGLE_FILE:
+                        if bytes_written > MAX_SINGLE_FILE or bytes_written > item["size"]:
                             raise ValueError("Changed source exceeds size limit")
                         hash_value.update(block)
                         dst.write(block)
+                        if inventory_copy:
+                            inventory_copy.write(block)
                     after = os.fstat(src.fileno())
                     current = p.stat()
                     identity = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns)
@@ -236,7 +249,8 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
                 "created_utc": datetime.now(timezone.utc).isoformat(),
                 "source_platform": platform.system(), "source_architecture": platform.machine(),
                 "strategy": "clean-migration", "files": manifest_files,
-                "inventory": build_inventory(source, items),
+                "inventory": build_inventory(snapshot, items),
+                "inventory_basis": "archived-resource-bytes",
                 "omitted": [x for x in items if x["policy"] in ("exclude", "regenerate")],
                 "notes": "review items are backed up but never restored into active REAPER resources automatically",
             }
@@ -446,6 +460,13 @@ def restore_backup(archive: Path, destination: Path, *, control=None) -> dict:
 
 def preview_backup(archive: Path, *, control=None) -> dict:
     manifest = verify_backup(archive, control=control)
-    counts = Counter(x["policy"] for x in manifest["files"])
+    decisions = [{"path": x["path"], "stored": x["policy"],
+                  "effective": _effective_policy(x["path"], x["policy"], manifest.get("app_version", ""))}
+                 for x in manifest["files"]]
+    counts = Counter(x["effective"] for x in decisions)
     omitted = Counter(x["policy"] for x in manifest["omitted"])
-    return {"saved": dict(counts), "omitted": dict(omitted), "created_utc": manifest["created_utc"], "inventory": manifest.get("inventory", {})}
+    changes = [{**x, "reason": decide(x["path"]).reason} for x in decisions if x["stored"] != x["effective"]]
+    return {"saved": dict(counts), "stored_saved": dict(Counter(x["stored"] for x in decisions)),
+            "policy_changes": changes, "omitted": dict(omitted), "created_utc": manifest["created_utc"],
+            "inventory": manifest.get("inventory", {}),
+            "inventory_basis": manifest.get("inventory_basis", "legacy-unverified-source-inventory")}
