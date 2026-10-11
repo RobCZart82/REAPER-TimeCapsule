@@ -41,6 +41,21 @@ a bundled self-test report and documentation. The release also provides
 and platform build manifests. Windows source uses CRLF line endings.
 Development on `main` may differ from the published packages.
 
+
+### Development: traversal and destination safety
+
+Directory traversal and file-metadata errors abort scanning/backup; no successful
+archive is published from that failed scan. Symbolic links, Windows reparse points
+and special entries are listed as excluded in `skipped_entries` and the manifest’s
+omitted list. Their targets are not followed or copied; zero size means the target
+content was not measured. Review these omissions before relying on a backup.
+
+Backup resolves and pins the actual destination parent, rejects aliases into the
+source, and rechecks the parent before exclusive publication. This is not a
+transactional filesystem snapshot or protection against arbitrary hostile directory
+replacement. Snapshot-consistent inventory and inventory-reader boundaries remain
+separate fixes. These changes are on main, not in the published beta.
+
 ## Features
 
 - File policies classify resources as `keep`, `review`, `regenerate` or `exclude`.
