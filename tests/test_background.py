@@ -100,3 +100,16 @@ class GUIBackgroundTests(unittest.TestCase):
         app.runner.active = False
         App._on_close(app)
         app.destroy.assert_called_once()
+
+    def test_all_audits_capture_input_and_use_same_worker(self):
+        for operation, target in [('scan', 'preview'), ('midi', 'validate_midi_workflow'), ('reapack', 'audit_reapack')]:
+            with self.subTest(operation=operation):
+                app = self.app()
+                app.source.get.return_value = 'synthetic-source'
+                with patch('reaper_timecapsule.gui.' + target) as audit, patch('reaper_timecapsule.gui.scan', return_value=[]):
+                    App._start_io(app, operation)
+                    action = app.runner.submit.call_args.args[0]
+                    app.source.get.side_effect = AssertionError('Worker accessed Tk')
+                    audit.return_value = {key: [] for key in ('files', 'counts', 'bytes', 'portable_names_ready', 'portability_issues', 'skipped_entries')}
+                    action()
+                    self.assertIs(audit.call_args.kwargs['control'], app.operation_control)

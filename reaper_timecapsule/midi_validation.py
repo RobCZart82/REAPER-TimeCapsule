@@ -6,6 +6,7 @@ already inside the selected REAPER resource directory.
 """
 from __future__ import annotations
 
+from .operation import checkpoint
 from .safe_paths import trusted_resource_file
 
 import re
@@ -28,16 +29,21 @@ def _text(source: Path, relative: str, problems: list[dict]) -> str | None:
         file = trusted_resource_file(source, relative)
         if file.stat().st_size > MAX_TEXT_BYTES:
             raise ValueError("file exceeds 8 MiB parser limit")
-        return file.read_bytes().decode("utf-8-sig", errors="replace")
+        with file.open("rb") as stream:
+            data = stream.read(MAX_TEXT_BYTES + 1)
+        if len(data) > MAX_TEXT_BYTES:
+            raise ValueError("file exceeds 8 MiB parser limit")
+        return data.decode("utf-8-sig", errors="replace")
     except (OSError, ValueError) as exc:
         if len(problems) < MAX_ISSUES:
             problems.append({"file": relative, "problem": str(exc)})
         return None
 
 
-def _action_records(text: str, filename: str, problems: list[dict]):
+def _action_records(text: str, filename: str, problems: list[dict], control=None):
     records = []
     for number, line in enumerate(text.splitlines(), 1):
+        checkpoint(control, "Parsing MIDI actions", number, 0)
         stripped = line.strip()
         m = RE_ACTION.match(stripped)
         if not m:
@@ -51,7 +57,7 @@ def _action_records(text: str, filename: str, problems: list[dict]):
     return records
 
 
-def _action_cycles(graph):
+def _action_cycles(graph, control=None):
     """Iterative DFS: deep action chains cannot exhaust Python recursion."""
     state, cycles = {}, []
     count = 0
@@ -62,6 +68,7 @@ def _action_cycles(graph):
         state[origin] = 1
         stack = [(origin, iter(sorted(graph[origin])))]
         while stack:
+            checkpoint(control, "Checking MIDI dependency graph")
             node, neighbours = stack[-1]
             child = next(neighbours, None)
             if child is None:
@@ -83,10 +90,11 @@ def _action_cycles(graph):
     return cycles, count
 
 
-def _menu_records(text: str, filename: str) -> list[dict]:
+def _menu_records(text: str, filename: str, control=None) -> list[dict]:
     entries = []
     section_name = ""
     for line in text.splitlines():
+        checkpoint(control, "Parsing MIDI menus")
         line = line.strip()
         if line.startswith("[") and line.endswith("]"):
             section_name = line[1:-1]
@@ -122,13 +130,14 @@ def _script_resolution(script_path: str, known_files: set[str]) -> str:
     return "missing-from-backup"
 
 
-def validate_midi_workflow(source: Path, items: list[dict]) -> dict:
+def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> dict:
     """Statically check custom MIDI menus and action registrations.
 
     Only the existence of named files and references is verified. A successful
     result does NOT attest that ReaPack/SWS binaries, command IDs or Lua
     scripts have been activated correctly by REAPER.
     """
+    checkpoint(control, "Inspecting MIDI workflow")
     source = Path(source)
     saved = {x["path"] for x in items if x["policy"] == "keep"}
     problems: list[dict] = []
@@ -144,9 +153,10 @@ def validate_midi_workflow(source: Path, items: list[dict]) -> dict:
     definitions: dict[tuple[int, str], dict] = {}
     all_records, duplicates = [], []
     for filename in action_files:
+        checkpoint(control, "Reading MIDI registrations")
         contents = _text(source, filename, problems)
         if contents is not None:
-            for key, record in _action_records(contents, filename, problems):
+            for key, record in _action_records(contents, filename, problems, control):
                 previous = definitions.get(key)
                 if previous is not None:
                     duplicates.append({"section": key[0], "command": key[1],
@@ -159,15 +169,17 @@ def validate_midi_workflow(source: Path, items: list[dict]) -> dict:
 
     references = []
     for filename in menu_files:
+        checkpoint(control, "Reading MIDI menus")
         contents = _text(source, filename, problems)
         if contents is not None:
-            references.extend(_menu_records(contents, filename))
+            references.extend(_menu_records(contents, filename, control))
 
     external = set()
     numeric = set()
     missing = set()
     resolved = 0
     for reference in references:
+        checkpoint(control, "Checking MIDI references")
         command = reference["command"]
         if command.isdecimal():
             numeric.add((reference["section"], command))
@@ -183,6 +195,7 @@ def validate_midi_workflow(source: Path, items: list[dict]) -> dict:
     checked_scripts = 0
     graph = {key: set() for key in definitions}
     for (section, command), definition in all_records:
+        checkpoint(control, "Checking MIDI registrations")
         if definition["kind"] == "SCR":
             checked_scripts += 1
             resolution = _script_resolution(definition["tail"], saved)
@@ -190,6 +203,7 @@ def validate_midi_workflow(source: Path, items: list[dict]) -> dict:
                 script_problems.add((command, resolution))
         else:
             for token in definition["tail"].split():
+                checkpoint(control, "Checking MIDI dependencies")
                 if token.isdecimal():
                     numeric.add((section, token))
                     continue
@@ -207,7 +221,7 @@ def validate_midi_workflow(source: Path, items: list[dict]) -> dict:
                 else:
                     unverified.add(token)
 
-    cycles, cycle_count = _action_cycles(graph)
+    cycles, cycle_count = _action_cycles(graph, control)
     if cycle_count or any(x["conflicting"] for x in duplicates):
         status = "invalid-action-graph"
     elif missing or script_problems:

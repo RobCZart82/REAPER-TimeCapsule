@@ -134,8 +134,8 @@ def scan(source: Path, *, control=None) -> list[dict]:
     return result
 
 
-def preview(source: Path) -> dict:
-    items = scan(source)
+def preview(source: Path, *, control=None) -> dict:
+    items = scan(source, control=control)
     counts = Counter(x["policy"] for x in items)
     sizes = Counter()
     for x in items:
@@ -143,6 +143,7 @@ def preview(source: Path) -> dict:
     issues = []
     portable = []
     for item in items:
+        checkpoint(control, "Checking portability")
         if item["policy"] not in ("keep", "review"):
             continue
         try:
@@ -155,7 +156,7 @@ def preview(source: Path) -> dict:
     except ValueError as exc:
         issues.append({"reason": str(exc)})
     return {"files": len(items), "counts": dict(counts), "bytes": dict(sizes), "items": items,
-            "inventory": build_inventory(Path(source).expanduser().resolve(strict=True), items),
+            "inventory": build_inventory(Path(source).expanduser().resolve(strict=True), items, control=control),
             "portable_names_ready": not issues, "portability_issues": issues,
             "skipped_entries": [x for x in items if x.get("kind") in ("link", "special")]}
 
@@ -249,7 +250,7 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
                 "created_utc": datetime.now(timezone.utc).isoformat(),
                 "source_platform": platform.system(), "source_architecture": platform.machine(),
                 "strategy": "clean-migration", "files": manifest_files,
-                "inventory": build_inventory(snapshot, items),
+                "inventory": build_inventory(snapshot, items, control=control),
                 "inventory_basis": "archived-resource-bytes",
                 "omitted": [x for x in items if x["policy"] in ("exclude", "regenerate")],
                 "notes": "review items are backed up but never restored into active REAPER resources automatically",

@@ -66,9 +66,9 @@ class App(tk.Tk):
         self.action_row = row
         self.action_buttons = []
         for label, fn in (
-            ("Scan / Preview", lambda: self._do(lambda: self._brief(preview(self.source.get())))),
-            ("MIDI Audit", lambda: self._do(lambda: validate_midi_workflow(Path(self.source.get()), scan(Path(self.source.get()))))),
-            ("ReaPack Audit", lambda: self._do(lambda: audit_reapack(self.source.get()))),
+            ("Scan / Preview", lambda: self._start_io("scan")),
+            ("MIDI Audit", lambda: self._start_io("midi")),
+            ("ReaPack Audit", lambda: self._start_io("reapack")),
             ("Config Preview", self._config_preview),
             ("Backup", lambda: self._start_io("backup")),
             ("Verify", lambda: self._start_io("verify")),
@@ -223,6 +223,9 @@ class App(tk.Tk):
         self.operation_control = OperationControl()
         control = self.operation_control
         actions = {
+            "scan": lambda: App._brief(preview(source, control=control)),
+            "midi": lambda: validate_midi_workflow(Path(source), scan(source, control=control), control=control),
+            "reapack": lambda: audit_reapack(source, control=control),
             "backup": lambda: make_backup(source, archive, control=control),
             "verify": lambda: preview_backup(archive, control=control),
             "restore": lambda: restore_backup(archive, destination, control=control),
@@ -250,6 +253,8 @@ class App(tk.Tk):
                 self.progress.stop()
                 self.progress.configure(mode="determinate", maximum=total, value=completed)
                 self.status.set(f"{phase}: {min(100, completed * 100 // total)}% of this phase")
+            elif not self.operation_control.cancel_requested:
+                self.status.set(phase + " — please wait")
         result = self.runner.poll()
         if result is None:
             self.after(100, self._poll_io)

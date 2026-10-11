@@ -34,12 +34,12 @@ class SnapshotInventoryTests(unittest.TestCase):
         kb.write_text(action)
         saved_ini, saved_kb = ini.read_bytes(), kb.read_bytes()
         seen = []
-        def changed_source(snapshot, items):
+        def changed_source(snapshot, items, **kwargs):
             ini.write_text('repo=https://example.org/later.xml\n')
             kb.write_text('')
             seen.append(Path(snapshot))
             self.assertNotEqual(Path(snapshot), self.source)
-            return build_inventory(snapshot, items)
+            return build_inventory(snapshot, items, **kwargs)
         with patch('reaper_timecapsule.core.build_inventory', side_effect=changed_source):
             make_backup(self.source, self.archive)
         manifest = verify_backup(self.archive)
@@ -55,7 +55,7 @@ class SnapshotInventoryTests(unittest.TestCase):
     def test_inventory_failure_cleans_snapshot_and_unpublished_zip(self):
         (self.source / 'reapack.ini').write_text('synthetic')
         seen = []
-        def fail(snapshot, items):
+        def fail(snapshot, items, **kwargs):
             seen.append(Path(snapshot))
             raise OSError('Synthetic inventory failure')
         with patch('reaper_timecapsule.core.build_inventory', side_effect=fail):
@@ -123,11 +123,11 @@ class SnapshotInventoryTests(unittest.TestCase):
             db.execute('CREATE TABLE files (entry INTEGER, path TEXT)')
             db.execute("INSERT INTO entries VALUES (1, 'Synthetic', 'MIDI', 'Original', '1.0', 0)")
             db.commit()
-        def mutate(snapshot, items):
+        def mutate(snapshot, items, **kwargs):
             with closing(sqlite3.connect(database)) as db:
                 db.execute('DELETE FROM entries')
                 db.commit()
-            return build_inventory(snapshot, items)
+            return build_inventory(snapshot, items, **kwargs)
         with patch('reaper_timecapsule.core.build_inventory', side_effect=mutate):
             make_backup(self.source, self.archive)
         registry = verify_backup(self.archive)['inventory']['reapack']['registry']
