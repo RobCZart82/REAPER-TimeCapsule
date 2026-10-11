@@ -11,7 +11,8 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from .midi_validation import validate_midi_workflow
-from .reapack_profile import inspect_registry, parse_profile
+from .reapack_profile import inspect_registry, parse_profile, _empty_profile, _empty_registry
+from .safe_paths import trusted_resource_file
 
 MAX_REAPACK_INI_BYTES = 2 * 1024 * 1024
 MAX_URLS = 1000
@@ -62,6 +63,7 @@ def build_inventory(source: Path, items: list[dict]) -> dict:
     portable = {x["path"] for x in items if x["policy"] == "keep"}
     review = {x["path"] for x in items if x["policy"] == "review"}
     paths = portable | review
+    indexed = {x["path"]: x for x in items}
     native = []
     for name in sorted(review):
         lower = name.lower()
@@ -75,13 +77,36 @@ def build_inventory(source: Path, items: list[dict]) -> dict:
         else:
             family = "Other"
         native.append({"filename": basename, "family": family, "restore": "manual-review"})
-    profile = parse_profile(source / "reapack.ini")
-    registry = inspect_registry(source / "ReaPack" / "registry.db")
+    def selected_path(relative):
+        if relative not in paths:
+            return None
+        try:
+            return trusted_resource_file(source, relative)
+        except (OSError, ValueError):
+            return None
+
+    ini = selected_path("reapack.ini")
+    database = selected_path("ReaPack/registry.db")
+    # Inspect sidecar boundaries too: SQLite must not observe an external WAL.
+    for suffix in ("-wal", "-journal"):
+        relative = "ReaPack/registry.db" + suffix
+        sidecar = indexed.get(relative)
+        if sidecar and (relative not in paths or sidecar["size"] > inventory_input_limit(relative)):
+            database = None
+        if database:
+            try:
+                (database.parent / (database.name + suffix)).lstat()
+            except FileNotFoundError:
+                continue
+            if selected_path(relative) is None:
+                database = None
+    profile = parse_profile(ini) if ini else _empty_profile("missing", "No selected trusted reapack.ini")
+    registry = inspect_registry(database) if database else _empty_registry("missing", "No selected trusted registry")
     # Legacy URL-only scan remains a compatibility fallback when an INI
     # predates the 1.x [remotes] section or uses an unknown format.
     repo_urls = ([x["index_url"] for x in profile["repositories"]]
                  if profile["status"] == "parsed" else
-                 _public_repo_urls(source / "reapack.ini") if "reapack.ini" in paths else [])
+                 _public_repo_urls(ini) if ini else [])
     menu_files = sorted(
         x for x in portable if x.lower().startswith("menusets/") and x.lower().endswith(".reapermenu")
     )
@@ -90,6 +115,10 @@ def build_inventory(source: Path, items: list[dict]) -> dict:
     )
     return {
         "format": "inventory-v1",
+        "inspection_omissions": [{"path": x["path"], "reason": "Parser size limit exceeded"}
+                                 for x in items if x["path"] in paths and
+                                 inventory_input_limit(x["path"]) and
+                                 x["size"] > inventory_input_limit(x["path"])],
         "reapack": {
             "settings_file_saved": "reapack.ini" in paths,
             "data_files_saved": sum(1 for x in portable if x.lower().startswith("reapack/")),
@@ -116,3 +145,24 @@ def build_inventory(source: Path, items: list[dict]) -> dict:
             x for x in portable if x.lower() in ("s&m.ini", "br.ini", "sws-autocoloricon.ini")
         ),
     }
+
+
+def inventory_input_limit(relative):
+    """Only parser inputs need a byte-identical private copy; scripts stay paths."""
+    lower = relative.lower()
+    if lower in ('reapack/registry.db', 'reapack/registry.db-wal', 'reapack/registry.db-journal'):
+        return 128 * 1024 * 1024
+    if lower == 'reapack.ini':
+        return MAX_REAPACK_INI_BYTES
+    if (lower in ('reaper-kb.ini', 'reaper-menu.ini') or
+            lower.startswith('keymaps/') and lower.endswith('.reaperkeymap') or
+            lower.startswith('menusets/') and lower.endswith('.reapermenu')):
+        return 8 * 1024 * 1024
+    return 0
+
+
+def audit_reapack(source):
+    """Resource-boundary checked GUI/CLI audit, without reading linked parents."""
+    from .core import scan
+    result = build_inventory(Path(source).expanduser().resolve(strict=True), scan(source))["reapack"]
+    return {"profile": result["profile"], "registry": result["registry"]}

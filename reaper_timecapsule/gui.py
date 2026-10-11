@@ -9,7 +9,7 @@ from .operation import OperationControl
 from .core import VERSION, default_resource, make_backup, preview, preview_backup, restore_backup, scan
 from .midi_validation import validate_midi_workflow
 from .config_migration import preview_migration
-from .reapack_profile import inspect_registry, parse_profile
+from .inventory import audit_reapack
 from .about import AboutWindow, brand_image
 
 
@@ -68,10 +68,7 @@ class App(tk.Tk):
         for label, fn in (
             ("Scan / Preview", lambda: self._do(lambda: self._brief(preview(self.source.get())))),
             ("MIDI Audit", lambda: self._do(lambda: validate_midi_workflow(Path(self.source.get()), scan(Path(self.source.get()))))),
-            ("ReaPack Audit", lambda: self._do(lambda: {
-                "profile": parse_profile(Path(self.source.get()) / "reapack.ini"),
-                "registry": inspect_registry(Path(self.source.get()) / "ReaPack" / "registry.db"),
-            })),
+            ("ReaPack Audit", lambda: self._do(lambda: audit_reapack(self.source.get()))),
             ("Config Preview", self._config_preview),
             ("Backup", lambda: self._start_io("backup")),
             ("Verify", lambda: self._start_io("verify")),

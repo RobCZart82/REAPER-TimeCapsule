@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .core import default_resource, make_backup, preview, preview_backup, restore_backup, scan
 from .midi_validation import validate_midi_workflow
-from .reapack_profile import inspect_registry, parse_profile
+from .inventory import audit_reapack
 from .config_migration import preview_migration
 from .theme_migration import preview_themes
 from .config_staging import export_preferences, verify_staging
@@ -68,10 +68,7 @@ def main():
                                        source_version=args.source_version,
                                        target_version=args.target_version)
         elif args.command == "reapack-audit":
-            result = {
-                "profile": parse_profile(args.source / "reapack.ini"),
-                "registry": inspect_registry(args.source / "ReaPack" / "registry.db"),
-            }
+            result = audit_reapack(args.source)
         elif args.command == "midi-audit":
             result = validate_midi_workflow(args.source, scan(args.source))
         elif args.command == "scan":

@@ -56,6 +56,20 @@ transactional filesystem snapshot or protection against arbitrary hostile direct
 replacement. Snapshot-consistent inventory and inventory-reader boundaries remain
 separate fixes. These changes are on main, not in the published beta.
 
+### Development: archived inventory and restore preview
+
+New backups build their ReaPack/MIDI inventory from private copies of the exact
+bytes written to the ZIP, not from later live source reads. Copies are removed
+on success, cancellation or handled failure. Parser-size omissions are reported;
+the original resource remains archived. This requires extra temporary disk space
+for bounded parser inputs and is not a simultaneous filesystem snapshot.
+
+Inventory and the resource-based ReaPack/MIDI audits reject linked parent paths.
+Restore preview reports effective current policies, stored counts and explained
+policy changes. Older inventories are labelled as having an unverified source
+basis; their original files are preserved and current restore safety rules apply.
+These changes are on main and are not yet in the published beta.
+
 ## Features
 
 - File policies classify resources as `keep`, `review`, `regenerate` or `exclude`.

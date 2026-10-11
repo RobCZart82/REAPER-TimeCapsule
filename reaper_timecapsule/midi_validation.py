@@ -6,6 +6,8 @@ already inside the selected REAPER resource directory.
 """
 from __future__ import annotations
 
+from .safe_paths import trusted_resource_file
+
 import re
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
@@ -23,8 +25,7 @@ def _text(source: Path, relative: str, problems: list[dict]) -> str | None:
     """Bound the read and refuse symlinks. Legacy-encoded configs are tolerated."""
     file = source.joinpath(*relative.split("/"))
     try:
-        if file.is_symlink() or not file.is_file():
-            raise OSError("file missing or symbolic link")
+        file = trusted_resource_file(source, relative)
         if file.stat().st_size > MAX_TEXT_BYTES:
             raise ValueError("file exceeds 8 MiB parser limit")
         return file.read_bytes().decode("utf-8-sig", errors="replace")

@@ -104,3 +104,30 @@ are not guaranteed by this first fix. No automatic link-target backup is added.
 TC-004/TC-006/TC-005 leltár- és előnézet-javítás következik. Ez az első kör nem
 ígér védelmet tetszőleges ellenséges fájlrendszercserére, bind-mount azonosságra
 vagy tranzakciós forráskonzisztenciára. Linkcélok automatikus mentése nem került be.
+
+## Second reliability fix / második megbízhatósági javítás
+
+TC-004: ReaPack INI, registry/sidecars and MIDI menu/keymap text are copied from
+the same stream as the archived resource. Inventory parses those private bounded
+copies, never later live source state. Temporary copies are cleaned on handled
+exit. Parser-limit omissions are explicit; oversized originals remain archived.
+TC-006: selected-path and full resource-relative component checks reject links
+and Windows reparse points in inventory, copying and resource-based audits.
+TC-005: restore preview uses the same effective-policy function as restore,
+retaining stored counts and explained changes. Old inventory provenance is labelled.
+
+TC-004: a leltár a ZIP-bájtfólamból másolt, korlátozott parserbemenetekből készül;
+a későbbi forrásváltozás nem kerül bele. Kezelt kilépéskor az ideiglenes másolatok
+törlődnek. A méretkorlát miatti elemzési kihagyás jelzett, az eredeti fájl mentett.
+TC-006: csak kiválasztott, teljes relatív komponenslánccal ellenőrzött utak olvashatók;
+linkek/reparse pontok elutasítva a leltárnál, másolásnál és erőforrás-auditnál.
+TC-005: az előnézet a restore szabálymotorját használja; tárolt számlálók és indokolt
+változások megmaradnak, a régi leltár forrásalapja jelölt.
+
+This guarantees inventory/archive byte agreement, not an instantaneous snapshot
+of all source files, protection against hostile component swaps between check/open,
+or crash cleanup. SQLite live/WAL state still needs a closed REAPER source.
+
+A leltár és archívum bájtazonosságát biztosítja, nem minden fájl egyidejű állapotát,
+ellenőrzés/megnyitás közti ellenséges komponenscserét vagy crash utáni takarítást.
+SQLite/WAL konzisztenciához továbbra is bezárt REAPER-forrás szükséges.

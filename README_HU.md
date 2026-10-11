@@ -57,6 +57,21 @@ tranzakciós fájlrendszer-pillanatkép vagy védelem tetszőleges ellenséges
 könyvtárcserével szemben. A leltár konzisztenciája és az olvasók útvonalhatárai
 külön javítások maradnak. Ezek a változások a main ágon vannak, nem a publikált bétában.
 
+### Fejlesztés: archivált leltár és restore-előnézet
+
+Az új mentések ReaPack/MIDI-leltára a ZIP-be írt pontos bájtok ideiglenes,
+elkülönített másolataiból készül, nem későbbi élő forrásolvasásból. A másolatok
+siker, megszakítás vagy kezelt hiba után törlődnek. A parser méretkorlátja miatt
+nem elemzett bemeneteket jelezzük; az eredeti erőforrás az archívumban megmarad.
+Ez további ideiglenes tárhelyet igényel a korlátozott méretű parserbemenetekhez,
+és nem egyidejű fájlrendszer-pillanatkép.
+
+A leltár és az erőforrás-alapú ReaPack/MIDI-audit elutasítja a linkelt szülőutakat.
+A restore-előnézet az aktuális szabályokat, a tárolt darabszámokat és az indokolt
+besorolásváltozásokat mutatja. A régi leltárak forrásalapját ellenőrizetlenként
+jelöljük; az eredeti fájlok megmaradnak, és az aktuális restore-védelem érvényesül.
+Ezek a változások a main ágon vannak, még nem a publikált bétában.
+
 ## Funkciók
 
 - Fájlszabályok sorolják az erőforrásokat `keep`, `review`, `regenerate` vagy `exclude` kategóriába.
