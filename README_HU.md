@@ -8,6 +8,11 @@ meg a hordozható fájlokat, és elkülöníti a kézi felülvizsgálatot igény
 
 [English](README.md)
 
+![REAPER TimeCapsule 0.9.0-beta.2 macOS-en, a Scan / Preview eredményével](docs/screenshots/timecapsule-scan-preview-0.9.0-beta.2-macos.png)
+
+*A projekt tulajdonosa által készített valódi macOS-képernyőkép, 2026. október 11.
+A Scan / Preview egy fájlnév hordozhatósági problémáját jelzi; nem befejezett mentést mutat.*
+
 > **[0.9.0-beta.2 letöltése](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2)**
 > — nyilvános, aláíratlan béta. Az eszköz erőforrásokat ment és állít vissza;
 > a teljes, egykattintásos REAPER-újratelepítés még nincs megvalósítva. Tarts külön biztonsági mentést is.
