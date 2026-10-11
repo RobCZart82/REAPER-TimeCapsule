@@ -1,116 +1,181 @@
-# REAPER TimeCapsule 🎹
+# REAPER TimeCapsule
 
-Cross-platform (macOS / Windows / Linux) **experimental** REAPER resource snapshot tool.
-This is a **development preview**, not a complete one-click workflow migration utility.
-Do not use it as your only backup. Close REAPER before any resource snapshot.
+**Preserve your REAPER setup. Restore with confidence.**
 
-## Current milestone (`0.9.0-beta.1`)
+An open-source tool for offline REAPER resource backups, archive verification and
+careful recovery on another machine. Keep portable files together and separate
+settings that need manual review.
 
-- Uses a policy engine to classify files as `keep`, `review`, `regenerate`, or `exclude`.
-- Preserves portable REAPER Scripts, MenuSets, KeyMaps, ReaPack state, SWS configuration,
-  LangPack, toolbar resources, themes, and user presets for backups.
-- Does NOT import old VST/AU/CLAP plugin scans; rebuild those on the new machine.
-- Excludes REAPER registration/license files and obvious credentials from backups by default.
-- Saves uncertain machine-specific settings (`reaper.ini`, audio/MIDI devices, UserPlugins)
-  but isolates them in `NeedsReview/` when restoring, **not** in the active REAPER folder.
-- ZIP snapshots include `manifest.json` with SHA-256 hashes, omission decisions and
-  platform information; verification checks every archived file.
-- Restores only into a **nonexistent** destination folder by staging/rename; no overwrite,
-  no automatic plugin installation, no silent merges into REAPER, no network downloads.
-- GUI uses Tkinter; Python 3.10+ required until native .app/.exe builds exist.
-- GUI backup, verify and restore run in the background with a busy indicator.
-  Only one operation runs at a time, with cooperative Cancel and per-phase progress.
-  Closing is blocked until completion or cancellation cleanup.
-- MIDI Editor dependency validator: compare menu Custom Action references with imported .ReaperKeyMap and reaper-kb.ini; report missing actions and missing/nonportable script paths. Results are visible in GUI, CLI and snapshot inventory.
-- The validator performs **static inspection only**: it cannot prove runtime script correctness, extension availability or automatic import success.
-- Read-only ReaPack/SWS/MIDI inventory embedded in snapshots: recognizable extension
-  filenames, menu and keymap files, configured XML repository URLs (credentials redacted
-  in the report). The original config is backed up, not edited.
-- **ReaPack 1.x profile reader** reads actual repository names, order, URLs,
-  enabled states, per-repository auto-install overrides and global options
-  from `reapack.ini`; unknown formats are flagged rather than guessed.
-- **Installed packages inventory** is read from the ReaPack SQLite registry in
-  read-only mode. On clean restore the old registry is isolated in
-  `NeedsReview/` and downloaded `ReaPack/cache/` indexes are regenerated.
-- Never starts a ReaPack synchronization, writes the installed-package
-  registry or installs a native extension without approval.
+[Magyar](README_HU.md)
 
-## Intelligent Configuration Migration (read-only preview)
+> **[Download 0.9.0-beta.1](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.1)**
+> — the first public, unsigned beta. This is a resource snapshot and recovery tool;
+> complete one-click REAPER reinstallation is not implemented. Keep an independent backup.
 
-`config-preview` compares two explicitly selected INI files and outputs a redacted
-JSON diff. Only exact approved section/key/value combinations can be candidates;
-unknown settings require review and hardware/platform/cache/private state is excluded.
-The GUI **Config Preview** button provides the same comparison with explicit file
-selection, optional version records and conflict counts.
-Preview never writes either file or the REAPER resource folder. No active merge
-is implemented. Separate opt-in preference DATA export and read-only verification
-are available; see [staging and verification](docs/CONFIGURATION_STAGING.md). See [configuration migration](docs/CONFIGURATION_MIGRATION.md).
+## Download
 
-## Factory theme preview
+Download packages from this project's [GitHub Releases](https://github.com/RobCZart82/REAPER-TimeCapsule/releases).
 
-`theme-preview` compares explicit source, factory and target ColorThemes folders.
-It identifies byte-identical packed factory themes, modified variants, user themes
-and destination conflicts. It never copies, deletes or omits backup files. See
-[theme migration preview](docs/THEME_MIGRATION.md).
+| Platform | Application |
+|---|---|
+| macOS · Apple Silicon (arm64) | [Unsigned application ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.1/REAPER-TimeCapsule-0.9.0-beta.1-Darwin-arm64-unsigned.zip) |
+| Windows · x64 | [Unsigned application ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.1/REAPER-TimeCapsule-0.9.0-beta.1-Windows-AMD64-unsigned.zip) |
+| Linux | [Source and release notes](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.1) · Python 3.10+ |
 
-## Preference staging and verification (0.7 / 0.8)
+Both application ZIPs include matching source, GPL and runtime license notices,
+a bundled self-test report and documentation. The release also provides
+[SHA-256 checksums](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.1/SHA256SUMS.txt)
+and platform build manifests. Windows source uses CRLF line endings.
+Development on `main` may differ from the published packages.
 
-`config-stage` requires explicit opt-in and exact changed preference selections.
-It creates a new `.timecapsule-stage.zip` under a dedicated `TimeCapsule-Staging`
-folder outside input and recognized REAPER directories. It contains selected
-preference DATA, reverse values and fingerprints, not an installable reaper.ini.
-`verify-stage` checks integrity, approval policy and optionally the current target
-baseline. Neither command applies settings or supports full rollback.
+## Features
 
-## Run
+- File policies classify resources as `keep`, `review`, `regenerate` or `exclude`.
+- Backups preserve portable Scripts, MenuSets, KeyMaps, LangPack, toolbar resources,
+  themes, user presets, SWS configuration and selected ReaPack state.
+- A ZIP manifest records SHA-256 hashes, omissions and platform information;
+  verification checks every archived file.
+- Recovery creates a new external folder, separating portable resources in
+  `REAPER/` from uncertain configuration and native extensions in `NeedsReview/`.
+- Background Backup, Verify and Restore offer per-phase progress and cooperative
+  Cancel. One operation runs at a time; closing waits for completion or cleanup.
+- Static MIDI audit checks menu Custom Action references against keymaps and
+  `reaper-kb.ini`, reporting missing actions and missing or nonportable script paths.
+- ReaPack 1.x audit reads repository names, order, URLs, enabled states,
+  per-repository auto-install overrides and global options. Installed packages,
+  versions and pinned versions are inventoried from the SQLite registry read-only.
+- Read-only configuration and theme previews identify candidates and conflicts;
+  explicitly selected preferences can be exported separately as review data.
+
+## System requirements
+
+The macOS and Windows application downloads do not require Python or a compiler.
+The published binaries target Apple Silicon and Windows x64 respectively; Intel
+macOS and Windows ARM compatibility is not claimed. Linux is source-only.
+Minimum OS and clean-machine acceptance are not fully validated; consult the
+[first beta guide](docs/FIRST_BETA.md) and release manifests for actual build environments.
+
+Source use requires Python 3.10+; the desktop interface also requires Tkinter/Tk.
+Close REAPER before taking a resource snapshot and keep the source unchanged
+throughout the operation. Portable REAPER installations need their own resource path.
+
+## Installation and first backup
+
+1. Download the ZIP for your platform and extract the complete package. Keep the
+   application's companion files together. Start the included `.app` on macOS or
+   `REAPER-TimeCapsule.exe` inside its application folder on Windows.
+2. Close REAPER. Find its resource directory through REAPER's resource-path menu
+   and choose that directory in TimeCapsule.
+3. Use **Scan / Preview**, then **Choose new backup ZIP** to select a new archive
+   outside the resource directory. Choose **Backup** and wait for verification.
+4. Use **Open existing snapshot** and **Verify** to inspect a saved archive.
+5. Choose a recovery folder that does not yet exist, then **Restore**. Review
+   `REAPER/`, `NeedsReview/` and the reports before manually importing resources.
+
+These packages have no developer certificate or notarization. Gatekeeper or
+SmartScreen may display warnings. Check the official download and checksum;
+do not disable system security globally. See the [beta guide](docs/FIRST_BETA.md).
+
+## Configuration and theme previews
+
+**Config Preview** in the GUI and `config-preview` in the CLI compare explicitly
+selected INI files and produce a redacted diff. Only exact approved section,
+key and value combinations are candidates; unknown keys require review, while
+hardware, platform, plugin-cache and private state are excluded. Neither input
+nor the active REAPER resource directory is modified. No active merge is implemented.
+
+`theme-preview` compares source, factory and target ColorThemes directories,
+identifying byte-identical packed factory themes, modified variants, user themes
+and destination conflicts. It does not copy, delete or omit backup files.
+
+`config-stage` requires explicit opt-in, version records and exact preference
+selections. It creates a new `.timecapsule-stage.zip` in a dedicated external
+`TimeCapsule-Staging` directory. This contains preference data, reverse values and
+fingerprints, not an installable `reaper.ini`. `verify-stage` checks integrity,
+approval policy and optionally the target baseline. Neither command applies
+settings or provides full rollback.
+
+## Safety and limitations
+
+Recovery never overwrites an existing destination or merges into the active
+REAPER directory. Old VST/AU/CLAP scan caches and downloaded ReaPack indexes are
+regenerated; the old installed-package registry is isolated in `NeedsReview/`.
+TimeCapsule does not synchronize ReaPack, edit its registry, install plugins or
+native extensions, transfer licenses or download components automatically.
+
+Registration/license files and obvious credentials are excluded from backups by
+default. Inventory reports redact credentials in recognizable repository URLs;
+original backed-up configuration can still be private. Keep your archives private
+and do not attach full profiles or credentials to public issues.
+
+Backup creation requires writable storage with hard-link support. FAT/exFAT
+creation fails closed; create and verify locally, then copy the ZIP elsewhere.
+Restore requires exclusive-rename support. Windows-invalid filenames,
+case/Unicode collisions and file/directory conflicts are rejected on every
+platform rather than renamed or dropped.
+
+Cancellation waits for safe checkpoints and can arrive after final publication;
+an already completed result is reported as success. Progress is per phase, not
+an overall percentage or ETA. Audits and other scans remain synchronous. There
+is no full transactional snapshot, power-loss durability or hostile filesystem-race
+guarantee; unusual filesystems and path-length limits need further validation.
+
+Static audits and green CI do not prove that every script, theme, extension or
+MIDI workflow works inside REAPER. Keep an independent backup and review recovery
+results in a fresh REAPER installation.
+
+## Documentation
+
+- [First beta guide and package limitations](docs/FIRST_BETA.md)
+- [Backup policy](docs/REAPER_BACKUP_POLICY.md)
+- [Configuration migration preview](docs/CONFIGURATION_MIGRATION.md)
+- [Preference staging and verification](docs/CONFIGURATION_STAGING.md)
+- [Theme migration preview](docs/THEME_MIGRATION.md)
+- [MIDI Workflow Recovery](docs/MIDI_WORKFLOW_RECOVERY.md)
+- [ReaPack Smart Recovery](docs/REAPACK_SMART_RECOVERY.md)
+- [Release readiness](docs/RELEASE_READINESS.md) and [roadmap](docs/ROADMAP.md)
+
+These detailed technical documents are currently English. This README and its
+[Hungarian counterpart](README_HU.md) cover the same features, instructions and limitations.
+
+## Running from source
+
+From the extracted source directory, start the GUI or use the CLI:
+
+```bash
+python -m reaper_timecapsule gui
+python -m reaper_timecapsule scan
+python -m reaper_timecapsule midi-audit
+python -m reaper_timecapsule reapack-audit
+python -m reaper_timecapsule backup my-timecapsule.zip --source /path/to/REAPER
+python -m reaper_timecapsule verify my-timecapsule.zip
+python -m reaper_timecapsule restore my-timecapsule.zip RecoveredTimeCapsule
+```
+
+`scan`, `midi-audit` and `reapack-audit` accept an optional source directory.
+Without one, they inspect the platform's default REAPER resource path.
+Use explicit paths for portable installations. Preview and staging examples:
 
 ```bash
 python -m reaper_timecapsule config-preview old.ini clean.ini --source-version 7.82 --target-version 7.82
 python -m reaper_timecapsule theme-preview old/ColorThemes factory/ColorThemes clean/ColorThemes --source-version 7.82 --factory-version 7.82
 python -m reaper_timecapsule config-stage old.ini clean.ini TimeCapsule-Staging/review.timecapsule-stage.zip --select REAPER/tinttcp --source-version 7.82 --target-version 7.82 --opt-in
 python -m reaper_timecapsule verify-stage TimeCapsule-Staging/review.timecapsule-stage.zip --target clean.ini
-python -m reaper_timecapsule scan
-python -m reaper_timecapsule midi-audit
-python -m reaper_timecapsule reapack-audit
-python -m reaper_timecapsule backup ~/Desktop/my-timecapsule.zip
-python -m reaper_timecapsule verify ~/Desktop/my-timecapsule.zip
-python -m reaper_timecapsule restore ~/Desktop/my-timecapsule.zip ~/Desktop/RecoveredTimeCapsule
-python -m reaper_timecapsule gui
-python -m unittest discover -s tests -v
 ```
 
-Optional `--source /path/to/REAPER` with `backup`, or a source argument with `scan`.
-**Close REAPER before backup or restore.**
-Backup creation requires a writable destination filesystem with hard-link support
-for atomic no-overwrite publication (FAT/exFAT destinations are not supported by
-this publication method). On failure, choose a supported local filesystem; there
-is no overwrite-capable fallback. You can manually copy an already verified ZIP
-elsewhere afterwards. See [release readiness](docs/RELEASE_READINESS.md).
+Paths and REAPER versions above are examples; provide your actual selected inputs.
+Run automated tests with `python -m unittest discover -s tests -v`.
+The release passed 108 tests across macOS, Windows and Linux on Python 3.10/3.12;
+both bundled desktop executables passed synthetic backup/verify/recovery and Tk
+startup checks. This does not replace full REAPER integration testing.
 
-## Portable archive filenames
+## About and license
 
-Verification and restore reject Windows-invalid resource names, case/Unicode
-collisions and file/directory conflicts on every platform before restoring files.
-No automatic renaming occurs. Older archives with such names must be reviewed;
-keep the original backup. See [release readiness](docs/RELEASE_READINESS.md).
+Developed by **RobCZart82**. Report bugs in [GitHub Issues](https://github.com/RobCZart82/REAPER-TimeCapsule/issues)
+with the version, OS, architecture and reproduction steps using reduced or synthetic examples.
 
-## Migration safety
-
-Restore produces `RecoveredTimeCapsule/REAPER/` for portable files, plus
-`RecoveredTimeCapsule/NeedsReview/` for uncertain settings and native extensions.
-This is **not** yet an automatic reinstallation procedure. Review its reports and use a
-fresh REAPER installation to regenerate plugin caches and hardware settings.
-
-Third-party script bundles, proprietary plugin executables, and REAPER registration
-keys are **not included in this source repository**. A private backup of installed
-components is different from legally redistributing them in a public GitHub repo.
-
-This app isn't affiliated with or endorsed by Cockos / REAPER.
-
-## Development status
-
-Source is **GPL-3.0-only**; see [LICENSE](LICENSE). Standalone unsigned beta builds
-include matching source and runtime notices. See [first beta guide](docs/FIRST_BETA.md).
-Repository visibility remains private until explicitly approved for publication. See [roadmap](docs/ROADMAP.md),
-[ReaPack Smart Recovery](docs/REAPACK_SMART_RECOVERY.md) and
-[MIDI Workflow Recovery](docs/MIDI_WORKFLOW_RECOVERY.md).
+TimeCapsule source is [GPL-3.0-only](LICENSE), provided without warranty.
+Bundled runtimes retain their own terms; see [third-party notices](THIRD_PARTY_NOTICES.md).
+REAPER, proprietary plugins, third-party script bundles, personal profiles and
+registration keys are not distributed with this project. The project is not
+affiliated with or endorsed by Cockos / REAPER.
