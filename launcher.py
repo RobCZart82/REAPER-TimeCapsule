@@ -70,9 +70,9 @@ def self_test(report):
         assert abs(left_margin - right_margin) <= 1, (left_margin, right_margin)
         log_height = app.log.winfo_height()
         app._begin_vertical_resize(SimpleNamespace(y_root=0))
-        app._drag_vertical_resize(SimpleNamespace(y_root=80))
-        wait_for_geometry(app, width, height + 80)
-        assert app.winfo_width() == width and app.winfo_height() == height + 80
+        app._drag_vertical_resize(SimpleNamespace(y_root=40))
+        wait_for_geometry(app, width, height + 40)
+        assert app.winfo_width() == width and app.winfo_height() == height + 40
         assert app.log.winfo_height() > log_height
         app.withdraw()
         app.update_idletasks()
