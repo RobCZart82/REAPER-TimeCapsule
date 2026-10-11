@@ -82,7 +82,8 @@ class App(tk.Tk):
 
     @staticmethod
     def _brief(result):
-        return {"files": result["files"], "counts": result["counts"], "bytes": result["bytes"]}
+        return {key: result[key] for key in
+                ("files", "counts", "bytes", "portable_names_ready", "portability_issues")}
 
     def _do(self, action):
         try:

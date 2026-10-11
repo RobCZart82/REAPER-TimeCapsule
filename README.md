@@ -8,8 +8,8 @@ settings that need manual review.
 
 [Magyar](README_HU.md)
 
-> **[Download 0.9.0-beta.1](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.1)**
-> — the first public, unsigned beta. This is a resource snapshot and recovery tool;
+> **[Download 0.9.0-beta.2](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2)**
+> — an unsigned public beta. This is a resource snapshot and recovery tool;
 > complete one-click REAPER reinstallation is not implemented. Keep an independent backup.
 
 ## Download
@@ -18,13 +18,13 @@ Download packages from this project's [GitHub Releases](https://github.com/RobCZ
 
 | Platform | Application |
 |---|---|
-| macOS · Apple Silicon (arm64) | [Unsigned application ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.1/REAPER-TimeCapsule-0.9.0-beta.1-Darwin-arm64-unsigned.zip) |
-| Windows · x64 | [Unsigned application ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.1/REAPER-TimeCapsule-0.9.0-beta.1-Windows-AMD64-unsigned.zip) |
-| Linux | [Source and release notes](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.1) · Python 3.10+ |
+| macOS · Apple Silicon (arm64) | [Unsigned application ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/REAPER-TimeCapsule-0.9.0-beta.2-Darwin-arm64-unsigned.zip) |
+| Windows · x64 | [Unsigned application ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/REAPER-TimeCapsule-0.9.0-beta.2-Windows-AMD64-unsigned.zip) |
+| Linux | [Source and release notes](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2) · Python 3.10+ |
 
 Both application ZIPs include matching source, GPL and runtime license notices,
 a bundled self-test report and documentation. The release also provides
-[SHA-256 checksums](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.1/SHA256SUMS.txt)
+[SHA-256 checksums](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/SHA256SUMS.txt)
 and platform build manifests. Windows source uses CRLF line endings.
 Development on `main` may differ from the published packages.
 
@@ -112,7 +112,10 @@ Backup creation requires writable storage with hard-link support. FAT/exFAT
 creation fails closed; create and verify locally, then copy the ZIP elsewhere.
 Restore requires exclusive-rename support. Windows-invalid filenames,
 case/Unicode collisions and file/directory conflicts are rejected on every
-platform rather than renamed or dropped.
+platform rather than renamed or dropped. Scan / Preview accepts native names
+(such as macOS AU presets containing a colon) and reports portability issues
+with file paths. Affected files remain listed; portable backup is blocked before
+creating an archive. No silent exclusion or renaming is performed.
 
 Cancellation waits for safe checkpoints and can arrive after final publication;
 an already completed result is reported as success. Progress is per phase, not
@@ -165,7 +168,7 @@ python -m reaper_timecapsule verify-stage TimeCapsule-Staging/review.timecapsule
 
 Paths and REAPER versions above are examples; provide your actual selected inputs.
 Run automated tests with `python -m unittest discover -s tests -v`.
-The release passed 108 tests across macOS, Windows and Linux on Python 3.10/3.12;
+The release passed 112 tests across macOS, Windows and Linux on Python 3.10/3.12;
 both bundled desktop executables passed synthetic backup/verify/recovery and Tk
 startup checks. This does not replace full REAPER integration testing.
 

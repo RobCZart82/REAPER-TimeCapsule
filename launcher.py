@@ -4,7 +4,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from reaper_timecapsule.core import VERSION, make_backup, verify_backup, restore_backup
+from reaper_timecapsule.core import VERSION, make_backup, verify_backup, restore_backup, preview
 from reaper_timecapsule.gui import App
 from reaper_timecapsule.operation import OperationControl, OperationCancelled
 
@@ -23,6 +23,22 @@ def self_test(report):
         restore_backup(archive, destination)
         assert (destination / 'REAPER/reaper-kb.ini').read_text() == 'synthetic action'
         assert (destination / 'NeedsReview/reaper.ini').is_file()
+        if sys.platform == 'darwin':
+            (source / 'presets').mkdir()
+            preset = source / 'presets/au-example: Synth-builtin.ini'
+            preset.write_text('synthetic preset', encoding='utf-8')
+            scanned = preview(source)
+            assert scanned['files'] == 3 and not scanned['portable_names_ready']
+            assert App._brief(scanned)['portability_issues'][0]['path'] == 'presets/au-example: Synth-builtin.ini'
+            try:
+                make_backup(source, root / 'not-portable.zip')
+            except ValueError as exc:
+                assert 'Cannot create a portable backup' in str(exc)
+            else:
+                raise AssertionError('Nonportable backup was accepted')
+            assert not (root / 'not-portable.zip').exists()
+            assert preset.read_text() == 'synthetic preset'
+            preset.unlink()
         control = OperationControl()
         control.cancel()
         try:

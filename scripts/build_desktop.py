@@ -40,7 +40,7 @@ def main():
         package.mkdir()
         binary = ROOT / 'dist' / (NAME + '.app' if sys.platform == 'darwin' else NAME)
         shutil.copytree(binary, package / binary.name, symlinks=True)
-        for filename in ('LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.md'):
+        for filename in ('LICENSE', 'README.md', 'README_HU.md', 'THIRD_PARTY_NOTICES.md'):
             shutil.copy2(ROOT / filename, package / filename)
         shutil.copytree(ROOT / 'docs', package / 'docs')
         shutil.copytree(ROOT / 'runtime-licenses', package / 'runtime-licenses')

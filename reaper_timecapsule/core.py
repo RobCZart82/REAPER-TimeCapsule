@@ -20,7 +20,7 @@ from .publication import publish_directory
 from .operation import checkpoint
 from .inventory import build_inventory
 
-VERSION = "0.9.0-beta.1"
+VERSION = "0.9.0-beta.2"
 FORMAT = "reaper-timecapsule"
 SCHEMA = 2
 MAX_MANIFEST_BYTES = 16 * 1024 * 1024
@@ -65,21 +65,22 @@ def _validate_portable_paths(paths) -> None:
     prefixes = {}
     for path in paths:
         if not _valid_path(path):
-            raise ValueError("Unsafe archive path")
+            raise ValueError("Unsafe archive path: " + repr(path))
         original = path.split('/')
         normalized = []
         for index, part in enumerate(original):
             if (part.endswith((' ', '.')) or any(char in '<>:"\\|?*' for char in part)
                     or any(ord(char) < 32 or 0xD800 <= ord(char) <= 0xDFFF for char in part)
                     or part.split('.')[0].rstrip(' ').casefold() in WINDOWS_RESERVED_NAMES):
-                raise ValueError("Archive contains a nonportable filename")
+                raise ValueError("Archive contains a nonportable filename: " + repr(path))
             normalized.append(unicodedata.normalize('NFC', part).casefold())
             identity = tuple(normalized)
             spelling = tuple(original[:index + 1])
             is_file = index == len(original) - 1
             existing = prefixes.get(identity)
             if existing is not None and existing != (spelling, is_file):
-                raise ValueError("Archive paths collide across platforms")
+                raise ValueError("Archive paths collide across platforms: " + repr(path)
+                                 + " conflicts with " + repr('/'.join(existing[0])))
             prefixes[identity] = spelling, is_file
 
 
@@ -100,8 +101,8 @@ def scan(source: Path, *, control=None) -> list[dict]:
             if path.is_symlink() or not path.is_file():
                 continue
             rel = path.relative_to(source).as_posix()
-            if not _valid_path(rel):
-                raise ValueError("Unexpected source path")
+            # Native names (e.g. macOS AU presets containing ':') are valid
+            # inventory input. Archive portability is a separate preflight.
             rule = decide(rel)
             size = path.stat().st_size
             result.append({"path": rel, "size": size, "policy": rule.policy, "reason": rule.reason})
@@ -114,7 +115,23 @@ def preview(source: Path) -> dict:
     sizes = Counter()
     for x in items:
         sizes[x["policy"]] += x["size"]
-    return {"files": len(items), "counts": dict(counts), "bytes": dict(sizes), "items": items, "inventory": build_inventory(Path(source), items)}
+    issues = []
+    portable = []
+    for item in items:
+        if item["policy"] not in ("keep", "review"):
+            continue
+        try:
+            _validate_portable_paths([item["path"]])
+            portable.append(item["path"])
+        except ValueError as exc:
+            issues.append({"path": item["path"], "reason": str(exc)})
+    try:
+        _validate_portable_paths(portable)
+    except ValueError as exc:
+        issues.append({"reason": str(exc)})
+    return {"files": len(items), "counts": dict(counts), "bytes": dict(sizes), "items": items,
+            "inventory": build_inventory(Path(source).expanduser().resolve(strict=True), items),
+            "portable_names_ready": not issues, "portability_issues": issues}
 
 
 def make_backup(source: Path, destination: Path, *, control=None) -> dict:
@@ -125,14 +142,20 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
         raise ValueError("Backup ZIP cannot be inside the source directory")
     if destination.exists() or destination.is_symlink():
         raise FileExistsError("Refusing to overwrite an existing backup")
-    destination.parent.mkdir(parents=True, exist_ok=True)
     items = scan(source, control=control)
     selected = [x for x in items if x["policy"] in ("keep", "review")]
+    try:
+        _validate_portable_paths(item["path"] for item in selected)
+    except ValueError as exc:
+        raise ValueError("Cannot create a portable backup. " + str(exc)
+                         + ". Use Scan / Preview to inspect filename conflicts. "
+                         "No files were renamed or omitted; keep the original resources.") from None
     if len(selected) > MAX_FILES or sum(x["size"] for x in selected) > MAX_TOTAL_BYTES:
         raise ValueError("Backup exceeds safe snapshot limits")
     for x in selected:
         if x["size"] > MAX_SINGLE_FILE:
             raise ValueError("Single file too large: " + x["path"])
+    destination.parent.mkdir(parents=True, exist_ok=True)
     fd, staging = tempfile.mkstemp(prefix=".timecapsule-", suffix=".zip", dir=destination.parent)
     os.close(fd)
     manifest_files = []
