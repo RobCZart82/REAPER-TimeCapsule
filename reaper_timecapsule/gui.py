@@ -22,28 +22,34 @@ class App(tk.Tk):
         self.source = tk.StringVar(value=str(default_resource()))
         self.archive = tk.StringVar()
         self.destination = tk.StringVar(value=str(Path.home() / "Desktop" / "TimeCapsule-Restored"))
-        body = ttk.Frame(self, padding=20)
+        body = ttk.Frame(self, padding=(25, 20))
         body.pack(fill="both", expand=True)
         ttk.Label(body, text="REAPER TimeCapsule — Smart Backup", font=("Arial", 17, "bold")).pack(anchor="w", pady=(0, 14))
-        for label, variable, chooser in (
+        paths = ttk.Frame(body)
+        paths.pack(fill="x")
+        paths.columnconfigure(1, weight=1)
+        self.path_labels, self.path_entries, self.browse_buttons = [], [], []
+        for index, (label, variable, chooser) in enumerate((
             ("REAPER resource folder", self.source, filedialog.askdirectory),
             ("Snapshot ZIP", self.archive, lambda: filedialog.asksaveasfilename(defaultextension=".zip", filetypes=[("ZIP files", "*.zip")])) ,
             ("Restore to NEW folder", self.destination, self._select_restore_destination),
-        ):
-            row = ttk.Frame(body)
-            row.pack(fill="x", pady=5)
-            ttk.Label(row, text=label, width=26).pack(side="left")
-            entry = ttk.Entry(row, textvariable=variable)
-            entry.pack(side="left", fill="x", expand=True)
-            browse = ttk.Button(row, text="Browse", command=lambda v=variable, c=chooser: v.set(c() or v.get()))
-            browse.pack(side="left", padx=8)
+        )):
+            caption = ttk.Label(paths, text=label)
+            caption.grid(row=index, column=0, sticky="w", padx=(0, 12), pady=5)
+            entry = ttk.Entry(paths, textvariable=variable)
+            entry.grid(row=index, column=1, sticky="ew", pady=5)
+            browse = ttk.Button(paths, text="Browse", command=lambda v=variable, c=chooser: v.set(c() or v.get()))
+            browse.grid(row=index, column=2, padx=(10, 0), pady=5)
+            self.path_labels.append(caption)
+            self.path_entries.append(entry)
+            self.browse_buttons.append(browse)
             self.interactive.extend((entry, browse))
         archive_choices = ttk.Frame(body)
         archive_choices.pack(anchor="w", pady=3)
         for label, chooser in (("Open existing snapshot", lambda: filedialog.askopenfilename(filetypes=[("ZIP files", "*.zip")])),
                                ("Choose new backup ZIP", lambda: filedialog.asksaveasfilename(defaultextension=".zip", filetypes=[("ZIP files", "*.zip")]))):
             button = ttk.Button(archive_choices, text=label, command=lambda c=chooser: self.archive.set(c() or self.archive.get()))
-            button.pack(side="left", padx=5)
+            button.pack(side="left", padx=(0, 10))
             self.interactive.append(button)
         row = ttk.Frame(body)
         row.pack(anchor="w", pady=17)
@@ -65,6 +71,8 @@ class App(tk.Tk):
             button.pack(side="left", padx=5)
             self.action_buttons.append(button)
             self.interactive.append(button)
+        self.action_buttons[0].pack_configure(padx=(0, 5))
+        self.action_buttons[-1].pack_configure(padx=(5, 0))
         ttk.Label(body, text="REAPER must be closed. Restore NEVER overwrites an existing folder.").pack(anchor="w")
         ttk.Label(body, text="Machine-dependent and uncertain files are isolated under NeedsReview/.").pack(anchor="w")
         self.status = tk.StringVar(value="Ready")
@@ -73,22 +81,43 @@ class App(tk.Tk):
         self.progress.pack(fill="x", pady=4)
         self.cancel_button = ttk.Button(body, text="Cancel operation", command=self._cancel_io, state="disabled")
         self.cancel_button.pack(anchor="w")
-        self.log = tk.Text(body, width=1, height=10, wrap="word")
-        self.log.pack(fill="both", expand=True, pady=10)
+        output = ttk.Frame(body)
+        output.pack(fill="both", expand=True, pady=10)
+        output.columnconfigure(0, weight=1)
+        output.rowconfigure(0, weight=1)
+        self.log = tk.Text(output, width=1, height=10, wrap="none")
+        self.log.grid(row=0, column=0, sticky="nsew")
+        self.vertical_scroll = ttk.Scrollbar(output, orient="vertical", command=self.log.yview)
+        self.vertical_scroll.grid(row=0, column=1, sticky="ns")
+        self.horizontal_scroll = ttk.Scrollbar(output, orient="horizontal", command=self.log.xview)
+        self.horizontal_scroll.grid(row=1, column=0, sticky="ew")
+        self.vertical_scroll.grid_remove()
+        self.horizontal_scroll.grid_remove()
+        self.log.configure(yscrollcommand=lambda first, last: self._scroll_visibility(self.vertical_scroll, first, last),
+                           xscrollcommand=lambda first, last: self._scroll_visibility(self.horizontal_scroll, first, last))
         self.log.insert("end", "Scan the source before creating a backup.\n")
         self.resize_hint = ttk.Label(body, text="↓  Drag down to show more output",
                                      anchor="center", cursor="sb_v_double_arrow")
         self.resize_hint.pack(fill="x")
         self.resize_hint.bind("<ButtonPress-1>", self._begin_vertical_resize)
         self.resize_hint.bind("<B1-Motion>", self._drag_vertical_resize)
-        # Use native theme/font measurements instead of a platform-specific
-        # pixel constant. The action row includes equal 5px end padding.
+        # Start afresh each time; no window geometry is read or persisted.
+        # Keep the previously approved width: move the row's 5px end gaps
+        # into the shared body padding so all left/right edges align.
         self.update_idletasks()
-        self.fixed_width = self.action_row.winfo_reqwidth() + 40
+        self.default_width = self.action_row.winfo_reqwidth() + 50
         self.minimum_height = max(570, self.winfo_reqheight())
-        self.geometry(f"{self.fixed_width}x{self.minimum_height}")
-        self.minsize(self.fixed_width, self.minimum_height)
-        self.resizable(False, True)
+        self.geometry(f"{self.default_width}x{self.minimum_height}")
+        self.minsize(self.default_width, self.minimum_height)
+        self.resizable(True, True)
+
+    @staticmethod
+    def _scroll_visibility(scrollbar, first, last):
+        scrollbar.set(first, last)
+        if float(first) <= 0 and float(last) >= 1:
+            scrollbar.grid_remove()
+        else:
+            scrollbar.grid()
 
     def _begin_vertical_resize(self, event):
         self._resize_start = (event.y_root, self.winfo_height())
@@ -97,7 +126,7 @@ class App(tk.Tk):
         start = getattr(self, "_resize_start", None)
         if start is not None:
             height = max(self.minimum_height, start[1] + event.y_root - start[0])
-            self.geometry(f"{self.fixed_width}x{height}")
+            self.geometry(f"{self.winfo_width()}x{height}")
 
     @staticmethod
     def _select_restore_destination():

@@ -61,13 +61,33 @@ def self_test(report):
         else:
             raise AssertionError('Cancellation failed')
         app = App()
-        wait_for_geometry(app, app.fixed_width, app.minimum_height)
-        assert tuple(map(int, app.resizable())) == (0, 1)
+        wait_for_geometry(app, app.default_width, app.minimum_height)
+        assert tuple(map(int, app.resizable())) == (1, 1)
         width, height = app.winfo_width(), app.winfo_height()
         first, last = app.action_buttons[0], app.action_buttons[-1]
         left_margin = first.winfo_rootx() - app.winfo_rootx()
         right_margin = app.winfo_rootx() + width - last.winfo_rootx() - last.winfo_width()
         assert abs(left_margin - right_margin) <= 1, (left_margin, right_margin)
+        assert len({entry.winfo_rootx() for entry in app.path_entries}) == 1
+        assert len({button.winfo_rootx() for button in app.browse_buttons}) == 1
+        label_edge = max(label.winfo_rootx() + label.winfo_width() for label in app.path_labels)
+        assert app.path_entries[0].winfo_rootx() - label_edge == 12
+        assert app.path_labels[0].winfo_rootx() == first.winfo_rootx()
+        assert app.browse_buttons[0].winfo_rootx() + app.browse_buttons[0].winfo_width() == last.winfo_rootx() + last.winfo_width()
+        assert app.log.cget('wrap') == 'none'
+        app.log.delete('1.0', 'end')
+        app.log.insert('1.0', ('X' * 2000 + '\n') * 100)
+        for _ in range(3):
+            app.update()
+        assert app.vertical_scroll.winfo_ismapped() and app.horizontal_scroll.winfo_ismapped()
+        app.log.delete('1.0', 'end')
+        app.log.insert('1.0', 'Short output')
+        for _ in range(3):
+            app.update()
+        assert not app.vertical_scroll.winfo_ismapped() and not app.horizontal_scroll.winfo_ismapped()
+        app.geometry(f'{width + 80}x{height}')
+        wait_for_geometry(app, width + 80, height)
+        width += 80
         log_height = app.log.winfo_height()
         app._begin_vertical_resize(SimpleNamespace(y_root=0))
         app._drag_vertical_resize(SimpleNamespace(y_root=40))
@@ -79,6 +99,10 @@ def self_test(report):
         tcl_version = app.tk.call('info', 'patchlevel')
         tk_version = app.tk.call('package', 'require', 'Tk')
         app.destroy()
+        fresh = App()
+        wait_for_geometry(fresh, fresh.default_width, fresh.minimum_height)
+        assert fresh.winfo_width() == width - 80 and fresh.winfo_height() == height
+        fresh.destroy()
     Path(report).write_text(json.dumps(dict(valid=True, version=VERSION, python=sys.version,
                                           tcl=tcl_version, tk=tk_version, synthetic_only=True)), encoding='utf-8')
 
