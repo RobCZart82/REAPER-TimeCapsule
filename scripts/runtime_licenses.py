@@ -1,5 +1,6 @@
 """Collect upstream notices for the concrete Python/Tcl/Tk build runtime."""
 import sys
+import ssl
 import tkinter
 import urllib.request
 from pathlib import Path
@@ -14,6 +15,19 @@ app.destroy()
 python_version = '.'.join(map(str, sys.version_info[:3]))
 urls = {'CPython-LICENSE.txt': f'https://raw.githubusercontent.com/python/cpython/v{python_version}/LICENSE',
         'PyInstaller-COPYING.txt': f'https://raw.githubusercontent.com/pyinstaller/pyinstaller/v{importlib.metadata.version("pyinstaller")}/COPYING.txt'}
+# Runtime-library upstream notices; system versions are recorded separately.
+urls.update({
+    'zlib-LICENSE.txt': 'https://raw.githubusercontent.com/madler/zlib/master/LICENSE',
+    'libffi-LICENSE.txt': 'https://raw.githubusercontent.com/libffi/libffi/master/LICENSE',
+    'bzip2-LICENSE.txt': 'https://sourceware.org/git/?p=bzip2.git;a=blob_plain;f=LICENSE;hb=bzip2-1.0.8',
+    'xz-COPYING.txt': 'https://raw.githubusercontent.com/tukaani-project/xz/master/COPYING',
+    'sqlite-COPYRIGHT.html': 'https://www.sqlite.org/copyright.html',
+})
+openssl = ssl.OPENSSL_VERSION.split()[1]
+if openssl.startswith('3.'):
+    urls['OpenSSL-LICENSE.txt'] = f'https://raw.githubusercontent.com/openssl/openssl/openssl-{openssl}/LICENSE.txt'
+else:
+    raise RuntimeError('Review OpenSSL runtime notices for this version')
 for library, version in versions.items():
     tag = 'core-' + version.replace('.', '-')
     urls[library + '-license.terms'] = f'https://raw.githubusercontent.com/tcltk/{library}/{tag}/license.terms'
