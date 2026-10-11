@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import shutil
 import stat
 import tempfile
@@ -56,6 +57,49 @@ def _valid_path(path: str) -> bool:
         return False
     return all(p not in ("", ".", "..") for p in path.split("/"))
 
+
+
+class NonPortableNames(ValueError):
+    """Portable backup refused before writing; native-name retry requires opt-in."""
+
+
+def _valid_original_path(path):
+    """Data-only native name. Never use this validator for ZIP member names."""
+    return (isinstance(path, str) and bool(path) and not path.startswith('/')
+            and not path.endswith('/') and '\\' not in path
+            and not any(ord(char) < 32 or 0xD800 <= ord(char) <= 0xDFFF for char in path)
+            and all(part not in ('', '.', '..') for part in path.split('/')))
+
+
+def _archive_member(item, schema):
+    if schema == 3:
+        name = item.get('archive_member')
+        # Canonical ordinal object names cannot carry traversal, drive or ADS paths.
+        if not isinstance(name, str) or not re.fullmatch(r'objects/[0-9]{6}\.bin', name):
+            raise ValueError('Invalid native-name archive member')
+        return name
+    return 'resources/' + item['path']
+
+
+def _native_restore_paths(paths):
+    """Conservative same-platform namespace, permitting POSIX colons only."""
+    paths = list(paths)
+    if os.name == 'nt':
+        _validate_portable_paths(paths)
+        return
+    prefixes = {}
+    for path in paths:
+        if not _valid_original_path(path):
+            raise ValueError('Unsafe original resource name')
+        parts = path.split('/')
+        for index, part in enumerate(parts):
+            if any(ord(char) < 32 or 0xD800 <= ord(char) <= 0xDFFF for char in part):
+                raise ValueError('Unsupported native filename; use portable-name recovery')
+            key = tuple(unicodedata.normalize('NFC', x).casefold() for x in parts[:index + 1])
+            identity = (tuple(parts[:index + 1]), index == len(parts) - 1)
+            if key in prefixes and prefixes[key] != identity:
+                raise ValueError('Native names collide; use portable-name recovery')
+            prefixes[key] = identity
 
 WINDOWS_RESERVED_NAMES = {'con', 'prn', 'aux', 'nul'} | {
     prefix + digit for prefix in ('com', 'lpt') for digit in '123456789¹²³'
@@ -161,7 +205,7 @@ def preview(source: Path, *, control=None) -> dict:
             "skipped_entries": [x for x in items if x.get("kind") in ("link", "special")]}
 
 
-def make_backup(source: Path, destination: Path, *, control=None) -> dict:
+def make_backup(source: Path, destination: Path, *, control=None, native_names=False) -> dict:
     checkpoint(control, "Preparing backup")
     source = Path(source).expanduser().resolve(strict=True)
     destination = Path(destination).expanduser().absolute()
@@ -176,12 +220,17 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
         raise ValueError("Backup ZIP cannot be inside the source directory")
     items = scan(source, control=control)
     selected = [x for x in items if x["policy"] in ("keep", "review")]
-    try:
-        _validate_portable_paths(item["path"] for item in selected)
-    except ValueError as exc:
-        raise ValueError("Cannot create a portable backup. " + str(exc)
-                         + ". Use Scan / Preview to inspect filename conflicts. "
-                         "No files were renamed or omitted; keep the original resources.") from None
+    if native_names:
+        if any(not _valid_original_path(item['path']) for item in selected):
+            raise ValueError('Unsupported native resource name; no files were omitted')
+    else:
+        try:
+            _validate_portable_paths(item['path'] for item in selected)
+        except ValueError as exc:
+            raise NonPortableNames('Cannot create a portable backup. ' + str(exc)
+                             + '. Use Scan / Preview or explicitly choose native-name backup. '
+                             'No original files were renamed or omitted.') from None
+    schema = 3 if native_names else SCHEMA
     if len(selected) > MAX_FILES or sum(x["size"] for x in selected) > MAX_TOTAL_BYTES:
         raise ValueError("Backup exceeds safe snapshot limits")
     for x in selected:
@@ -209,7 +258,7 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
         with tempfile.TemporaryDirectory(prefix="timecapsule-inventory-") as snapshot_name, \
                 zipfile.ZipFile(staging, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6, allowZip64=True) as out:
             snapshot = Path(snapshot_name)
-            for item in selected:
+            for ordinal, item in enumerate(selected):
                 checkpoint(control, "Copying backup", completed, total)
                 p = trusted_resource_file(source, item["path"])
                 if p.is_symlink() or not p.is_file():
@@ -217,7 +266,7 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
                 # Copy once while hashing, so the digest refers to ZIP contents, not a later file state.
                 hash_value = hashlib.sha256()
                 bytes_written = 0
-                entry = "resources/" + item["path"]
+                entry = f"objects/{ordinal:06d}.bin" if native_names else "resources/" + item["path"]
                 limit = inventory_input_limit(item["path"])
                 copied = snapshot / item["path"] if limit and item["size"] <= limit else None
                 if copied:
@@ -244,12 +293,16 @@ def make_backup(source: Path, destination: Path, *, control=None) -> dict:
                         raise ValueError("Source changed during backup: " + item["path"])
                 if bytes_written != item["size"]:
                     raise ValueError("Source changed during backup: " + item["path"])
-                manifest_files.append({**item, "sha256": hash_value.hexdigest()})
+                record = {**item, "sha256": hash_value.hexdigest()}
+                if native_names:
+                    record["archive_member"] = entry
+                manifest_files.append(record)
             manifest = {
-                "format": FORMAT, "schema": SCHEMA, "app_version": VERSION,
+                "format": FORMAT, "schema": schema, "app_version": VERSION,
                 "created_utc": datetime.now(timezone.utc).isoformat(),
                 "source_platform": platform.system(), "source_architecture": platform.machine(),
                 "strategy": "clean-migration", "files": manifest_files,
+                "filename_mode": "native-data" if native_names else "portable",
                 "inventory": build_inventory(snapshot, items, control=control),
                 "inventory_basis": "archived-resource-bytes",
                 "omitted": [x for x in items if x["policy"] in ("exclude", "regenerate")],
@@ -334,7 +387,7 @@ def _verify_backup(archive: Path, *, control=None) -> dict:
     with zipfile.ZipFile(archive) as z:
         infos = z.infolist()
         completed = 0
-        progress_total = sum(info.file_size for info in infos if info.filename.startswith("resources/"))
+        progress_total = sum(info.file_size for info in infos if info.filename.startswith(("resources/", "objects/")))
         if len(infos) > MAX_FILES + 1:
             raise ValueError("Too many archive members")
         names = [x.filename for x in infos]
@@ -347,7 +400,7 @@ def _verify_backup(archive: Path, *, control=None) -> dict:
         manifest = json.loads(z.read(manifest_info), object_pairs_hook=_unique_manifest_object)
         if not isinstance(manifest, dict):
             raise ValueError("Manifest must be an object")
-        if manifest.get("format") != FORMAT or manifest.get("schema") != SCHEMA:
+        if manifest.get("format") != FORMAT or manifest.get("schema") not in (SCHEMA, 3):
             raise ValueError("Unsupported archive format or schema")
         files = manifest.get("files")
         if not isinstance(files, list) or len(files) > MAX_FILES:
@@ -355,7 +408,15 @@ def _verify_backup(archive: Path, *, control=None) -> dict:
         # Validate the complete namespace before hashing or creating restore paths.
         if any(not isinstance(item, dict) for item in files):
             raise ValueError("Invalid file record")
-        _validate_portable_paths(item.get("path") for item in files)
+        schema = manifest['schema']
+        if schema == 3:
+            if manifest.get('filename_mode') != 'native-data':
+                raise ValueError('Missing native filename contract')
+            originals = [item.get('path') for item in files]
+            if any(not _valid_original_path(path) for path in originals) or len(set(originals)) != len(originals):
+                raise ValueError('Invalid or duplicate original resource names')
+        else:
+            _validate_portable_paths(item.get('path') for item in files)
         expected = {"manifest.json"}
         total_bytes = 0
         for item in files:
@@ -363,7 +424,7 @@ def _verify_backup(archive: Path, *, control=None) -> dict:
             if not isinstance(item, dict):
                 raise ValueError("Invalid file record")
             rel = item.get("path")
-            if not _valid_path(rel):
+            if not (_valid_original_path(rel) if schema == 3 else _valid_path(rel)):
                 raise ValueError("Unsafe archive path")
             if item.get("policy") not in ("keep", "review"):
                 raise ValueError("Invalid restore policy")
@@ -374,7 +435,7 @@ def _verify_backup(archive: Path, *, control=None) -> dict:
                 raise ValueError("Invalid size")
             if not isinstance(item.get("sha256"), str) or len(item["sha256"]) != 64:
                 raise ValueError("Invalid hash")
-            name = "resources/" + rel
+            name = _archive_member(item, schema)
             if name in expected or name not in names:
                 raise ValueError("Duplicate or missing resource: " + rel)
             expected.add(name)
@@ -399,7 +460,7 @@ def _verify_backup(archive: Path, *, control=None) -> dict:
         return manifest
 
 
-def restore_backup(archive: Path, destination: Path, *, control=None) -> dict:
+def restore_backup(archive: Path, destination: Path, *, control=None, portable_names=False) -> dict:
     """Restore into a NEW folder, in staging. Review files remain quarantined.
 
     Never merges into a running REAPER config, overwrites, or installs native plugins.
@@ -408,6 +469,12 @@ def restore_backup(archive: Path, destination: Path, *, control=None) -> dict:
     destination = Path(destination).expanduser().absolute()
     manifest = verify_backup(archive, control=control)
     checkpoint(control, "Preparing restore")
+    native_names = manifest['schema'] == 3
+    if native_names and not portable_names:
+        if manifest.get('source_platform') != platform.system():
+            raise ValueError('Native-name recovery across platforms requires portable_names=True')
+        _native_restore_paths(item['path'] for item in manifest['files'])
+    mappings = []
     if destination.exists() or destination.is_symlink():
         raise FileExistsError("Choose a NEW destination folder; existing folders are never overwritten")
     parent = destination.parent.resolve(strict=True)
@@ -431,9 +498,18 @@ def restore_backup(archive: Path, destination: Path, *, control=None) -> dict:
                     continue
                 # Explicitly separate undecided settings to avoid accidentally activating them.
                 prefix = "REAPER" if effective == "keep" else "NeedsReview"
-                target = staging / prefix / PurePosixPath(item["path"])
+                if native_names and portable_names:
+                    # Every item is isolated: opaque recovery names are never activated.
+                    prefix = 'NeedsReview/RecoveredResources'
+                    relative = _archive_member(item, 3).split('/')[-1]
+                    mappings.append({'original': item['path'], 'restored': prefix + '/' + relative,
+                                     'sha256': item['sha256'], 'effective_policy': effective})
+                    effective = 'review'
+                else:
+                    relative = item['path']
+                target = staging / prefix / PurePosixPath(relative)
                 target.parent.mkdir(parents=True, exist_ok=True)
-                with z.open("resources/" + item["path"]) as src, target.open("xb") as dst:
+                with z.open(_archive_member(item, manifest["schema"])) as src, target.open("xb") as dst:
                     h = hashlib.sha256()
                     for block in iter(lambda: src.read(BLOCK_SIZE), b""):
                         checkpoint(control, "Restoring", completed, progress_total)
@@ -449,6 +525,8 @@ def restore_backup(archive: Path, destination: Path, *, control=None) -> dict:
             "legacy_cache_skipped": counts["regenerate"],
             "instructions": "Copy REAPER/ into a CLEAN, CLOSED REAPER resource directory only after reviewing conflicts. NeedsReview/ is NOT automatically installed.",
             "inventory": manifest.get("inventory", {}),
+            "filename_mapping": mappings,
+            "filename_recovery": "isolated-portable-names" if mappings else "original-names",
         }
         (staging / "RESTORE_REPORT.json").write_text(json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
         checkpoint(control, "Publishing restore")
@@ -470,4 +548,5 @@ def preview_backup(archive: Path, *, control=None) -> dict:
     return {"saved": dict(counts), "stored_saved": dict(Counter(x["stored"] for x in decisions)),
             "policy_changes": changes, "omitted": dict(omitted), "created_utc": manifest["created_utc"],
             "inventory": manifest.get("inventory", {}),
-            "inventory_basis": manifest.get("inventory_basis", "legacy-unverified-source-inventory")}
+            "inventory_basis": manifest.get("inventory_basis", "legacy-unverified-source-inventory"),
+            "filename_mode": manifest.get("filename_mode", "portable")}

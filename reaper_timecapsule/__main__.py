@@ -19,11 +19,13 @@ def main():
     backup_cmd = commands.add_parser("backup", help="Create ZIP snapshot without overwriting")
     backup_cmd.add_argument("archive", type=Path)
     backup_cmd.add_argument("--source", type=Path, default=default_resource())
+    backup_cmd.add_argument("--native-names", action="store_true", help="Preserve native names as manifest data in schema 3")
     verify_cmd = commands.add_parser("verify", help="Verify ZIP checksums and policy")
     verify_cmd.add_argument("archive", type=Path)
     restore_cmd = commands.add_parser("restore", help="Restore to a NEW folder, no active overwrite")
     restore_cmd.add_argument("archive", type=Path)
     restore_cmd.add_argument("destination", type=Path)
+    restore_cmd.add_argument("--portable-names", action="store_true", help="Isolate native-name resources under reversible portable object names")
     midi_cmd = commands.add_parser("midi-audit", help="Validate MIDI menus, Custom Actions and script registrations")
     midi_cmd.add_argument("source", nargs="?", type=Path, default=default_resource())
     rp_cmd = commands.add_parser("reapack-audit", help="Inspect ReaPack repository options and installed package registry")
@@ -74,11 +76,11 @@ def main():
         elif args.command == "scan":
             result = preview(args.source)
         elif args.command == "backup":
-            result = make_backup(args.source, args.archive)
+            result = make_backup(args.source, args.archive, native_names=args.native_names)
         elif args.command == "verify":
             result = preview_backup(args.archive)
         elif args.command == "restore":
-            result = restore_backup(args.archive, args.destination)
+            result = restore_backup(args.archive, args.destination, portable_names=args.portable_names)
         else:
             from .gui import App
             App().mainloop()

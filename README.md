@@ -238,3 +238,5 @@ affiliated with or endorsed by Cockos / REAPER.
 MIDI Audit now reports duplicate/conflicting definitions, dependency cycles and unverified numeric commands. Resolving a menu reference does not prove its execution chain works in REAPER. Numeric commands remain unverified without an authoritative runtime action catalog.
 
 Development audits now run on the shared background worker: Scan / Preview, MIDI Audit and ReaPack Audit keep the interface responsive and support cooperative cancellation. Read-only ReaPack SQL inspection has a five-second query budget and reports `timed-out` separately from invalid data. Cancellation can wait for an active operating-system file read; it is not forced thread termination.
+
+Native filenames, including macOS colons, can now be preserved through an explicit schema-3 backup. Original-name restoration requires the same platform; optional portable recovery isolates all files and records a reversible name map. See [native filename recovery](docs/NATIVE_FILENAMES.md) for commands, GUI opt-in and compatibility limits.
