@@ -1,6 +1,6 @@
 # REAPER Time Capsule — audit finding status
 
-Reviewed against code at `6d6da95` (2026-10-11). The supplied audit examined an
+Reviewed against code at `769c31d` (2026-10-11). The supplied audit examined an
 older revision (`a56fde0`); its findings are useful historical evidence, but its
 “still broken” labels and proposed work are not current status. This page tracks
 what was confirmed, what has since changed, and what remains outside the product's
@@ -41,7 +41,7 @@ MIDI audit still needs user-side smoke testing.
 | TC-016 | Scan reports are versioned and record inspection basis, summary, policy entries, inventory and manual steps. Reports are local/private and are not signed. Broader provenance and portable audit export are future work. |
 | TC-017 | Restore preflights portable namespace conflicts and path limits conservatively. Very long paths, unusual filesystem limits and legacy aliases may still be rejected or require manual remediation. |
 | TC-019 | Source timestamp and permission bits are informational. Restore uses fresh-file defaults; ACLs, ownership, extended attributes and Finder metadata are not preserved. |
-| TC-020 | Free-space estimates and handled-error cleanup exist. A crash or forced termination can leave temporary data; no crash-durability or transaction guarantee is made. |
+| TC-020 | Free-space estimates and handled-error cleanup exist, including cleanup of a partially written config-stage file after exceptions or interrupts when its identity still matches. A process crash can still leave temporary data; no crash-durability or transaction guarantee is made. |
 | TC-021 | Regression suites include malformed archives, boundary cases, races and synthetic failure injection. They are not a proof against every hostile concurrent filesystem change, nor a substitute for real-user-profile testing. |
 | TC-022 | GitHub Actions references are pinned to reviewed commit SHAs. Runner images and bundled OS toolchains can still change; build artifacts are not reproducibly identical across time. |
 | TC-023 | The owner accepted unsigned beta packages. Signing/notarization remains a distribution improvement, not a requirement for the already authorized beta. |

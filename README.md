@@ -81,8 +81,16 @@ These changes are on main and are not yet in the published beta.
   `REAPER/` from uncertain configuration and native extensions in `NeedsReview/`.
 - Background Backup, Verify and Restore offer per-phase progress and cooperative
   Cancel. One operation runs at a time; closing waits for completion or cleanup.
+- GUI Scan / Preview, MIDI Audit and ReaPack Audit run on the shared background
+  worker and can be cancelled at safe checkpoints. The display-only GUI report is
+  capped at 256 KiB and rendered in chunks of at most 8 KiB; long values and
+  collections can be shortened. Full scan policy rows remain in **File policies**,
+  and CLI report output is not shortened.
 - Static MIDI audit checks menu Custom Action references against keymaps and
-  `reaper-kb.ini`, reporting missing actions and missing or nonportable script paths.
+  `reaper-kb.ini`; it also reports duplicate/conflicting definitions, dependency
+  cycles, missing actions or script files, nonportable script paths, unresolved
+  references and unverified numeric or extension commands. It does not check
+  toolbar/icon bindings or execute actions inside REAPER.
 - ReaPack 1.x audit reads repository names, order, URLs, enabled states,
   per-repository auto-install overrides and global options. Installed packages,
   versions and pinned versions are inventoried from the SQLite registry read-only.
@@ -179,10 +187,11 @@ with file paths. Affected files remain listed; portable backup is blocked before
 creating an archive. No silent exclusion or renaming is performed.
 
 Cancellation waits for safe checkpoints and can arrive after final publication;
-an already completed result is reported as success. Progress is per phase, not
-an overall percentage or ETA. Audits and other scans remain synchronous. There
-is no full transactional snapshot, power-loss durability or hostile filesystem-race
-guarantee; unusual filesystems and path-length limits need further validation.
+an already completed result is reported as success. A cancellation request may
+wait for an active operating-system file read; it does not forcibly terminate a
+thread. Progress is per phase, not an overall percentage or ETA. There is no full
+transactional snapshot, power-loss durability or hostile filesystem-race guarantee;
+unusual filesystems and path-length limits need further validation.
 
 Static audits and green CI do not prove that every script, theme, extension or
 MIDI workflow works inside REAPER. Keep an independent backup and review recovery

@@ -96,26 +96,35 @@ handling, failed thread startup, the close guard, and bounded/chunked rendering 
 large audit reports. Native screen layout and dialogs have not been visually
 validated by these tests.
 
-## First limited beta release preparation
+## Completed: first limited beta preparation
 
-GPL-3.0-only was selected by the user. An unsigned beta was explicitly accepted.
+GPL-3.0-only was selected by the user, and unsigned beta packages were explicitly
+accepted. The v0.9.0-beta.2 release is published; this section records that release
+preparation rather than a pending publication request.
 Native desktop CI builds bundle the runtime, matching tracked source and notices,
 and execute a synthetic backup/verify/restore/cancellation/Tk self-test using the
 actual binary. Release-specific scope and remaining limitations are documented
 in FIRST_BETA.md. This limited beta makes no automatic migration/runtime-workflow
-compatibility promise. Artifact build success still must be checked before release.
+compatibility promise. The release artifacts and checksums are linked from the
+README; later releases require their own clean validation.
 
-## Remaining work for broader/stable release
+## Development and validation before a later beta
 
-- Extend destination-length/filesystem compatibility checks where needed.
-- Broaden tests for disk-full, permissions, cancellation and changing inputs.
-- Broader native visual QA of audits and very large reports.
-- Validate supported resources in real temporary REAPER profiles on macOS/Windows.
-- Build and test standalone macOS/Windows distributions without Python installed.
-- Choose source license, record dependency licenses and settle signing/release policy.
-- Publish user documentation, limitations, release notes and artifact checksums.
-- Test release candidates and resolve all data-loss/basic-workflow blockers.
+- Smoke-test large MIDI and ReaPack reports in packaged macOS and Windows builds,
+  including native scrolling and file dialogs; synthetic Tk tests do not replace this.
+- Verify toolbar/icon references from reliable REAPER format evidence and design
+  a disposable REAPER integration test. Static audit does not execute or validate actions.
+- Keep configuration preview and staging read-only. Expand the two-key allowlist
+  only with exact evidence and isolated runtime validation; active apply and rollback
+  remain out of scope until separately designed and tested.
+- Treat ReaPack 2.x parsing, package installation and synchronization as separate
+  future work; the current verified profile/registry support is ReaPack 1.x.
+- Validate on clean supported macOS and Windows environments, and broaden checks
+  for removable/network filesystems, destination path limits and failure recovery.
+- Refresh the bilingual PDF guides, screenshots, release notes and package manifests
+  together when the next beta candidate is ready. Do not publish a release from this
+  checklist alone.
 
-The repository remains a development preview. Green CI alone does not satisfy
-these release gates. Full rollback, active merge and automatic ReaPack installation
-remain separate future milestones.
+Green CI and synthetic tests are necessary but do not replace these real-application
+and clean-environment checks. Full rollback, active configuration merge and automatic
+ReaPack installation remain separate future milestones.
