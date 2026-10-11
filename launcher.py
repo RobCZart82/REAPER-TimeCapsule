@@ -65,6 +65,13 @@ def self_test(report):
         about = app._show_about()
         app.update()
         assert app._show_about() is about
+        if app.tk.call('tk', 'windowingsystem') == 'aqua':
+            app.tk.call('tk::mac::ShowAbout')
+            assert app.about_window is about
+        center_x = lambda widget: widget.winfo_rootx() + widget.winfo_width() / 2
+        assert abs(center_x(about.icon_label) - center_x(about.logo_label)) <= 1
+        assert abs(center_x(about.title_label) - center_x(about.signature_label)) <= 1
+        assert about.logo_label.winfo_rooty() > about.icon_label.winfo_rooty()
         assert all(image.width() > 0 and image.height() > 0 for image in about.images.values())
         # Tk must accept signed absolute coordinates for secondary monitors.
         original_geometry = about.geometry()

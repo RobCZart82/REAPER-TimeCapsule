@@ -21,6 +21,8 @@ class App(tk.Tk):
         self.small_icon = brand_image(self, 'timecapsule-32.png')
         self.iconphoto(True, self.app_icon, self.small_icon)
         self.about_window = None
+        if self.tk.call("tk", "windowingsystem") == "aqua":
+            self.createcommand("tk::mac::ShowAbout", self._show_about)
         self.runner = BackgroundTask()
         self.interactive = []
         self.protocol("WM_DELETE_WINDOW", self._on_close)
