@@ -62,8 +62,25 @@ def self_test(report):
             raise AssertionError('Cancellation failed')
         app = App()
         wait_for_geometry(app, app.default_width, app.minimum_height)
+        about = app._show_about()
+        app.update()
+        assert app._show_about() is about
+        assert all(image.width() > 0 and image.height() > 0 for image in about.images.values())
+        # Tk must accept signed absolute coordinates for secondary monitors.
+        original_geometry = about.geometry()
+        about.geometry('+-10+-10')
+        app.update()
+        about.geometry(original_geometry)
+        about.event_generate('<Escape>')
+        app.update()
+        if about.winfo_exists():
+            about.destroy()
+        assert app._show_about() is not about
+        app.about_window.destroy()
         assert tuple(map(int, app.resizable())) == (1, 1)
         width, height = app.winfo_width(), app.winfo_height()
+        assert app.resize_hint.winfo_ismapped()
+        assert app.resize_hint.winfo_rooty() + app.resize_hint.winfo_height() <= app.winfo_rooty() + height
         first, last = app.action_buttons[0], app.action_buttons[-1]
         left_margin = first.winfo_rootx() - app.winfo_rootx()
         right_margin = app.winfo_rootx() + width - last.winfo_rootx() - last.winfo_width()

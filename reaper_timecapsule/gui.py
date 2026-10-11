@@ -10,12 +10,17 @@ from .core import VERSION, default_resource, make_backup, preview, preview_backu
 from .midi_validation import validate_midi_workflow
 from .config_migration import preview_migration
 from .reapack_profile import inspect_registry, parse_profile
+from .about import AboutWindow, brand_image
 
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("REAPER TimeCapsule " + VERSION)
+        self.app_icon = brand_image(self, 'timecapsule-128.png')
+        self.small_icon = brand_image(self, 'timecapsule-32.png')
+        self.iconphoto(True, self.app_icon, self.small_icon)
+        self.about_window = None
         self.runner = BackgroundTask()
         self.interactive = []
         self.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -24,7 +29,10 @@ class App(tk.Tk):
         self.destination = tk.StringVar(value=str(Path.home() / "Desktop" / "TimeCapsule-Restored"))
         body = ttk.Frame(self, padding=(25, 20))
         body.pack(fill="both", expand=True)
-        ttk.Label(body, text="REAPER TimeCapsule — Smart Backup", font=("Arial", 17, "bold")).pack(anchor="w", pady=(0, 14))
+        header = ttk.Frame(body)
+        header.pack(fill="x", pady=(0, 14))
+        ttk.Label(header, text="REAPER TimeCapsule — Smart Backup", font=("Arial", 17, "bold")).pack(side="left")
+        ttk.Button(header, text="About", command=self._show_about).pack(side="right")
         paths = ttk.Frame(body)
         paths.pack(fill="x")
         paths.columnconfigure(1, weight=1)
@@ -81,6 +89,12 @@ class App(tk.Tk):
         self.progress.pack(fill="x", pady=4)
         self.cancel_button = ttk.Button(body, text="Cancel operation", command=self._cancel_io, state="disabled")
         self.cancel_button.pack(anchor="w")
+        # Reserve the footer before the expanding output at the default height.
+        self.resize_hint = ttk.Label(body, text="↓  Drag down to show more output",
+                                     anchor="center", cursor="sb_v_double_arrow")
+        self.resize_hint.pack(side="bottom", fill="x")
+        self.resize_hint.bind("<ButtonPress-1>", self._begin_vertical_resize)
+        self.resize_hint.bind("<B1-Motion>", self._drag_vertical_resize)
         output = ttk.Frame(body)
         output.pack(fill="both", expand=True, pady=10)
         output.columnconfigure(0, weight=1)
@@ -102,11 +116,6 @@ class App(tk.Tk):
         self.log.configure(yscrollcommand=lambda first, last: self._scroll_visibility(self.vertical_scroll, first, last),
                            xscrollcommand=lambda first, last: self._scroll_visibility(self.horizontal_scroll, first, last))
         self.log.insert("end", "Scan the source before creating a backup.\n")
-        self.resize_hint = ttk.Label(body, text="↓  Drag down to show more output",
-                                     anchor="center", cursor="sb_v_double_arrow")
-        self.resize_hint.pack(fill="x")
-        self.resize_hint.bind("<ButtonPress-1>", self._begin_vertical_resize)
-        self.resize_hint.bind("<B1-Motion>", self._drag_vertical_resize)
         # Start afresh each time; no window geometry is read or persisted.
         # Keep the previously approved width: move the row's 5px end gaps
         # into the shared body padding so all left/right edges align.
@@ -125,6 +134,13 @@ class App(tk.Tk):
             scrollbar.grid_remove()
         elif visible and not scrollbar.grid_info():
             scrollbar.grid()
+
+    def _show_about(self):
+        if self.about_window is not None and self.about_window.winfo_exists():
+            self.about_window.lift()
+            return self.about_window
+        self.about_window = AboutWindow(self)
+        return self.about_window
 
     def _begin_vertical_resize(self, event):
         self._resize_start = (event.y_root, self.winfo_height())
