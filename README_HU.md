@@ -53,10 +53,13 @@ A `main` ágon folyó fejlesztés eltérhet a már kiadott csomagoktól.
 - A konfiguráció- és témaelőkép csak olvasással azonosít jelölteket és ütközéseket;
   a kifejezetten kiválasztott preferenciák külön, felülvizsgálható adatként exportálhatók.
 
-A `main` ágon a fejlesztés a Scan / Preview–Restore gombsorhoz méretezett, rögzített
-szélességet és azonos külső margókat ad. Az ablak csak függőlegesen méretezhető;
-az alsó ↓ fogantyú húzásával a kiírás területe növelhető. Ez az elrendezés még nincs
-benne a publikált 0.9.0-beta.2 csomagokban.
+A `main` ágon az ablak minden indításkor a jóváhagyott, gombsorhoz méretezett
+alapméretben nyílik meg, és nem menti az átméretezést. Mindkét irányban méretezhető;
+a minimális szélesség láthatóan tartja a gombsort. Közös oszlopok igazítják az
+útvonalmezőket és a Browse gombokat. A kimeneti sorok nem tördelődnek; a vízszintes
+és függőleges görgetősáv csak szükség esetén jelenik meg. Az alsó ↓ fogantyú
+a jelenlegi szélesség megtartásával növeli a kiírás területét. Ezek az elrendezési
+változások még nincsenek benne a publikált 0.9.0-beta.2 csomagokban.
 
 ## Rendszerkövetelmények
 
