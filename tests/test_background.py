@@ -5,7 +5,9 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from reaper_timecapsule.background import BackgroundTask
-from reaper_timecapsule.gui import App
+from reaper_timecapsule.gui import (
+    App, GUI_REPORT_CHUNK_CHARS, GUI_REPORT_MAX_CHARS, _bounded_report,
+)
 
 
 class BackgroundTaskTests(unittest.TestCase):
@@ -113,6 +115,41 @@ class GUIBackgroundTests(unittest.TestCase):
                     audit.return_value = {key: [] for key in ('files', 'counts', 'bytes', 'portable_names_ready', 'portability_issues', 'skipped_entries')}
                     action()
                     self.assertIs(audit.call_args.kwargs['control'], app.operation_control)
+
+    def test_large_report_display_is_bounded_and_rendered_in_ui_chunks(self):
+        callbacks = []
+        log = Mock()
+        app = SimpleNamespace(log=log, after=Mock(), _report_generation=0)
+        app._append_report_chunk = lambda generation: App._append_report_chunk(app, generation)
+        app.after.side_effect = lambda delay, callback: callbacks.append(callback)
+        report = {'items': ['x' * 3000 for _ in range(500)]}
+
+        App._do(app, lambda: report)
+        while callbacks:
+            callbacks.pop(0)()
+
+        writes = [call.args[1] for call in log.insert.call_args_list]
+        displayed = ''.join(writes)
+        self.assertTrue(writes)
+        self.assertTrue(all(len(part) <= GUI_REPORT_CHUNK_CHARS for part in writes[:-1]))
+        self.assertLess(len(displayed), GUI_REPORT_MAX_CHARS + 256)
+        self.assertIn('Display shortened at 256 KiB', displayed)
+
+    def test_bounded_report_limits_large_strings_lists_and_nested_values(self):
+        nested = 'too deep'
+        for _ in range(20):
+            nested = [nested]
+        report = _bounded_report({
+            'text': 'x' * 5000,
+            'items': list(range(250)),
+            'nested': nested,
+        })
+        self.assertIn('characters omitted', report['text'])
+        self.assertIn('additional items omitted', report['items'][-1])
+        nested = report['nested']
+        while isinstance(nested, list):
+            nested = nested[0]
+        self.assertEqual(nested, '[nested value omitted: display depth limit]')
 
     def test_nonportable_backup_never_retries_without_explicit_opt_in(self):
         from reaper_timecapsule.core import NonPortableNames
