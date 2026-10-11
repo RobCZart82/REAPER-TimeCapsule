@@ -8,6 +8,11 @@ settings that need manual review.
 
 [Magyar](README_HU.md)
 
+![REAPER TimeCapsule 0.9.0-beta.2 on macOS showing Scan / Preview results](docs/screenshots/timecapsule-scan-preview-0.9.0-beta.2-macos.png)
+
+*Actual macOS screenshot supplied by the project owner, October 11, 2026.
+Scan / Preview lists a filename portability issue; this is not a completed backup.*
+
 > **[Download 0.9.0-beta.2](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2)**
 > — an unsigned public beta. This is a resource snapshot and recovery tool;
 > complete one-click REAPER reinstallation is not implemented. Keep an independent backup.
