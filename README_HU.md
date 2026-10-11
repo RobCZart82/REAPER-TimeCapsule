@@ -8,8 +8,8 @@ meg a hordozható fájlokat, és elkülöníti a kézi felülvizsgálatot igény
 
 [English](README.md)
 
-> **[0.9.0-beta.1 letöltése](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.1)**
-> — az első nyilvános, aláíratlan béta. Az eszköz erőforrásokat ment és állít vissza;
+> **[0.9.0-beta.2 letöltése](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2)**
+> — nyilvános, aláíratlan béta. Az eszköz erőforrásokat ment és állít vissza;
 > a teljes, egykattintásos REAPER-újratelepítés még nincs megvalósítva. Tarts külön biztonsági mentést is.
 
 ## Letöltés
@@ -18,13 +18,13 @@ A csomagokat a projekt [GitHub Releases](https://github.com/RobCZart82/REAPER-Ti
 
 | Platform | Alkalmazás |
 |---|---|
-| macOS · Apple Silicon (arm64) | [Aláíratlan alkalmazás ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.1/REAPER-TimeCapsule-0.9.0-beta.1-Darwin-arm64-unsigned.zip) |
-| Windows · x64 | [Aláíratlan alkalmazás ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.1/REAPER-TimeCapsule-0.9.0-beta.1-Windows-AMD64-unsigned.zip) |
-| Linux | [Forráskód és kiadási megjegyzések](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.1) · Python 3.10+ |
+| macOS · Apple Silicon (arm64) | [Aláíratlan alkalmazás ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/REAPER-TimeCapsule-0.9.0-beta.2-Darwin-arm64-unsigned.zip) |
+| Windows · x64 | [Aláíratlan alkalmazás ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/REAPER-TimeCapsule-0.9.0-beta.2-Windows-AMD64-unsigned.zip) |
+| Linux | [Forráskód és kiadási megjegyzések](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2) · Python 3.10+ |
 
 Mindkét alkalmazás ZIP tartalmazza a hozzá tartozó forráskódot, a GPL és a futtatókörnyezet
 licencszövegeit, a csomagolt alkalmazás öntesztjének jelentését és a dokumentációt.
-A kiadáshoz [SHA-256 ellenőrzőösszegek](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.1/SHA256SUMS.txt)
+A kiadáshoz [SHA-256 ellenőrzőösszegek](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/SHA256SUMS.txt)
 és platformonkénti buildleírások is tartoznak. A Windows-forrás CRLF sorvégeket használ.
 A `main` ágon folyó fejlesztés eltérhet a már kiadott csomagoktól.
 
@@ -117,6 +117,10 @@ esetén biztonságosan hibával leáll; készítsd el és ellenőrizd helyben, m
 máshová a ZIP-et. A visszaállításhoz kizárólagos átnevezés támogatása kell.
 A Windows alatt érvénytelen neveket, kis-/nagybetűs vagy Unicode-ütközéseket és
 fájl/mappa-konfliktusokat minden platformon elutasítja átnevezés vagy kihagyás helyett.
+A Scan / Preview elfogadja a natív neveket (például a macOS kettőspontos AU-presetneveit),
+és útvonallal együtt jelzi a hordozhatósági problémákat. Az érintett fájlok a listában
+maradnak; a hordozható mentés az archívum létrehozása előtt leáll. Nincs csendes
+kihagyás vagy átnevezés.
 
 A megszakítás biztonságos ellenőrzési pontokra vár, és a végső közzététel után is
 érkezhet; a már elkészült eredményt sikeresként jelzi. Az előrehaladás fázisonkénti,
@@ -169,7 +173,7 @@ python -m reaper_timecapsule verify-stage TimeCapsule-Staging/review.timecapsule
 
 A fenti útvonalak és REAPER-verziók példák; a ténylegesen kiválasztott bemeneteidet add meg.
 Az automatikus tesztek parancsa: `python -m unittest discover -s tests -v`.
-A kiadás 108 tesztje sikeres macOS, Windows és Linux alatt Python 3.10/3.12-vel;
+A kiadás 112 tesztje sikeres macOS, Windows és Linux alatt Python 3.10/3.12-vel;
 mindkét csomagolt alkalmazás teljesítette a szintetikus mentési/ellenőrzési/visszaállítási
 és Tk-indítási próbákat. Ez nem helyettesíti a teljes REAPER-integráció tesztelését.
 

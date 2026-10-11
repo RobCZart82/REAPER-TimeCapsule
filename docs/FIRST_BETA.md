@@ -1,4 +1,4 @@
-# First public beta: 0.9.0-beta.1
+# Public beta guide: 0.9.0-beta.2
 
 ## Scope
 
@@ -40,7 +40,9 @@ unsigned first beta. Signing is a later release milestone.
 Backup publication requires hard-link-capable storage; FAT/exFAT direct backup
 creation fails closed. Use supported local storage then copy the verified archive
 elsewhere. Restore requires the platform's exclusive-rename support. Incompatible
-filenames and archives fail rather than being renamed/dropped. Length limits and
+filenames and archives fail rather than being renamed/dropped. Scan accepts native
+filenames and reports portability issues with paths; portable backup rejects them
+before creating any archive, without renaming or silently excluding user files. Length limits and
 unusual filesystems/portable layouts are not exhaustively validated.
 
 Automated packaged tests use synthetic temporary profiles and instantiate Tk.
