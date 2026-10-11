@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
 from .rules import decide
+from .resource_budget import preflight_zip, require_space
 from .publication import publish_directory
 from .operation import checkpoint
 from .inventory import build_inventory, inventory_input_limit
@@ -161,6 +162,8 @@ def scan(source: Path, *, control=None) -> list[dict]:
                 traversed.append(name)
         folders[:] = traversed
         for filename in sorted(files):
+            if len(result) >= MAX_FILES:
+                raise ValueError("Source inventory exceeds file inspection budget")
             checkpoint(control, "Scanning")
             path = Path(base) / filename
             metadata = path.lstat()
@@ -237,6 +240,15 @@ def make_backup(source: Path, destination: Path, *, control=None, native_names=F
         if x["size"] > MAX_SINGLE_FILE:
             raise ValueError("Single file too large: " + x["path"])
     destination.parent.mkdir(parents=True, exist_ok=True)
+    # ZIP may slightly expand incompressible input; private parser snapshots
+    # also require space, possibly on a different filesystem.
+    payload = sum(item['size'] for item in selected)
+    parser_bytes = sum(item['size'] for item in selected if inventory_input_limit(item['path'])
+                       and item['size'] <= inventory_input_limit(item['path']))
+    zip_estimate = payload + payload // 100 + len(selected) * 1024 + MAX_MANIFEST_BYTES
+    require_space(destination.parent, zip_estimate + parser_bytes)
+    require_space(tempfile.gettempdir(), zip_estimate + parser_bytes
+                  if destination.parent.stat().st_dev == Path(tempfile.gettempdir()).stat().st_dev else parser_bytes)
     parent_identity = destination.parent.stat()
 
     def validate_destination_parent():
@@ -308,7 +320,10 @@ def make_backup(source: Path, destination: Path, *, control=None, native_names=F
                 "omitted": [x for x in items if x["policy"] in ("exclude", "regenerate")],
                 "notes": "review items are backed up but never restored into active REAPER resources automatically",
             }
-            out.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
+            serialized = json.dumps(manifest, ensure_ascii=False, indent=2).encode('utf-8')
+            if len(serialized) > MAX_MANIFEST_BYTES:
+                raise ValueError('Generated manifest exceeds inspection budget')
+            out.writestr('manifest.json', serialized)
         verify_backup(Path(staging), control=control)
         checkpoint(control, "Publishing backup")
         validate_destination_parent()
@@ -384,6 +399,7 @@ def verify_backup(archive: Path, *, control=None) -> dict:
 def _verify_backup(archive: Path, *, control=None) -> dict:
     checkpoint(control, "Preparing verification")
     archive = Path(archive)
+    preflight_zip(archive, MAX_FILES + 1)
     with zipfile.ZipFile(archive) as z:
         infos = z.infolist()
         completed = 0
@@ -480,6 +496,8 @@ def restore_backup(archive: Path, destination: Path, *, control=None, portable_n
     parent = destination.parent.resolve(strict=True)
     if not parent.is_dir():
         raise ValueError("Restore parent must be a directory")
+    require_space(parent, sum(item["size"] for item in manifest["files"])
+                  + len(manifest["files"]) * 4096 + MAX_MANIFEST_BYTES)
     staging = Path(tempfile.mkdtemp(prefix=".timecapsule-restore-", dir=parent))
     counts = Counter()
     completed = 0
@@ -528,7 +546,10 @@ def restore_backup(archive: Path, destination: Path, *, control=None, portable_n
             "filename_mapping": mappings,
             "filename_recovery": "isolated-portable-names" if mappings else "original-names",
         }
-        (staging / "RESTORE_REPORT.json").write_text(json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
+        report_bytes = json.dumps(info, ensure_ascii=False, indent=2).encode("utf-8")
+        if len(report_bytes) > MAX_MANIFEST_BYTES:
+            raise ValueError("Restore report exceeds inspection budget")
+        (staging / "RESTORE_REPORT.json").write_bytes(report_bytes)
         checkpoint(control, "Publishing restore")
         publish_directory(staging, parent / destination.name)
         return {"destination": str(destination), **info}
