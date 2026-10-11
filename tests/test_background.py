@@ -77,6 +77,21 @@ class GUIBackgroundTests(unittest.TestCase):
         App._start_io(app, 'backup')
         app.runner.submit.assert_called_once()
 
+    def test_restore_without_selected_snapshot_never_starts_worker(self):
+        app = self.app()
+        app.source.get.return_value = '/synthetic/REAPER'
+        app.archive.get.return_value = ''
+        app.destination.get.return_value = '/synthetic/Recovered'
+        with patch('reaper_timecapsule.gui.messagebox.showerror') as error:
+            App._start_io(app, 'restore')
+        app.runner.submit.assert_not_called()
+        app._set_busy.assert_not_called()
+        error.assert_called_once_with(
+            'Cannot restore',
+            'Choose an existing snapshot ZIP with Open existing snapshot before restoring.',
+            parent=app,
+        )
+
     def test_poll_pending_success_and_error_on_ui_thread(self):
         app = self.app()
         app.operation_control.latest.return_value = None

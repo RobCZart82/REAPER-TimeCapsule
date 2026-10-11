@@ -227,6 +227,14 @@ class App(tk.Tk):
         return str(Path(parent) / "TimeCapsule-Restored") if parent else ""
 
     @staticmethod
+    def _restore_input_error(archive, destination):
+        if not archive.strip():
+            return "Choose an existing snapshot ZIP with Open existing snapshot before restoring."
+        if not destination.strip():
+            return "Choose a new destination folder for the restored files."
+        return None
+
+    @staticmethod
     def _brief(result):
         return {key: result[key] for key in
                 ("files", "counts", "bytes", "portable_names_ready", "portability_issues", "skipped_entries")}
@@ -381,6 +389,11 @@ class App(tk.Tk):
             return
         # Capture Tk values on the main thread. Workers see ordinary strings only.
         source, archive, destination = self.source.get(), self.archive.get(), self.destination.get()
+        if operation == "restore":
+            input_error = App._restore_input_error(archive, destination)
+            if input_error:
+                messagebox.showerror("Cannot restore", input_error, parent=self)
+                return
         try:
             self.operation_source_root = Path(source).expanduser().resolve()
         except (OSError, RuntimeError):
@@ -475,5 +488,9 @@ class App(tk.Tk):
         self.destroy()
 
     def _restore(self):
+        input_error = App._restore_input_error(self.archive.get(), self.destination.get())
+        if input_error:
+            messagebox.showerror("Cannot restore", input_error, parent=self)
+            return
         if messagebox.askyesno("Restore", "Restore to a NEW folder? Existing REAPER files will NOT be modified."):
             self._start_io("restore")
