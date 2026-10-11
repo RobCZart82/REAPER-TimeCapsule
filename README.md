@@ -12,10 +12,14 @@ settings that need manual review.
 
 [Magyar](README_HU.md)
 
-![REAPER Time Capsule 0.9.0-beta.2 on macOS showing Scan / Preview results](docs/screenshots/timecapsule-scan-preview-0.9.0-beta.2-macos.png)
+![REAPER Time Capsule 0.9.0-beta.2 on macOS showing Scan / Preview results](docs/screenshots/time-capsule-main-macos.png)
 
 *Actual macOS screenshot supplied by the project owner, October 11, 2026.
 Scan / Preview lists a filename portability issue; this is not a completed backup.*
+
+![REAPER Time Capsule About window on macOS](docs/screenshots/time-capsule-about-macos.png)
+
+*Development build About window with the new floppy icon, GYR logo and graphic signature. These UI changes are not yet included in the published beta download.*
 
 > **[Download 0.9.0-beta.2](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2)**
 > — an unsigned public beta. This is a resource snapshot and recovery tool;
