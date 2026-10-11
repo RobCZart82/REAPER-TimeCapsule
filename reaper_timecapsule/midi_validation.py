@@ -15,14 +15,27 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 MAX_TEXT_BYTES = 8 * 1024 * 1024
 MAX_ISSUES = 100
 RE_GUID = re.compile(r"^_[0-9a-fA-F]{32}$")
+RE_SCRIPT_ID = re.compile(r"^_RS(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{4}_[0-9a-fA-F]{40})$", re.IGNORECASE)
 RE_ACTION = re.compile(
     r'^(ACT|SCR)\s+\d+\s+(\d+)\s+"([a-fA-F0-9]{32})"\s+"(?:[^"\\]|\\.)*"(?:\s+(.*))?$',
+    re.IGNORECASE,
+)
+RE_SCRIPT_ACTION = re.compile(
+    r'^SCR\s+\d+\s+(\d+)\s+(RS(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{4}_[0-9a-fA-F]{40}))\s+'
+    r'"(?:[^"\\]|\\.)*"\s+"((?:[^"\\]|\\.)*)"$',
     re.IGNORECASE,
 )
 RE_MENU_ITEM = re.compile(r"^item_\d+\s*=\s*(\S+)", re.IGNORECASE)
 
 
-def _text(source: Path, relative: str, problems: list[dict]) -> str | None:
+def _record_problem(problems: list[dict], total: list[int], issue: dict) -> None:
+    """Count every finding while bounding potentially large detail lists."""
+    total[0] += 1
+    if len(problems) < MAX_ISSUES:
+        problems.append(issue)
+
+
+def _text(source: Path, relative: str, problems: list[dict], problem_count: list[int]) -> str | None:
     """Bound the read and refuse symlinks. Legacy-encoded configs are tolerated."""
     file = source.joinpath(*relative.split("/"))
     try:
@@ -35,20 +48,28 @@ def _text(source: Path, relative: str, problems: list[dict]) -> str | None:
             raise ValueError("file exceeds 8 MiB parser limit")
         return data.decode("utf-8-sig", errors="replace")
     except (OSError, ValueError) as exc:
-        if len(problems) < MAX_ISSUES:
-            problems.append({"file": relative, "problem": str(exc)})
+        _record_problem(problems, problem_count, {"file": relative, "problem": str(exc)})
         return None
 
 
-def _action_records(text: str, filename: str, problems: list[dict], control=None):
+def _action_records(text: str, filename: str, problems: list[dict], problem_count: list[int], control=None):
     records = []
     for number, line in enumerate(text.splitlines(), 1):
         checkpoint(control, "Parsing MIDI actions", number, 0)
         stripped = line.strip()
         m = RE_ACTION.match(stripped)
         if not m:
-            if re.match(r'^(ACT|SCR)\s', stripped, re.IGNORECASE) and len(problems) < MAX_ISSUES:
-                problems.append({"file": filename, "line": number, "problem": "Unrecognized action record"})
+            script = RE_SCRIPT_ACTION.match(stripped)
+            if script:
+                section, action_id, script_path = script.groups()
+                key = (int(section), "_" + action_id.lower())
+                records.append((key, {"kind": "SCR", "tail": script_path,
+                                      "file": filename, "line": number}))
+                continue
+            if re.match(r'^(ACT|SCR)\s', stripped, re.IGNORECASE):
+                _record_problem(problems, problem_count,
+                                {"file": filename, "line": number,
+                                 "problem": "Unrecognized action record"})
             continue
         kind, section, action_id, tail = m.groups()
         key = (int(section), "_" + action_id.lower())
@@ -141,6 +162,7 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
     source = Path(source)
     saved = {x["path"] for x in items if x["policy"] == "keep"}
     problems: list[dict] = []
+    problem_count = [0]
     menu_files = sorted(p for p in saved if (
         p.casefold() == "reaper-menu.ini" or
         (p.casefold().startswith("menusets/") and p.casefold().endswith(".reapermenu"))
@@ -154,9 +176,9 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
     all_records, duplicates = [], []
     for filename in action_files:
         checkpoint(control, "Reading MIDI registrations")
-        contents = _text(source, filename, problems)
+        contents = _text(source, filename, problems, problem_count)
         if contents is not None:
-            for key, record in _action_records(contents, filename, problems, control):
+            for key, record in _action_records(contents, filename, problems, problem_count, control):
                 previous = definitions.get(key)
                 if previous is not None:
                     duplicates.append({"section": key[0], "command": key[1],
@@ -170,7 +192,7 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
     references = []
     for filename in menu_files:
         checkpoint(control, "Reading MIDI menus")
-        contents = _text(source, filename, problems)
+        contents = _text(source, filename, problems, problem_count)
         if contents is not None:
             references.extend(_menu_records(contents, filename, control))
 
@@ -183,7 +205,7 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
         command = reference["command"]
         if command.isdecimal():
             numeric.add((reference["section"], command))
-        elif not RE_GUID.fullmatch(command):
+        elif not RE_GUID.fullmatch(command) and not RE_SCRIPT_ID.fullmatch(command):
             external.add(command)
         elif (reference["section"], command) in definitions:
             resolved += 1
@@ -208,9 +230,9 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
                     numeric.add((section, token))
                     continue
                 if not token.startswith("_"):
-                    if len(problems) < MAX_ISSUES:
-                        problems.append({"file": definition["file"], "line": definition["line"],
-                                         "problem": "Unrecognized action dependency"})
+                    _record_problem(problems, problem_count,
+                                    {"file": definition["file"], "line": definition["line"],
+                                     "problem": "Unrecognized action dependency"})
                     continue
                 token = token.casefold()
                 if RE_GUID.fullmatch(token):
@@ -250,7 +272,18 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
                                         for section, cmd in sorted(numeric)[:MAX_ISSUES]],
         "issue_counts": {"duplicates": len(duplicates), "cycles": cycle_count,
                          "unverified_numeric": len(numeric), "missing": len(missing),
-                         "script_issues": len(script_problems)},
+                         "script_issues": len(script_problems),
+                         "parse_problems": problem_count[0]},
+        "issue_detail_limit": MAX_ISSUES,
+        "truncated_issue_details": {
+            "duplicates": len(duplicates) > MAX_ISSUES,
+            "cycles": cycle_count > len(cycles),
+            "unverified_numeric": len(numeric) > MAX_ISSUES,
+            "missing": len(missing) > MAX_ISSUES,
+            "script_issues": len(script_problems) > MAX_ISSUES,
+            "extension_commands": len(unverified | external) > MAX_ISSUES,
+            "parse_problems": problem_count[0] > len(problems),
+        },
         "resolved_menu_references": resolved,
         "missing_custom_actions": [
             {"file": f, "command": a} for f, a in sorted(missing)[:MAX_ISSUES]

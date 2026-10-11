@@ -65,6 +65,25 @@ class MIDIWorkflowValidationTests(unittest.TestCase):
         self.assertEqual(self.report()["script_registration_issues"][0]["reason"],
                          "absolute-path-requires-remapping")
 
+    def test_reascript_registration_ids_resolve_from_menu_and_saved_script_paths(self):
+        rs_id = "RS" + "a" * 40
+        contextual_id = "RS1234_" + "b" * 40
+        self.put("Scripts/one.lua", "-- synthetic script fixture\n")
+        self.put("Scripts/two.lua", "-- synthetic script fixture\n")
+        self.put("KeyMaps/scripts.ReaperKeyMap",
+                 f'SCR 4 32060 {rs_id} "Custom: One" "Scripts/one.lua"\n'
+                 f'SCR 4 32060 {contextual_id} "Custom: Two" "Scripts/two.lua"\n')
+        self.put("MenuSets/scripts.ReaperMenu",
+                 "[MIDI piano roll context]\n"
+                 f"item_1=_{rs_id} One\n"
+                 f"item_2=_{contextual_id} Two\n")
+        result = self.report()
+        self.assertEqual(result["script_registrations_checked"], 2)
+        self.assertEqual(result["resolved_menu_references"], 2)
+        self.assertEqual(result["missing_custom_actions"], [])
+        self.assertEqual(result["script_registration_issues"], [])
+        self.assertEqual(result["issue_counts"]["parse_problems"], 0)
+
     def test_external_extension_is_unverified_not_dropped(self):
         self.put("MenuSets/midi.ReaperMenu", "[MIDI piano roll context]\nitem_1=_SWS_MY_ACTION Menu\n")
         result = self.report()
@@ -99,6 +118,14 @@ class MIDIWorkflowValidationTests(unittest.TestCase):
         self.assertEqual(result["status"], "needs-review")
         self.assertEqual(result["toolbar_icon_dependencies"]["status"], "not-checked")
         self.assertEqual(result["runtime_validation"]["status"], "not-performed")
+
+    def test_parse_problem_total_and_truncation_are_reported(self):
+        self.put("reaper-kb.ini", "\n".join(f"ACT malformed {i}" for i in range(125)))
+        result = self.report()
+        self.assertEqual(result["issue_counts"]["parse_problems"], 125)
+        self.assertEqual(len(result["parse_problems"]), 100)
+        self.assertEqual(result["issue_detail_limit"], 100)
+        self.assertTrue(result["truncated_issue_details"]["parse_problems"])
 
 
 if __name__ == "__main__":
@@ -150,3 +177,4 @@ class MIDIGraphTests(unittest.TestCase):
         report = self.report()
         self.assertEqual(report['issue_counts']['unverified_numeric'], 150)
         self.assertEqual(len(report['unverified_numeric_commands']), 100)
+        self.assertTrue(report['truncated_issue_details']['unverified_numeric'])
