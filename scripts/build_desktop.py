@@ -10,6 +10,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 NAME = 'REAPER Time Capsule'
+sys.path.insert(0, str(ROOT))
+from reaper_timecapsule.core import VERSION
 
 
 def run(*arguments):
@@ -19,11 +21,33 @@ def run(*arguments):
 def main():
     if sys.platform not in ('darwin', 'win32'):
         raise SystemExit('Desktop beta builds support macOS and Windows')
-    run(sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir', '--windowed',
-        '--noupx', '--name', NAME, '--icon', str(ROOT / 'reaper_timecapsule/assets' /
-         ('timecapsule.icns' if sys.platform == 'darwin' else 'timecapsule.ico')),
-        '--add-data', 'reaper_timecapsule/assets:reaper_timecapsule/assets',
-        '--add-data', 'LICENSE:.', '--add-data', 'README.md:.', 'launcher.py')
+    options = ['--onedir', '--windowed', '--noupx', '--name', NAME,
+               '--icon', str(ROOT / 'reaper_timecapsule/assets' /
+                ('timecapsule.icns' if sys.platform == 'darwin' else 'timecapsule.ico')),
+               '--add-data', 'reaper_timecapsule/assets:reaper_timecapsule/assets',
+               '--add-data', 'LICENSE:.', '--add-data', 'README.md:.', 'launcher.py']
+    if sys.platform == 'darwin':
+        # Generate the spec first so BUNDLE writes metadata before ad-hoc signing.
+        run(sys.executable, '-m', 'PyInstaller.utils.cliutils.makespec', *options)
+        spec = ROOT / (NAME + '.spec')
+        text = spec.read_text(encoding='utf-8')
+        marker = '    bundle_identifier=None,'
+        if text.count(marker) != 1:
+            raise SystemExit('Unexpected PyInstaller BUNDLE template')
+        metadata = {'CFBundleName': NAME, 'CFBundleDisplayName': NAME,
+                    'CFBundleShortVersionString': VERSION,
+                    'CFBundleVersion': VERSION.replace('-beta.', '.')}
+        text = text.replace(marker, "    bundle_identifier='org.robczart82.reaper-time-capsule',"
+                            + '\n    info_plist=' + repr(metadata) + ',')
+        spec.write_text(text, encoding='utf-8')
+        run(sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', str(spec))
+        import plistlib
+        plist = ROOT / 'dist' / (NAME + '.app') / 'Contents/Info.plist'
+        with plist.open('rb') as stream:
+            actual = plistlib.load(stream)
+        assert all(actual.get(key) == value for key, value in metadata.items())
+    else:
+        run(sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', *options)
     executable = (ROOT / 'dist' / (NAME + '.app') / 'Contents/MacOS' / NAME if sys.platform == 'darwin'
                   else ROOT / 'dist' / NAME / (NAME + '.exe'))
     report = ROOT / 'work' / 'bundled-selftest.json'
