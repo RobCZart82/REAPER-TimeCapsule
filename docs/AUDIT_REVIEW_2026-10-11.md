@@ -23,9 +23,11 @@ verified scope. Synthetic tests do not prove recovery of every real REAPER profi
 For TC-011, this fixes the synchronous large-result display path implicated by the
 reported GUI freeze. Long strings, lists, dictionaries and nested values can be
 shortened in the GUI display copy. The full scan inventory remains available in
-**File policies**, and CLI output is not shortened. Synthetic/headless tests verify
-the bounds and scheduling; native macOS/Windows interaction with a very large live
-MIDI audit still needs user-side smoke testing.
+**File policies**. The GUI's **Save full report…** control exports the complete JSON
+report to a chosen location, warns about private paths/filenames, refuses the scanned
+resource tree and never replaces an existing file. Synthetic/headless tests verify
+the display bound and export cleanup; native macOS/Windows file-dialog interaction
+with a very large live MIDI audit still needs user-side smoke testing.
 
 ## Confirmed limitations and remaining work
 

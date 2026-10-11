@@ -9,6 +9,7 @@ from pathlib import Path
 from reaper_timecapsule.core import VERSION, make_backup, verify_backup, restore_backup, preview
 from reaper_timecapsule.gui import App, GUI_REPORT_MAX_CHARS
 from reaper_timecapsule.operation import OperationControl, OperationCancelled
+from reaper_timecapsule.report_export import export_report
 
 
 def wait_for_geometry(app, width, height):
@@ -22,7 +23,7 @@ def wait_for_geometry(app, width, height):
     raise AssertionError((app.winfo_width(), app.winfo_height(), width, height))
 
 
-def verify_bounded_report_preview(app):
+def verify_bounded_report_preview(app, export_root):
     """Exercise large synthetic report rendering in the packaged Tk app."""
     app.log.delete('1.0', 'end')
     synthetic = {'items': ['x' * 3000 for _ in range(500)]}
@@ -41,6 +42,13 @@ def verify_bounded_report_preview(app):
     assert len(rendered) <= GUI_REPORT_MAX_CHARS + len(marker) + 100, len(rendered)
     assert app.vertical_scroll.winfo_ismapped(), 'Large report did not show vertical scrolling'
     assert app.horizontal_scroll.winfo_ismapped(), 'Long report line did not show horizontal scrolling'
+    resource_root = export_root / 'synthetic-resource'
+    resource_root.mkdir()
+    exported = export_report(synthetic, export_root / 'complete-report.json', forbidden_root=resource_root)
+    assert json.loads(exported.read_text(encoding='utf-8')) == synthetic
+    exported.unlink()
+    app.last_full_report = None
+    app.report_export_button.configure(state='disabled')
     app.log.delete('1.0', 'end')
     app.update()
 
@@ -85,7 +93,7 @@ def self_test(report):
             raise AssertionError('Cancellation failed')
         app = App()
         wait_for_geometry(app, app.default_width, app.minimum_height)
-        verify_bounded_report_preview(app)
+        verify_bounded_report_preview(app, root)
         about = app._show_about()
         app.update()
         assert app._show_about() is about

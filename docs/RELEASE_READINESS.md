@@ -85,7 +85,11 @@ operation buttons are locked until completion, with an indeterminate busy indica
 It shows per-phase completion where known; there is no global ETA. Large report
 previews are bounded to 256 KiB and inserted in 8 KiB UI callbacks; long strings,
 collections and deep values are shortened in this display-only copy. The full scan
-inventory remains available in File policies, and CLI reports are not shortened.
+inventory remains available in File policies. **Save full report…** exports the
+complete JSON result only after the user chooses a path and confirms the private-data
+warning. It refuses to write inside the scanned resource tree and never replaces an
+existing file. Synthetic tests cover complete contents and cleanup; human file-dialog
+checks remain part of clean-machine validation.
 
 Window closing is blocked during active work to avoid interrupting a write.
 Cooperative cancellation now checkpoints scanning/copying/verification and before

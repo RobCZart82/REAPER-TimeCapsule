@@ -82,9 +82,12 @@ class ReportBrowser(tk.Toplevel):
 
     def _export(self):
         destination = filedialog.asksaveasfilename(parent=self, title='Export private report to NEW file', defaultextension='.json', filetypes=[('JSON', '*.json')])
-        if destination:
-            if not self.runner.active:
-                self._start(lambda: export_report(self.report, destination, control=self.control), 'export')
+        if destination and not self.runner.active and messagebox.askyesno(
+                'Save private report?', 'The complete report may contain local paths and filenames. '
+                'Save it only in a folder you trust. Continue?', parent=self):
+            source = self.report.get('source_resource')
+            self._start(lambda: export_report(self.report, destination, forbidden_root=source,
+                                              control=self.control), 'export')
 
     def _start(self, action, kind):
         self.control = OperationControl()

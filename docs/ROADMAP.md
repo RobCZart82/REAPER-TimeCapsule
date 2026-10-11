@@ -44,7 +44,9 @@ and the linked issue for each remaining area.
 - The macOS and Windows bundled executable self-tests render a synthetic over-limit
   report and require the truncation notice plus both scrollbars. This covers packaged
   Tk behavior in CI; a visual human check on clean machines remains.
-- If the GUI report cap is reached, direct users to the complete local CLI report;
+- If the GUI report cap is reached, **Save full report…** writes the complete JSON
+  report only to a user-selected location outside the scanned resource tree and will
+  not replace existing files. The on-screen notice identifies the export control;
   never silently imply the shortened display is the complete audit.
 
 ### 2. ReaPack scope and compatibility

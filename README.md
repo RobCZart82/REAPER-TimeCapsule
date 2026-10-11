@@ -84,8 +84,10 @@ These changes are on main and are not yet in the published beta.
 - GUI Scan / Preview, MIDI Audit and ReaPack Audit run on the shared background
   worker and can be cancelled at safe checkpoints. The display-only GUI report is
   capped at 256 KiB and rendered in chunks of at most 8 KiB; long values and
-  collections can be shortened. Full scan policy rows remain in **File policies**,
-  and CLI report output is not shortened.
+  collections can be shortened. Full scan policy rows remain in **File policies**.
+  Use **Save full report…** to export the complete JSON report to a chosen location;
+  it warns that reports can contain private paths and filenames, refuses to write
+  inside the scanned resource folder, and never overwrites an existing file.
 - Static MIDI audit checks menu Custom Action references against keymaps and
   `reaper-kb.ini`; it also reports duplicate/conflicting definitions, dependency
   cycles, missing actions or script files, nonportable script paths, unresolved

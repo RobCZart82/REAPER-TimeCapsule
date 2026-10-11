@@ -1,11 +1,9 @@
 """Private, versioned read-only scan reports and bounded browser pages."""
-import json
-import os
 from datetime import datetime, timezone
-from pathlib import Path
 
 from .core import VERSION
 from .operation import checkpoint
+from .report_export import export_report
 
 PAGE_SIZE = 200
 
@@ -37,29 +35,3 @@ def report_page(report, *, policy='all', query='', page=0, control=None):
     start = page * PAGE_SIZE
     return {'rows': matches[start:start + PAGE_SIZE], 'matches': len(matches),
             'page': page, 'page_size': PAGE_SIZE}
-
-
-def export_report(report, destination, *, control=None):
-    """Explicit local export; never overwrite an existing entry or follow its link."""
-    path = Path(destination).expanduser().absolute()
-    checkpoint(control, 'Preparing private report export')
-    data = json.dumps(report, ensure_ascii=False, indent=2).encode('utf-8')
-    checkpoint(control, 'Writing private report export')
-    owned = None
-    try:
-        with path.open('xb') as output:
-            metadata = os.fstat(output.fileno())
-            owned = metadata.st_dev, metadata.st_ino
-            for start in range(0, len(data), 1024 * 1024):
-                checkpoint(control, "Writing private report export", start, len(data))
-                output.write(data[start:start + 1024 * 1024])
-    except BaseException:
-        if owned is not None:
-            try:
-                metadata = path.lstat()
-                if (metadata.st_dev, metadata.st_ino) == owned:
-                    path.unlink()
-            except OSError:
-                pass
-        raise
-    return {'destination': str(path), 'entries': len(report['entries']), 'report_schema': 1}
