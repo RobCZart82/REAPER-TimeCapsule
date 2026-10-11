@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 
+from .resource_budget import inspect_residues
 from .core import default_resource, make_backup, preview, preview_backup, restore_backup, scan
 from .midi_validation import validate_midi_workflow
 from .inventory import audit_reapack
@@ -52,10 +53,14 @@ def main():
     staging_verify = commands.add_parser("verify-stage", help="Read-only staging integrity and policy check")
     staging_verify.add_argument("archive", type=Path)
     staging_verify.add_argument("--target", type=Path)
+    residue_cmd = commands.add_parser("staging-residues", help="Read-only listing of possible crash leftovers")
+    residue_cmd.add_argument("parent", type=Path)
     commands.add_parser("gui", help="Open desktop GUI")
     args = parser.parse_args()
     try:
-        if args.command == "config-stage":
+        if args.command == "staging-residues":
+            result = inspect_residues(args.parent)
+        elif args.command == "config-stage":
             result = export_preferences(args.source, args.target, args.archive,
                                         selections=args.select, source_version=args.source_version,
                                         target_version=args.target_version, opt_in=args.opt_in)
