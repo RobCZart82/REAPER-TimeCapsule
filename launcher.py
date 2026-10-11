@@ -2,6 +2,7 @@
 import json
 import sys
 import tempfile
+from types import SimpleNamespace
 from pathlib import Path
 
 from reaper_timecapsule.core import VERSION, make_backup, verify_backup, restore_backup, preview
@@ -48,6 +49,19 @@ def self_test(report):
         else:
             raise AssertionError('Cancellation failed')
         app = App()
+        app.update_idletasks()
+        assert tuple(map(int, app.resizable())) == (0, 1)
+        width, height = app.winfo_width(), app.winfo_height()
+        first, last = app.action_buttons[0], app.action_buttons[-1]
+        left_margin = first.winfo_rootx() - app.winfo_rootx()
+        right_margin = app.winfo_rootx() + width - last.winfo_rootx() - last.winfo_width()
+        assert abs(left_margin - right_margin) <= 1, (left_margin, right_margin)
+        log_height = app.log.winfo_height()
+        app._begin_vertical_resize(SimpleNamespace(y_root=0))
+        app._drag_vertical_resize(SimpleNamespace(y_root=80))
+        app.update_idletasks()
+        assert app.winfo_width() == width and app.winfo_height() == height + 80
+        assert app.log.winfo_height() > log_height
         app.withdraw()
         app.update_idletasks()
         tcl_version = app.tk.call('info', 'patchlevel')

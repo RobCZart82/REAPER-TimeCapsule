@@ -52,6 +52,11 @@ Development on `main` may differ from the published packages.
 - Read-only configuration and theme previews identify candidates and conflicts;
   explicitly selected preferences can be exported separately as review data.
 
+Development on `main` adds a fixed width measured from the Scan / Preview–Restore
+button row, with equal outer margins. The window resizes vertically only; the
+bottom ↓ handle can be dragged to expand the output area. This layout change is
+not included in the published 0.9.0-beta.2 packages.
+
 ## System requirements
 
 The macOS and Windows application downloads do not require Python or a compiler.

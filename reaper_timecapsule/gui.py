@@ -16,7 +16,6 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("REAPER TimeCapsule " + VERSION)
-        self.geometry("1080x570")
         self.runner = BackgroundTask()
         self.interactive = []
         self.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -48,6 +47,8 @@ class App(tk.Tk):
             self.interactive.append(button)
         row = ttk.Frame(body)
         row.pack(anchor="w", pady=17)
+        self.action_row = row
+        self.action_buttons = []
         for label, fn in (
             ("Scan / Preview", lambda: self._do(lambda: self._brief(preview(self.source.get())))),
             ("MIDI Audit", lambda: self._do(lambda: validate_midi_workflow(Path(self.source.get()), scan(Path(self.source.get()))))),
@@ -62,6 +63,7 @@ class App(tk.Tk):
         ):
             button = ttk.Button(row, text=label, command=fn)
             button.pack(side="left", padx=5)
+            self.action_buttons.append(button)
             self.interactive.append(button)
         ttk.Label(body, text="REAPER must be closed. Restore NEVER overwrites an existing folder.").pack(anchor="w")
         ttk.Label(body, text="Machine-dependent and uncertain files are isolated under NeedsReview/.").pack(anchor="w")
@@ -71,9 +73,31 @@ class App(tk.Tk):
         self.progress.pack(fill="x", pady=4)
         self.cancel_button = ttk.Button(body, text="Cancel operation", command=self._cancel_io, state="disabled")
         self.cancel_button.pack(anchor="w")
-        self.log = tk.Text(body, height=10, wrap="word")
+        self.log = tk.Text(body, width=1, height=10, wrap="word")
         self.log.pack(fill="both", expand=True, pady=10)
         self.log.insert("end", "Scan the source before creating a backup.\n")
+        self.resize_hint = ttk.Label(body, text="↓  Drag down to show more output",
+                                     anchor="center", cursor="sb_v_double_arrow")
+        self.resize_hint.pack(fill="x")
+        self.resize_hint.bind("<ButtonPress-1>", self._begin_vertical_resize)
+        self.resize_hint.bind("<B1-Motion>", self._drag_vertical_resize)
+        # Use native theme/font measurements instead of a platform-specific
+        # pixel constant. The action row includes equal 5px end padding.
+        self.update_idletasks()
+        self.fixed_width = self.action_row.winfo_reqwidth() + 40
+        self.minimum_height = max(570, self.winfo_reqheight())
+        self.geometry(f"{self.fixed_width}x{self.minimum_height}")
+        self.minsize(self.fixed_width, self.minimum_height)
+        self.resizable(False, True)
+
+    def _begin_vertical_resize(self, event):
+        self._resize_start = (event.y_root, self.winfo_height())
+
+    def _drag_vertical_resize(self, event):
+        start = getattr(self, "_resize_start", None)
+        if start is not None:
+            height = max(self.minimum_height, start[1] + event.y_root - start[0])
+            self.geometry(f"{self.fixed_width}x{height}")
 
     @staticmethod
     def _select_restore_destination():
