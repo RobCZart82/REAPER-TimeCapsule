@@ -244,3 +244,5 @@ Native filenames, including macOS colons, can now be preserved through an explic
 Backup/restore staging now checks conservative free-space estimates. ZIP inspection bounds central-directory bytes and member count before loading its index; ZIP64 remains supported. Read-only `staging-residues PARENT` lists possible crash leftovers without reading their content or deleting them. See [resource budgets](docs/RESOURCE_BUDGETS.md).
 
 Recovery paths are checked against conservative filesystem limits before staging. Original timestamps and permissions are saved as informational metadata; restoring does not activate executable bits or copy ACLs/extended attributes. See [filesystem publication](docs/FILESYSTEM_PUBLICATION.md).
+
+After Scan / Preview, **File policies…** opens a read-only searchable policy list with 200 rows per page. Filtering and explicit private JSON export run in the background. Reports preserve scan provenance, completeness, policy reasons, portability issues and manual steps; they are local private data, not proof of a transactional live snapshot.

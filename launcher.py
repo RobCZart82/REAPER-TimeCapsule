@@ -135,6 +135,26 @@ def self_test(report):
         wait_for_geometry(app, width, height + 40)
         assert app.winfo_width() == width and app.winfo_height() == height + 40
         assert app.log.winfo_height() > log_height
+        from reaper_timecapsule.reports import scan_report
+        from reaper_timecapsule.report_browser import ReportBrowser
+        browser_report = scan_report(preview(source))
+        browser_report['entries'] = [{'path': f'Scripts/synthetic-{i}.lua', 'policy': 'keep',
+                                      'size': i, 'reason': 'Synthetic UI test'} for i in range(205)]
+        browser = ReportBrowser(app, browser_report)
+        import time
+        deadline = time.monotonic() + 5
+        while browser.runner.active and time.monotonic() < deadline:
+            app.update()
+            time.sleep(0.01)
+        assert not browser.runner.active
+        assert len(browser.tree.get_children()) == 200
+        browser._page(1)
+        deadline = time.monotonic() + 5
+        while browser.runner.active and time.monotonic() < deadline:
+            app.update()
+            time.sleep(0.01)
+        assert not browser.runner.active and len(browser.tree.get_children()) == 5
+        browser.destroy()
         app.withdraw()
         app.update_idletasks()
         tcl_version = app.tk.call('info', 'patchlevel')

@@ -203,7 +203,8 @@ def preview(source: Path, *, control=None) -> dict:
         _validate_portable_paths(portable)
     except ValueError as exc:
         issues.append({"reason": str(exc)})
-    return {"files": len(items), "counts": dict(counts), "bytes": dict(sizes), "items": items,
+    return {"source_resource": str(Path(source).expanduser().resolve(strict=True)),
+            "files": len(items), "counts": dict(counts), "bytes": dict(sizes), "items": items,
             "inventory": build_inventory(Path(source).expanduser().resolve(strict=True), items, control=control),
             "portable_names_ready": not issues, "portability_issues": issues,
             "skipped_entries": [x for x in items if x.get("kind") in ("link", "special")]}

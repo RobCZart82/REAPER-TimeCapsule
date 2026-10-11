@@ -10,6 +10,8 @@ from .core import NonPortableNames, VERSION, default_resource, make_backup, prev
 from .midi_validation import validate_midi_workflow
 from .config_migration import preview_migration
 from .inventory import audit_reapack
+from .reports import scan_report
+from .report_browser import ReportBrowser
 from .about import AboutWindow, brand_image
 
 
@@ -21,6 +23,8 @@ class App(tk.Tk):
         self.small_icon = brand_image(self, 'timecapsule-32.png')
         self.iconphoto(True, self.app_icon, self.small_icon)
         self.about_window = None
+        self.last_scan_report = None
+        self.report_window = None
         if self.tk.call("tk", "windowingsystem") == "aqua":
             self.createcommand("tkAboutDialog", self._show_about)
         self.runner = BackgroundTask()
@@ -86,8 +90,13 @@ class App(tk.Tk):
         ttk.Label(body, textvariable=self.status).pack(anchor="w")
         self.progress = ttk.Progressbar(body, mode="indeterminate")
         self.progress.pack(fill="x", pady=4)
-        self.cancel_button = ttk.Button(body, text="Cancel operation", command=self._cancel_io, state="disabled")
-        self.cancel_button.pack(anchor="w")
+        report_controls = ttk.Frame(body)
+        report_controls.pack(anchor="w")
+        self.cancel_button = ttk.Button(report_controls, text="Cancel operation", command=self._cancel_io, state="disabled")
+        self.cancel_button.pack(side="left")
+        self.report_button = ttk.Button(report_controls, text="File policies…", command=self._show_report)
+        self.report_button.pack(side="left", padx=(10, 0))
+        self.interactive.append(self.report_button)
         # Reserve the footer before the expanding output at the default height.
         self.resize_hint = ttk.Label(body, text="↓  Drag down to show more output",
                                      anchor="center", cursor="sb_v_double_arrow")
@@ -133,6 +142,15 @@ class App(tk.Tk):
             scrollbar.grid_remove()
         elif visible and not scrollbar.grid_info():
             scrollbar.grid()
+
+    def _show_report(self):
+        if self.last_scan_report is None:
+            messagebox.showinfo('Scan required', 'Run Scan / Preview first to inspect file policies.')
+            return
+        if self.report_window is not None and self.report_window.winfo_exists():
+            self.report_window.lift()
+            return
+        self.report_window = ReportBrowser(self, self.last_scan_report)
 
     def _show_about(self):
         if self.about_window is not None and self.about_window.winfo_exists():
@@ -223,7 +241,7 @@ class App(tk.Tk):
         self.operation_control = OperationControl()
         control = self.operation_control
         actions = {
-            "scan": lambda: App._brief(preview(source, control=control)),
+            "scan": lambda: preview(source, control=control),
             "midi": lambda: validate_midi_workflow(Path(source), scan(source, control=control), control=control),
             "reapack": lambda: audit_reapack(source, control=control),
             "native-backup": lambda: make_backup(source, archive, control=control, native_names=True),
@@ -277,9 +295,17 @@ class App(tk.Tk):
                 messagebox.showerror("Time Capsule error", str(payload))
         else:
             self.status.set("Operation completed")
-            self._do(lambda: payload)
+            if isinstance(payload, dict) and "items" in payload and "portable_names_ready" in payload:
+                self.last_scan_report = scan_report(payload)
+                self._do(lambda: App._brief(payload))
+            else:
+                self._do(lambda: payload)
 
     def _on_close(self):
+        browser = getattr(self, "report_window", None)
+        if browser is not None and browser.winfo_exists() and browser.runner.active:
+            messagebox.showinfo("Report in progress", "Close the report window and wait for cleanup before exiting.")
+            return
         if self.runner.active:
             messagebox.showinfo("Operation in progress", "Wait for the operation to finish before closing. "
                                 "Use Cancel operation and wait for cleanup.")
