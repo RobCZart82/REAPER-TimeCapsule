@@ -98,8 +98,13 @@ def self_test(report):
         app.update()
         assert app._show_about() is about
         if app.tk.call('tk', 'windowingsystem') == 'aqua':
+            about.destroy()
+            app.about_window = None
+            app.update()
             app.tk.call('tkAboutDialog')
-            assert app.about_window is about
+            about = app.about_window
+            assert about is not None and about.winfo_exists()
+            assert about.title_label.cget('text') == 'REAPER Time Capsule'
         center_x = lambda widget: widget.winfo_rootx() + widget.winfo_width() / 2
         assert abs(center_x(about.icon_label) - center_x(about.logo_label)) <= 1
         assert abs(center_x(about.title_label) - center_x(about.signature_label)) <= 1

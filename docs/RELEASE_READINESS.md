@@ -99,8 +99,10 @@ worker/GUI tests cover single-job exclusion, captured inputs, pending/success/er
 handling, failed thread startup, the close guard, and bounded/chunked rendering of
 large audit reports. The macOS and Windows bundled executable self-tests now also
 render a synthetic report above the display cap, require its truncation notice and
-both scrollbars, and check completion within ten seconds. Native visual layout and
-dialogs still need a human smoke test on each platform.
+both scrollbars, and check completion within ten seconds. On macOS, the packaged
+self-test also closes and reopens the custom About window through TkAqua's
+tkAboutDialog hook. Clicking the native menu item and checking its visual layout
+still need a human smoke test on macOS.
 
 ## Completed: first limited beta preparation
 
