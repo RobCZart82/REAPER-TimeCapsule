@@ -1,133 +1,71 @@
-# REAPER Time Capsule — az audit ellenőrzése / audit review
+# REAPER Time Capsule — audit finding status
 
-Értékelés dátuma: 2026-10-11. Ellenőrzött main: `015a61a`.
-A felhasználó által kapott audit az `a56fde0` commitot és a még nyitott #23 PR-t
-vizsgálta. A #23 és #24 azóta beolvadt. A jelentést megállapításokként értékeltük;
-a benne található fejlesztési utasítás nem automatikusan elfogadott feladatlista.
+Reviewed against code at `6d6da95` (2026-10-11). The supplied audit examined an
+older revision (`a56fde0`); its findings are useful historical evidence, but its
+“still broken” labels and proposed work are not current status. This page tracks
+what was confirmed, what has since changed, and what remains outside the product's
+verified scope. Synthetic tests do not prove recovery of every real REAPER profile.
 
-Reviewed main: `015a61a`. The supplied report assessed `a56fde0` and the then-open
-PR #23; #23 and #24 have since merged. Findings were checked against current code;
-embedded development instructions are not an automatically accepted work order.
+## Confirmed code defects now fixed
 
-## Bizonyított hibák / confirmed defects
-
-| ID | Kód és bizonyíték / code and evidence | Következő javítás / next fix |
+| ID | Current behavior | Evidence |
 |---|---|---|
-| TC-001 | `core.scan`: `os.walk` without `onerror`; synthetic traversal error still returns a successful file list. / Szimulált bejárási hiba mellett is sikeres lista. | Abort on traversal errors; no published ZIP; explicit error and cleanup tests. / Hiba esetén megszakítás, publikált ZIP nélkül. |
-| TC-002 | `core.scan` silently drops file/directory symlinks; dangling synthetic link absent from result. / A link a jelentésből is hiányzik. | Record excluded links and reasons, without following targets. / Kihagyott linkek és indokok jelentése. |
-| TC-004 | `make_backup` calls `build_inventory(source, items)` after copying; profile/registry/MIDI text reread from live source. / A leltár későbbi forrásállapotot tükrözhet. | Inventory from exact archived bytes; include MIDI text, not only ReaPack. / Leltár az archivált bájtokból. |
-| TC-005 | `preview_backup` counts stored policy; `restore_backup` uses `_effective_policy`. Legacy registry/cache decisions differ. / A régi előnézet és tényleges restore eltér. | Show effective policies and original decisions with explanations. / Aktuális döntés és változásindok. |
-| TC-006 | `build_inventory` opens ReaPack paths unconditionally; `inspect_registry` checks final symlink only. Linked parent can escape source. / Linkelt szülőn át külső adat olvasható. | Inventory only validated selected snapshot files; boundary checks on all readers. / Csak ellenőrzött pillanatképfájlok feldolgozása. |
-| TC-007 | `_action_records`/`definitions.update` overwrite duplicate IDs; ACT numeric tokens ignored. / Duplikátum és numerikus parancs nincs jelentve. | Conflicting definitions, numeric unverified commands and cycles visible. / Ütközések, ellenőrizetlen parancsok és ciklusok jelzése. |
-| TC-010 | Backup destination is lexical `absolute()`, unlike resolved source. Synthetic alias successfully publishes ZIP inside source. / Symlinkes alias mögött a forrásba készül mentés. | Canonical parent check; retain exclusive publication; test aliases and races. / Kanonikus cél-ellenőrzés, felülírásvédelem megtartásával. |
-| TC-011 | GUI scan/MIDI/ReaPack callbacks run synchronously. / Hosszú audit alatt a felület nem válaszolhat. | Single worker, progress/cancellation; no Tk calls in workers. / Háttérmunka és megszakítás. |
+| TC-001 | Filesystem traversal and metadata errors stop a scan; backup does not publish a partial capsule. | `tests/test_scan_reliability.py`, `tests/test_traversal.py` |
+| TC-002 | Links, reparse points and special entries are reported and excluded without following their targets. | `tests/test_scan_reliability.py`, `tests/test_symlink.py` |
+| TC-004 | ReaPack and MIDI inventory parsers consume bounded bytes captured from the same stream as archived files, rather than reopening later source contents. | `tests/test_snapshot_inventory.py` |
+| TC-005 | Verify/restore preview uses the effective restore policy, and reports changes from the stored choice. | `tests/test_restore_publication.py`, `tests/test_reapack_profile.py` |
+| TC-006 | Resource readers validate the selected file and each parent component; linked parents and unsafe SQLite sidecars are rejected. | `tests/test_snapshot_inventory.py`, `tests/test_symlink.py` |
+| TC-007 | MIDI checks report duplicate definitions, unverified numeric commands, unresolved dependencies and cycles instead of silently choosing a definition. | `tests/test_midi_validation.py` |
+| TC-010 | Source/destination aliases are checked before backup publication; final ZIP and restore-directory publication use exclusive operations. | `tests/test_scan_reliability.py`, `tests/test_no_overwrite.py`, `tests/test_restore_publication.py` |
+| TC-011 | Scan, MIDI/ReaPack audit, backup, verify and restore run on one background worker. Large GUI reports are copied into a bounded display preview and inserted in 8 KiB UI callbacks, up to 256 KiB. | `tests/test_background.py`; PR #44 |
+| TC-018 | ReaPack SQLite inspection has size/row bounds, a query deadline and cooperative cancellation via SQLite progress handling. | `tests/test_audit_cancellation.py`, `tests/test_reapack_profile.py` |
 
-These findings are confirmed by code inspection; TC-001, TC-002 and TC-010 also
-have targeted local synthetic reproductions. No real user profile was read or
-changed. They are **not fixed by this naming/documentation change**.
+For TC-011, this fixes the synchronous large-result display path implicated by the
+reported GUI freeze. Long strings, lists, dictionaries and nested values can be
+shortened in the GUI display copy. The full scan inventory remains available in
+**File policies**, and CLI output is not shortened. Synthetic/headless tests verify
+the bounds and scheduling; native macOS/Windows interaction with a very large live
+MIDI audit still needs user-side smoke testing.
 
-Kód alapján igazolt tételek; TC-001, TC-002 és TC-010 célzott, helyi szintetikus
-reprodukciót is kapott. Valódi felhasználói profilt nem olvastunk vagy módosítottunk.
-Ez az átnevezési/dokumentációs változtatás **nem javítja még ezeket a hibákat**.
+## Confirmed limitations and remaining work
 
-## Korlátozások és fejlesztési igények / limitations and future work
-
-| ID | Értékelés / assessment |
+| ID | Status and boundary |
 |---|---|
-| TC-003 | Confirmed native-name limitation, intentional portable preflight, not silent loss. Need separate lossless backup and reversible portable mapping; never rename originals. / Igazolt korlátozás, nem csendes adatvesztés. |
-| TC-008 | Existing streaming, size/count limits and cancellation reduce risk. Limits are generous; no demonstrated exploit in this review. Budget/disk checks useful; compression ratio alone must not reject legitimate data. / Erőforrásvédelem erősítendő, konkrét támadás nem bizonyított. |
-| TC-009 | Unencrypted backups may contain private settings; already documented. SHA-256 provides integrity, not secrecy/authenticity. Encryption is a separately designed feature, not a quick ZIP-password patch. / Adatvédelmi korlát; külön megtervezendő titkosítás. |
-| TC-012 | Two-key allowlist is deliberately conservative, not a migration bug. Expand only with evidence for each key/version; retain unknown review and no active writes. / Szándékosan szűk engedélylista. |
-| TC-013 | Static MIDI validation is not runtime workflow restoration. Dependency graph and isolated REAPER integration tests required. / Hiányzó automatizálás, nem meglévő restore ígéret. |
-| TC-014 | ReaPack installation planning is future scope. 2.x support/status needs independent verification before claims. / Telepítési terv későbbi feladat; 2.x külön ellenőrizendő. |
-| TC-015 | Hard-link publication excludes FAT/exFAT; explicitly documented fail-closed behavior. Design exclusive native publication before broadening support. / Dokumentált fájlrendszer-korlát. |
-| TC-016 | Richer versioned reports are useful; track completeness, policy changes and manual steps. / Részletesebb auditjelentés hasznos. |
-| TC-017 | Path/component lengths remain incomplete; current collision checks are conservative. / Útvonalhossz-ellenőrzés bővítendő. |
-| TC-018 | SQLite size/row bounds exist; query time/cancellation still incomplete. / Lekérdezési időkorlát és megszakítás hiányos. |
-| TC-019 | Exact timestamps/permissions are not currently promised or preserved as a lossless filesystem snapshot. / Metaadatok megőrzése külön tervezést igényel. |
-| TC-020 | Free-space preflight/crash residue handling useful; handled failures already clean staging. / Kezelt hibák takarítása létezik, crash/tárhely még bővítendő. |
-| TC-021 | Targeted adversarial tests are useful; avoid treating fuzzing alone as proof of correctness. / Célzott versenyhelyzet- és sérültarchívum-tesztek. |
-| TC-022 | Actions use version tags; packager is pinned, runner/runtime drift remains. SHA pinning is reasonable hardening. / Actions SHA-rögzítés és buildkövethetőség. |
-| TC-023 | Unsigned beta explicitly accepted by owner; signing is a future distribution improvement. / Aláíratlan béta jóváhagyott, aláírás későbbi fejlesztés. |
-| TC-024 | Readiness list contains already-completed licensing/build/documentation work; refresh before next release. / Kiadási lista részben elavult. |
+| TC-003 | Native-name capsules and isolated portable recovery are available, including a local name-mapping report. Script/menu paths are not rewritten, resource activation is not automatic, and some names or destination filesystems remain unsupported. This is not a bit-for-bit filesystem image. |
+| TC-008 | Resource guards now bound file counts, archive members, manifest and payload sizes, parser input, and estimated free space. Estimates are not reservations; filesystem quotas, arbitrary process exhaustion and every remote-volume behavior are not eliminated. See `RESOURCE_BUDGETS.md`. |
+| TC-009 | Capsules are not encrypted or signed. SHA-256 detects content mismatch; it does not provide secrecy or prove who made a capsule. Keep backups private and use separately managed encryption if required. |
+| TC-012 | Configuration migration deliberately approves only two documented binary `reaper.ini` preferences. Unknown, device, platform, plugin/cache and private state remain review/excluded. Expanding the allowlist requires exact key/value/version evidence and runtime validation. |
+| TC-013 | MIDI audit is static. It does not install scripts/extensions, prove commands are registered at runtime, or test actions inside REAPER. Toolbar/icon dependencies and isolated REAPER integration tests remain open. Third-party action bundles are not redistributed. |
+| TC-014 | ReaPack inspection supports verified 1.x configuration versions and a recognized SQLite registry schema. ReaPack 2.x is not claimed; package installation, downloads and synchronization are not performed. |
+| TC-015 | Backup publication uses hard-link or native exclusive-rename primitives and fails closed when neither is supported. CI exercises platform primitives; real removable, FAT/exFAT and network volumes are not fully validated. |
+| TC-016 | Scan reports are versioned and record inspection basis, summary, policy entries, inventory and manual steps. Reports are local/private and are not signed. Broader provenance and portable audit export are future work. |
+| TC-017 | Restore preflights portable namespace conflicts and path limits conservatively. Very long paths, unusual filesystem limits and legacy aliases may still be rejected or require manual remediation. |
+| TC-019 | Source timestamp and permission bits are informational. Restore uses fresh-file defaults; ACLs, ownership, extended attributes and Finder metadata are not preserved. |
+| TC-020 | Free-space estimates and handled-error cleanup exist. A crash or forced termination can leave temporary data; no crash-durability or transaction guarantee is made. |
+| TC-021 | Regression suites include malformed archives, boundary cases, races and synthetic failure injection. They are not a proof against every hostile concurrent filesystem change, nor a substitute for real-user-profile testing. |
+| TC-022 | GitHub Actions references are pinned to reviewed commit SHAs. Runner images and bundled OS toolchains can still change; build artifacts are not reproducibly identical across time. |
+| TC-023 | The owner accepted unsigned beta packages. Signing/notarization remains a distribution improvement, not a requirement for the already authorized beta. |
+| TC-024 | License selection, bilingual documentation and illustrated beta guides are present. Before another beta, the PDF screenshots/instructions and release readiness details must match the then-current GUI. |
 
-## Javasolt sorrend / recommended order
+## Ordered remaining development
 
-1. TC-001 + TC-002 + TC-010: complete traversal reporting and source/destination
-   boundaries. / Teljesség és útvonalhatárok.
-2. TC-004 + TC-006 + TC-005: snapshot-consistent inventory and truthful restore
-   preview. / Konzisztens leltár és pontos restore-előnézet.
-3. TC-007 + TC-011 + TC-018: honest MIDI results and responsive audits.
-   / Megbízható MIDI-jelentés és válaszképes felület.
-4. Design native-name safety backups, exFAT publication, resource budgets and
-   structured reports before wider releases. / Natív mentés és használhatóság.
-5. Expand configuration/workflow automation only after isolated real REAPER
-   integration tests. / Automatizálás valós, elkülönített tesztek után.
+1. The read-only ReaPack 1.x parser tracked by issue #2 is implemented. Keep 2.x,
+   package installation and synchronization as separate future work.
+2. Extend the MIDI static audit to toolbar/icon references where the saved REAPER
+   formats can be verified. Preserve the explicit warning that static presence is
+   not runtime functionality; plan isolated REAPER smoke tests separately.
+3. Keep configuration changes read-only by default. Add preference keys only when
+   exact source evidence justifies them. Any future apply operation needs a new
+   design for opt-in, target fingerprint/conflict checks, rollback and recovery;
+   it must never run against a real user profile as a development test.
+4. Refresh the bilingual user guide, screenshots, limitations and release notes
+   together when the next beta scope is ready. No release is part of this work.
 
-Priority labels in the external report are not adopted indiscriminately: missing
-future features are not equivalent to confirmed defects, and green synthetic CI
-is not proof of complete recovery of a real customized REAPER installation.
+Historical findings were not adopted as requirements merely because the external
+report listed them. Missing future features are distinct from demonstrated defects;
+all real profiles, licenses and DMG/configuration files remain local and private.
 
-A külső audit prioritásait nem vesszük át mechanikusan: egy hiányzó jövőbeli funkció
-nem azonos egy bizonyított hibával. A zöld szintetikus CI sem igazolja egy valódi,
-összetett REAPER-környezet teljes helyreállítását.
+## Official display name
 
-## Hivatalos név / official name
-
-**REAPER Time Capsule** is the display name in GUI, About, CLI help, future native
-application filenames and documentation. Existing repository URLs, Python module,
-archive format IDs, staging-directory contract and published beta filenames remain
-compatible; historical downloads are not replaced by a naming update.
-
-**REAPER Time Capsule** a hivatalos megjelenített név a GUI-ban, About ablakban,
-CLI-súgóban, következő natív alkalmazásfájlokban és dokumentációban. A repository
-URL-je, Python-modul, archívumformátum, stagingmappa-szerződés és korábbi bétafájlok
-neve kompatibilitási okból megmarad; a régi letöltéseket az átnevezés nem cseréli le.
-
-## First reliability fix / első megbízhatósági javítás
-
-TC-001, TC-002 and the destination-alias case in TC-010 are implemented in the
-first fix: traversal errors propagate, links/reparse/special entries are explicitly
-reported without following them, destination aliases into the source are rejected,
-and external destination aliases are pinned before work. Six new synthetic
-regressions complement the existing no-overwrite and cleanup tests.
-
-TC-001, TC-002 és TC-010 célalias-esete javítva: bejárási hibák továbbadása,
-link/reparse/speciális elemek jelentése követés nélkül, forrásba mutató célaliasok
-elutasítása és külső célalias rögzítése. Hat új szintetikus regressziós teszt
-kiegészíti a meglévő felülírásvédelmi és takarítási teszteket.
-
-TC-004/TC-006/TC-005 inventory and preview fixes remain next. Arbitrary hostile
-filesystem replacement, bind-mount identity and transactional source consistency
-are not guaranteed by this first fix. No automatic link-target backup is added.
-
-TC-004/TC-006/TC-005 leltár- és előnézet-javítás következik. Ez az első kör nem
-ígér védelmet tetszőleges ellenséges fájlrendszercserére, bind-mount azonosságra
-vagy tranzakciós forráskonzisztenciára. Linkcélok automatikus mentése nem került be.
-
-## Second reliability fix / második megbízhatósági javítás
-
-TC-004: ReaPack INI, registry/sidecars and MIDI menu/keymap text are copied from
-the same stream as the archived resource. Inventory parses those private bounded
-copies, never later live source state. Temporary copies are cleaned on handled
-exit. Parser-limit omissions are explicit; oversized originals remain archived.
-TC-006: selected-path and full resource-relative component checks reject links
-and Windows reparse points in inventory, copying and resource-based audits.
-TC-005: restore preview uses the same effective-policy function as restore,
-retaining stored counts and explained changes. Old inventory provenance is labelled.
-
-TC-004: a leltár a ZIP-bájtfólamból másolt, korlátozott parserbemenetekből készül;
-a későbbi forrásváltozás nem kerül bele. Kezelt kilépéskor az ideiglenes másolatok
-törlődnek. A méretkorlát miatti elemzési kihagyás jelzett, az eredeti fájl mentett.
-TC-006: csak kiválasztott, teljes relatív komponenslánccal ellenőrzött utak olvashatók;
-linkek/reparse pontok elutasítva a leltárnál, másolásnál és erőforrás-auditnál.
-TC-005: az előnézet a restore szabálymotorját használja; tárolt számlálók és indokolt
-változások megmaradnak, a régi leltár forrásalapja jelölt.
-
-This guarantees inventory/archive byte agreement, not an instantaneous snapshot
-of all source files, protection against hostile component swaps between check/open,
-or crash cleanup. SQLite live/WAL state still needs a closed REAPER source.
-
-A leltár és archívum bájtazonosságát biztosítja, nem minden fájl egyidejű állapotát,
-ellenőrzés/megnyitás közti ellenséges komponenscserét vagy crash utáni takarítást.
-SQLite/WAL konzisztenciához továbbra is bezárt REAPER-forrás szükséges.
+**REAPER Time Capsule** is the display name. The Python package name, repository
+URL, capsule identifiers and existing beta filenames remain compatible.
