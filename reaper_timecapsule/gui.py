@@ -12,6 +12,7 @@ from .config_migration import preview_migration
 from .inventory import audit_reapack
 from .reports import scan_report
 from .report_browser import ReportBrowser
+from .report_export import export_report
 from .about import AboutWindow, brand_image
 
 GUI_REPORT_MAX_CHARS = 256 * 1024
@@ -66,6 +67,9 @@ class App(tk.Tk):
         self.iconphoto(True, self.app_icon, self.small_icon)
         self.about_window = None
         self.last_scan_report = None
+        self.last_full_report = None
+        self.last_report_source_root = None
+        self.operation_source_root = None
         self.report_window = None
         if self.tk.call("tk", "windowingsystem") == "aqua":
             self.createcommand("tkAboutDialog", self._show_about)
@@ -139,6 +143,11 @@ class App(tk.Tk):
         self.report_button = ttk.Button(report_controls, text="File policies…", command=self._show_report)
         self.report_button.pack(side="left", padx=(10, 0))
         self.interactive.append(self.report_button)
+        self.report_export_button = ttk.Button(
+            report_controls, text="Save full report…", command=self._save_full_report, state="disabled"
+        )
+        self.report_export_button.pack(side="left", padx=(10, 0))
+        self.interactive.append(self.report_export_button)
         # Reserve the footer before the expanding output at the default height.
         self.resize_hint = ttk.Label(body, text="↓  Drag down to show more output",
                                      anchor="center", cursor="sb_v_double_arrow")
@@ -220,9 +229,15 @@ class App(tk.Tk):
         return {key: result[key] for key in
                 ("files", "counts", "bytes", "portable_names_ready", "portability_issues", "skipped_entries")}
 
-    def _do(self, action):
+    def _do(self, action, *, complete_report=None, forbidden_root=None):
         try:
-            output = _bounded_report(action())
+            result = action()
+            self.last_full_report = result if complete_report is None else complete_report
+            self.last_report_source_root = forbidden_root
+            export_button = getattr(self, "report_export_button", None)
+            if export_button is not None:
+                export_button.configure(state="normal")
+            output = _bounded_report(result)
             self._report_generation = getattr(self, "_report_generation", 0) + 1
             generation = self._report_generation
             self.log.delete("1.0", "end")
@@ -270,7 +285,7 @@ class App(tk.Tk):
             self.log.insert("end", "".join(parts))
             self._report_chars += chunk_size
         if truncated or self._report_chars >= GUI_REPORT_MAX_CHARS:
-            self.log.insert("end", "\n\n[Display shortened at 256 KiB to keep the interface responsive. Use the CLI for the complete report.]\n")
+            self.log.insert("end", "\n\n[Display shortened at 256 KiB to keep the interface responsive. Use Save full report… for the complete report.]\n")
             return
         if chunk_size:
             self.after(1, lambda: self._append_report_chunk(generation))
@@ -296,7 +311,40 @@ class App(tk.Tk):
             return
         self._do(lambda: self._configuration_report(preview_migration(
             source, target, source_version=source_version.strip() or None,
-            target_version=target_version.strip() or None)))
+            target_version=target_version.strip() or None)),
+            forbidden_root=(Path(source).parent, Path(target).parent))
+
+    def _save_full_report(self):
+        report = getattr(self, "last_full_report", None)
+        if report is None:
+            return
+        destination = filedialog.asksaveasfilename(
+            parent=self, title="Save complete report", defaultextension=".json",
+            filetypes=[("JSON reports", "*.json"), ("All files", "*")],
+        )
+        if not destination:
+            return
+        if not messagebox.askyesno(
+                "Save private report?",
+                "A complete report may contain local resource paths and filenames. "
+                "Save it only in a folder you trust. Continue?", parent=self):
+            return
+        try:
+            if self.runner.active:
+                return
+            control = OperationControl()
+            self.operation_control = control
+            forbidden_root = self.last_report_source_root
+            self.current_operation = "report-export"
+            self._set_busy(True, "Saving complete report — please wait")
+            self.runner.submit(lambda: export_report(
+                report, destination, forbidden_root=forbidden_root, control=control))
+            self.after(100, self._poll_io)
+        except Exception as exc:
+            self.current_operation = None
+            self._set_busy(False)
+            messagebox.showerror("Cannot save report", str(exc), parent=self)
+            return
 
     @staticmethod
     def _configuration_report(report):
@@ -316,6 +364,9 @@ class App(tk.Tk):
         for widget in self.interactive:
             widget.configure(state="disabled" if busy else "normal")
         self.status.set(label if busy else "Ready")
+        export_button = getattr(self, "report_export_button", None)
+        if export_button is not None:
+            export_button.configure(state="disabled" if busy or self.last_full_report is None else "normal")
         self.cancel_button.configure(state="normal" if busy else "disabled")
         if busy:
             self.progress.configure(mode="indeterminate")
@@ -328,7 +379,12 @@ class App(tk.Tk):
             return
         # Capture Tk values on the main thread. Workers see ordinary strings only.
         source, archive, destination = self.source.get(), self.archive.get(), self.destination.get()
+        try:
+            self.operation_source_root = Path(source).expanduser().resolve()
+        except (OSError, RuntimeError):
+            self.operation_source_root = None
         self.operation_control = OperationControl()
+        self.current_operation = operation
         control = self.operation_control
         actions = {
             "scan": lambda: preview(source, control=control),
@@ -343,6 +399,7 @@ class App(tk.Tk):
         try:
             self.runner.submit(actions[operation])
         except Exception as exc:
+            self.current_operation = None
             self._set_busy(False)
             messagebox.showerror("Time Capsule error", str(exc))
             return
@@ -370,6 +427,18 @@ class App(tk.Tk):
             return
         self._set_busy(False)
         kind, payload = result
+        if getattr(self, "current_operation", None) == "report-export":
+            self.current_operation = None
+            if kind == "success":
+                self.status.set("Complete report saved")
+                messagebox.showinfo("Report saved", "Complete report saved to:\n" + str(payload), parent=self)
+            elif kind == "cancelled":
+                self.status.set("Report export cancelled; no report was published")
+            else:
+                self.status.set("Report export failed")
+                messagebox.showerror("Cannot save report", str(payload), parent=self)
+            return
+        self.current_operation = None
         if kind == "cancelled":
             self.status.set("Operation cancelled; no completed result published")
         elif kind == "error":
@@ -387,9 +456,10 @@ class App(tk.Tk):
             self.status.set("Operation completed")
             if isinstance(payload, dict) and "items" in payload and "portable_names_ready" in payload:
                 self.last_scan_report = scan_report(payload)
-                self._do(lambda: App._brief(payload))
+                self._do(lambda: App._brief(payload), complete_report=self.last_scan_report,
+                         forbidden_root=getattr(self, "operation_source_root", None))
             else:
-                self._do(lambda: payload)
+                self._do(lambda: payload, forbidden_root=getattr(self, "operation_source_root", None))
 
     def _on_close(self):
         browser = getattr(self, "report_window", None)

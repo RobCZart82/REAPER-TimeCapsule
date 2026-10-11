@@ -18,7 +18,7 @@ class ConfigurationPreviewGUITests(unittest.TestCase):
         self.source.write_text('[REAPER]\ntinttcp=0\nvstpath=PRIVATE\n')
         self.target.write_text('[REAPER]\ntinttcp=1\n')
         self.outputs = []
-        self.app = SimpleNamespace(_do=lambda fn: self.outputs.append(fn()),
+        self.app = SimpleNamespace(_do=lambda fn, **kwargs: self.outputs.append(fn()),
                                    _configuration_report=App._configuration_report)
 
     def run_dialog(self, files, versions):
@@ -58,7 +58,7 @@ class ConfigurationPreviewGUITests(unittest.TestCase):
     def test_parse_error_uses_existing_error_dialog(self):
         self.source.write_text('[REAPER]\nPRIVATE_SECRET')
         self.app.log = Mock()
-        self.app._do = lambda fn: App._do(self.app, fn)
+        self.app._do = lambda fn, **kwargs: App._do(self.app, fn, **kwargs)
         with patch('reaper_timecapsule.gui.messagebox.showerror') as error:
             self.run_dialog([str(self.source), str(self.target)], ['7.82', '7.82'])
             error.assert_called_once()

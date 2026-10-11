@@ -125,6 +125,7 @@ class GUIBackgroundTests(unittest.TestCase):
         report = {'items': ['x' * 3000 for _ in range(500)]}
 
         App._do(app, lambda: report)
+        self.assertIs(app.last_full_report, report)
         while callbacks:
             callbacks.pop(0)()
 
@@ -134,6 +135,52 @@ class GUIBackgroundTests(unittest.TestCase):
         self.assertTrue(all(len(part) <= GUI_REPORT_CHUNK_CHARS for part in writes[:-1]))
         self.assertLess(len(displayed), GUI_REPORT_MAX_CHARS + 256)
         self.assertIn('Display shortened at 256 KiB', displayed)
+
+    def test_save_full_report_uses_selected_path_and_warns_about_private_data(self):
+        report = {"local_path": "/synthetic/REAPER", "items": ["private-name.wav"]}
+        app = SimpleNamespace(
+            last_full_report=report, last_report_source_root="/synthetic/REAPER",
+            runner=Mock(active=False), _set_busy=Mock(), after=Mock(), _poll_io=Mock(),
+        )
+        with patch('reaper_timecapsule.gui.filedialog.asksaveasfilename', return_value='/tmp/audit.json'), \
+                patch('reaper_timecapsule.gui.messagebox.askyesno', return_value=True) as confirm:
+            App._save_full_report(app)
+        self.assertEqual(app.runner.submit.call_count, 1)
+        work = app.runner.submit.call_args.args[0]
+        with patch('reaper_timecapsule.gui.export_report', return_value='/tmp/audit.json') as export:
+            work()
+        confirm.assert_called_once()
+        export.assert_called_once_with(
+            report, '/tmp/audit.json', forbidden_root='/synthetic/REAPER',
+            control=app.operation_control,
+        )
+
+    def test_save_full_report_requires_privacy_confirmation(self):
+        app = SimpleNamespace(
+            last_full_report={'items': []}, last_report_source_root='/synthetic/REAPER',
+            runner=Mock(active=False), _set_busy=Mock(), after=Mock(), _poll_io=Mock(),
+        )
+        with patch('reaper_timecapsule.gui.filedialog.asksaveasfilename', return_value='/tmp/audit.json'), \
+                patch('reaper_timecapsule.gui.messagebox.askyesno', return_value=False), \
+                patch('reaper_timecapsule.gui.export_report') as export:
+            App._save_full_report(app)
+        app.runner.submit.assert_not_called()
+        export.assert_not_called()
+
+    def test_report_export_completion_keeps_the_complete_report_available(self):
+        report = {"complete": True}
+        app = SimpleNamespace(
+            operation_control=Mock(), runner=Mock(), _set_busy=Mock(),
+            current_operation='report-export', last_full_report=report, status=Mock(),
+        )
+        app.operation_control.latest.return_value = None
+        app.runner.poll.return_value = ('success', '/tmp/audit.json')
+        with patch('reaper_timecapsule.gui.messagebox.showinfo') as info:
+            App._poll_io(app)
+        self.assertIs(app.last_full_report, report)
+        self.assertIsNone(app.current_operation)
+        app.status.set.assert_called_once_with('Complete report saved')
+        info.assert_called_once()
 
     def test_bounded_report_limits_large_strings_lists_and_nested_values(self):
         nested = 'too deep'

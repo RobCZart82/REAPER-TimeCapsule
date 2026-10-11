@@ -88,7 +88,9 @@ Ezek a változások a main ágon vannak, még nem a publikált bétában.
   és biztonságos ellenőrzési pontokon megszakítható. A csak megjelenítésre szolgáló
   GUI-jelentés legfeljebb 256 KiB, legfeljebb 8 KiB-os részekben jelenik meg; a hosszú
   értékek és listák rövidülhetnek. A teljes felmérési szabálylista a **File policies**
-  nézetben érhető el, a parancssori jelentés nem rövidül.
+  nézetben érhető el. A **Save full report…** gomb a teljes JSON-jelentést a
+  kiválasztott helyre menti, a privát útvonalakra és fájlnevekre külön figyelmeztet,
+  nem ír a beolvasott REAPER-mappába, és nem ír felül meglévő fájlt.
 - A statikus MIDI Audit összeveti a menük Custom Action hivatkozásait a keymapekkel
   és a `reaper-kb.ini` fájllal; jelzi a duplikált/ütköző definíciókat, függőségi
   ciklusokat, hiányzó műveleteket vagy scriptfájlokat, nem hordozható scriptútvonalakat,
