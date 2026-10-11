@@ -57,7 +57,7 @@ class GUIBackgroundTests(unittest.TestCase):
     def app(self):
         return SimpleNamespace(runner=Mock(active=False), source=Mock(), archive=Mock(), destination=Mock(),
                                _set_busy=Mock(), after=Mock(), _poll_io=Mock(), _do=Mock(),
-                               status=Mock(), destroy=Mock())
+                               status=Mock(), destroy=Mock(), operation_control=Mock(), progress=Mock())
 
     def test_inputs_captured_before_worker_and_only_one_submission(self):
         app = self.app()
@@ -70,13 +70,14 @@ class GUIBackgroundTests(unittest.TestCase):
             for variable in (app.source, app.archive, app.destination):
                 variable.get.side_effect = AssertionError('Tk read from worker')
             action()
-            backup.assert_called_once_with('source', 'backup.zip')
+            backup.assert_called_once_with('source', 'backup.zip', control=app.operation_control)
         app.runner.active = True
         App._start_io(app, 'backup')
         app.runner.submit.assert_called_once()
 
     def test_poll_pending_success_and_error_on_ui_thread(self):
         app = self.app()
+        app.operation_control.latest.return_value = None
         app.runner.poll.return_value = None
         App._poll_io(app)
         app.after.assert_called_once()

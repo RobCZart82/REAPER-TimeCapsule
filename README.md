@@ -4,7 +4,7 @@ Cross-platform (macOS / Windows / Linux) **experimental** REAPER resource snapsh
 This is a **development preview**, not a complete one-click workflow migration utility.
 Do not use it as your only backup. Close REAPER before any resource snapshot.
 
-## Current milestone (`0.8.0-dev`)
+## Current milestone (`0.9.0-beta.1`)
 
 - Uses a policy engine to classify files as `keep`, `review`, `regenerate`, or `exclude`.
 - Preserves portable REAPER Scripts, MenuSets, KeyMaps, ReaPack state, SWS configuration,
@@ -19,7 +19,8 @@ Do not use it as your only backup. Close REAPER before any resource snapshot.
   no automatic plugin installation, no silent merges into REAPER, no network downloads.
 - GUI uses Tkinter; Python 3.10+ required until native .app/.exe builds exist.
 - GUI backup, verify and restore run in the background with a busy indicator.
-  Only one operation runs at a time; closing is blocked while it is active.
+  Only one operation runs at a time, with cooperative Cancel and per-phase progress.
+  Closing is blocked until completion or cancellation cleanup.
 - MIDI Editor dependency validator: compare menu Custom Action references with imported .ReaperKeyMap and reaper-kb.ini; report missing actions and missing/nonportable script paths. Results are visible in GUI, CLI and snapshot inventory.
 - The validator performs **static inspection only**: it cannot prove runtime script correctness, extension availability or automatic import success.
 - Read-only ReaPack/SWS/MIDI inventory embedded in snapshots: recognizable extension
@@ -108,7 +109,8 @@ This app isn't affiliated with or endorsed by Cockos / REAPER.
 
 ## Development status
 
-Repository is intended to start **private**; source license and third-party
-redistribution review are pending. See [roadmap](docs/ROADMAP.md),
+Source is **GPL-3.0-only**; see [LICENSE](LICENSE). Standalone unsigned beta builds
+include matching source and runtime notices. See [first beta guide](docs/FIRST_BETA.md).
+Repository visibility remains private until explicitly approved for publication. See [roadmap](docs/ROADMAP.md),
 [ReaPack Smart Recovery](docs/REAPACK_SMART_RECOVERY.md) and
 [MIDI Workflow Recovery](docs/MIDI_WORKFLOW_RECOVERY.md).
