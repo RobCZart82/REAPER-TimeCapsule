@@ -93,8 +93,10 @@ publication, cleans temporary state and reports cancellation separately from err
 Per-phase progress replaces the busy indicator where totals are known. Headless
 worker/GUI tests cover single-job exclusion, captured inputs, pending/success/error
 handling, failed thread startup, the close guard, and bounded/chunked rendering of
-large audit reports. Native screen layout and dialogs have not been visually
-validated by these tests.
+large audit reports. The macOS and Windows bundled executable self-tests now also
+render a synthetic report above the display cap, require its truncation notice and
+both scrollbars, and check completion within ten seconds. Native visual layout and
+dialogs still need a human smoke test on each platform.
 
 ## Completed: first limited beta preparation
 

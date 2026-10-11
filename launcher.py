@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from pathlib import Path
 
 from reaper_timecapsule.core import VERSION, make_backup, verify_backup, restore_backup, preview
-from reaper_timecapsule.gui import App
+from reaper_timecapsule.gui import App, GUI_REPORT_MAX_CHARS
 from reaper_timecapsule.operation import OperationControl, OperationCancelled
 
 
@@ -20,6 +20,29 @@ def wait_for_geometry(app, width, height):
             return
         time.sleep(0.01)
     raise AssertionError((app.winfo_width(), app.winfo_height(), width, height))
+
+
+def verify_bounded_report_preview(app):
+    """Exercise large synthetic report rendering in the packaged Tk app."""
+    app.log.delete('1.0', 'end')
+    synthetic = {'items': ['x' * 3000 for _ in range(500)]}
+    app._do(lambda: synthetic)
+    marker = 'Display shortened at 256 KiB'
+    deadline = time.monotonic() + 10
+    rendered = ''
+    while time.monotonic() < deadline:
+        app.update()
+        rendered = app.log.get('1.0', 'end-1c')
+        if marker in rendered:
+            break
+        time.sleep(0.005)
+    assert marker in rendered, 'Large report preview did not finish within 10 seconds'
+    assert app._report_chars == GUI_REPORT_MAX_CHARS, app._report_chars
+    assert len(rendered) <= GUI_REPORT_MAX_CHARS + len(marker) + 100, len(rendered)
+    assert app.vertical_scroll.winfo_ismapped(), 'Large report did not show vertical scrolling'
+    assert app.horizontal_scroll.winfo_ismapped(), 'Long report line did not show horizontal scrolling'
+    app.log.delete('1.0', 'end')
+    app.update()
 
 
 def self_test(report):
@@ -62,6 +85,7 @@ def self_test(report):
             raise AssertionError('Cancellation failed')
         app = App()
         wait_for_geometry(app, app.default_width, app.minimum_height)
+        verify_bounded_report_preview(app)
         about = app._show_about()
         app.update()
         assert app._show_about() is about
