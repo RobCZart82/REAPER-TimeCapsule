@@ -91,6 +91,12 @@ class App(tk.Tk):
         self.vertical_scroll.grid(row=0, column=1, sticky="ns")
         self.horizontal_scroll = ttk.Scrollbar(output, orient="horizontal", command=self.log.xview)
         self.horizontal_scroll.grid(row=1, column=0, sticky="ew")
+        # Reserve the rails even while hidden. Showing a horizontal bar must
+        # not remove a visible text line and change the horizontal extent
+        # again, causing an endless show/hide geometry feedback loop.
+        output.columnconfigure(1, minsize=self.vertical_scroll.winfo_reqwidth())
+        self.scroll_rail_height = self.horizontal_scroll.winfo_reqheight()
+        output.rowconfigure(1, minsize=self.scroll_rail_height)
         self.vertical_scroll.grid_remove()
         self.horizontal_scroll.grid_remove()
         self.log.configure(yscrollcommand=lambda first, last: self._scroll_visibility(self.vertical_scroll, first, last),
@@ -106,7 +112,7 @@ class App(tk.Tk):
         # into the shared body padding so all left/right edges align.
         self.update_idletasks()
         self.default_width = self.action_row.winfo_reqwidth() + 50
-        self.minimum_height = max(570, self.winfo_reqheight())
+        self.minimum_height = max(570, self.winfo_reqheight() - self.scroll_rail_height)
         self.geometry(f"{self.default_width}x{self.minimum_height}")
         self.minsize(self.default_width, self.minimum_height)
         self.resizable(True, True)
@@ -114,9 +120,10 @@ class App(tk.Tk):
     @staticmethod
     def _scroll_visibility(scrollbar, first, last):
         scrollbar.set(first, last)
-        if float(first) <= 0 and float(last) >= 1:
+        visible = not (float(first) <= 0 and float(last) >= 1)
+        if not visible and scrollbar.grid_info():
             scrollbar.grid_remove()
-        else:
+        elif visible and not scrollbar.grid_info():
             scrollbar.grid()
 
     def _begin_vertical_resize(self, event):

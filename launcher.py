@@ -85,6 +85,23 @@ def self_test(report):
         for _ in range(3):
             app.update()
         assert not app.vertical_scroll.winfo_ismapped() and not app.horizontal_scroll.winfo_ismapped()
+        # A wide line entering/leaving the bottom of the visible viewport
+        # previously made auto-hiding bars resize the viewport indefinitely.
+        app.log.delete('1.0', 'end')
+        app.log.insert('1.0', '\n'.join('X' * 2000 if index == 50 else 'short line'
+                                     for index in range(100)))
+        app.update()
+        viewport = (app.log.winfo_width(), app.log.winfo_height())
+        horizontal_states = set()
+        for line in list(range(35, 57)) + list(range(56, 34, -1)):
+            app.log.yview(f'{line}.0')
+            app.update()
+            assert (app.log.winfo_width(), app.log.winfo_height()) == viewport
+            horizontal_states.add(bool(app.horizontal_scroll.winfo_ismapped()))
+        assert horizontal_states == {False, True}
+        app.log.delete('1.0', 'end')
+        app.log.insert('1.0', 'Short output')
+        app.update()
         app.geometry(f'{width + 80}x{height}')
         wait_for_geometry(app, width + 80, height)
         width += 80
