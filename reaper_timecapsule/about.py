@@ -29,29 +29,35 @@ class AboutWindow(tk.Toplevel):
         }
         body = tk.Frame(self, background=bg, padx=32, pady=26)
         body.pack(fill='both', expand=True)
-        heading = tk.Frame(body, background=bg)
-        heading.pack(fill='x')
-        tk.Label(heading, image=self.images['icon'], background=bg).pack(side='left', padx=(0, 22))
-        title = tk.Frame(heading, background=bg)
-        title.pack(side='left')
-        tk.Label(title, text='REAPER Time Capsule', font=('Arial', 22, 'bold'),
-                 foreground=paper, background=bg).pack(anchor='w')
+        # Shared columns keep the creator logo below the floppy and the
+        # signature on the same horizontal centerline as every text label.
+        body.columnconfigure(0, minsize=118)
+        body.columnconfigure(1, weight=1)
+        self.icon_label = tk.Label(body, image=self.images['icon'], background=bg)
+        self.icon_label.grid(row=0, column=0, sticky='n', padx=(0, 22))
+        title = tk.Frame(body, background=bg)
+        title.grid(row=0, column=1, sticky='ew')
+        self.title_label = tk.Label(title, text='REAPER Time Capsule', font=('Arial', 22, 'bold'),
+                                   foreground=paper, background=bg)
+        self.title_label.pack()
         tk.Label(title, text='Preserve your REAPER setup.\nRestore with confidence.',
-                 font=('Arial', 11), justify='left', foreground=muted, background=bg).pack(anchor='w', pady=(8, 0))
-        tk.Label(body, text=f'VERSION {VERSION}  ·  BETA', font=('Arial', 10, 'bold'),
-                 foreground=accent, background=bg).pack(anchor='w', pady=(18, 16))
-        tk.Frame(body, background='#35505e', height=1).pack(fill='x')
-        identity = tk.Frame(body, background=bg)
-        identity.pack(fill='x', pady=(20, 16))
-        tk.Label(identity, image=self.images['logo'], background=bg).pack(side='left', padx=(24, 34))
-        tk.Label(identity, image=self.images['signature'], background=bg).pack(side='right', padx=(12, 12))
-        tk.Frame(body, background='#35505e', height=1).pack(fill='x')
+                 font=('Arial', 11), justify='center', foreground=muted, background=bg).pack(pady=(8, 0))
+        tk.Label(title, text=f'VERSION {VERSION}  ·  BETA', font=('Arial', 10, 'bold'),
+                 foreground=accent, background=bg).pack(pady=(18, 0))
+        tk.Frame(body, background='#35505e', height=1).grid(row=1, column=0, columnspan=2,
+                                                          sticky='ew', pady=(18, 20))
+        self.logo_label = tk.Label(body, image=self.images['logo'], background=bg)
+        self.logo_label.grid(row=2, column=0, padx=(0, 22))
+        self.signature_label = tk.Label(body, image=self.images['signature'], background=bg)
+        self.signature_label.grid(row=2, column=1)
+        tk.Frame(body, background='#35505e', height=1).grid(row=3, column=0, columnspan=2,
+                                                          sticky='ew', pady=(16, 0))
         tk.Label(body, text='Offline backups · Read-only previews · Careful recovery',
-                 font=('Arial', 10), foreground=muted, background=bg).pack(pady=(16, 5))
+                 font=('Arial', 10), foreground=muted, background=bg).grid(row=4, column=1, pady=(16, 5))
         tk.Label(body, text='GPL-3.0-only · Provided without warranty\nIndependent project — not affiliated with Cockos / REAPER.',
-                 font=('Arial', 9), foreground=muted, background=bg, justify='center').pack()
+                 font=('Arial', 9), foreground=muted, background=bg, justify='center').grid(row=5, column=1)
         footer = tk.Frame(body, background=bg)
-        footer.pack(fill='x', pady=(18, 0))
+        footer.grid(row=6, column=0, columnspan=2, sticky='ew', pady=(18, 0))
         link = tk.Label(footer, text='Project & documentation ↗', font=('Arial', 10, 'underline'),
                         foreground=accent, background=bg, cursor='hand2', takefocus=True)
         link.pack(side='left')
