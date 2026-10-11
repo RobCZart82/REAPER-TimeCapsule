@@ -14,6 +14,48 @@ from .reports import scan_report
 from .report_browser import ReportBrowser
 from .about import AboutWindow, brand_image
 
+GUI_REPORT_MAX_CHARS = 256 * 1024
+GUI_REPORT_CHUNK_CHARS = 8 * 1024
+GUI_REPORT_MAX_ITEMS = 200
+GUI_REPORT_MAX_NODES = 1000
+GUI_REPORT_MAX_DEPTH = 12
+GUI_REPORT_MAX_STRING_CHARS = 2048
+
+
+def _bounded_report(value):
+    """Copy a JSON-like report into a small, display-only preview."""
+    remaining_nodes = [GUI_REPORT_MAX_NODES]
+
+    def copy(item, depth=0):
+        if remaining_nodes[0] <= 0:
+            return "[display limit reached]"
+        remaining_nodes[0] -= 1
+        if depth >= GUI_REPORT_MAX_DEPTH:
+            return "[nested value omitted: display depth limit]"
+        if isinstance(item, str):
+            if len(item) > GUI_REPORT_MAX_STRING_CHARS:
+                omitted = len(item) - GUI_REPORT_MAX_STRING_CHARS
+                return item[:GUI_REPORT_MAX_STRING_CHARS] + f"… [{omitted} characters omitted]"
+            return item
+        if isinstance(item, dict):
+            result = {}
+            for index, (key, child) in enumerate(item.items()):
+                if index >= GUI_REPORT_MAX_ITEMS:
+                    result["_display_note"] = f"{len(item) - index} additional fields omitted"
+                    break
+                result[str(key)] = copy(child, depth + 1)
+            return result
+        if isinstance(item, (list, tuple)):
+            result = [copy(child, depth + 1) for child in item[:GUI_REPORT_MAX_ITEMS]]
+            if len(item) > GUI_REPORT_MAX_ITEMS:
+                result.append(f"[… {len(item) - GUI_REPORT_MAX_ITEMS} additional items omitted]")
+            return result
+        if item is None or isinstance(item, (bool, int, float)):
+            return item
+        return str(item)[:GUI_REPORT_MAX_STRING_CHARS]
+
+    return copy(value)
+
 
 class App(tk.Tk):
     def __init__(self):
@@ -180,11 +222,58 @@ class App(tk.Tk):
 
     def _do(self, action):
         try:
-            output = action()
-            self.log.insert("end", json.dumps(output, ensure_ascii=False, indent=2) + "\n")
-            self.log.see("end")
+            output = _bounded_report(action())
+            self._report_generation = getattr(self, "_report_generation", 0) + 1
+            generation = self._report_generation
+            self.log.delete("1.0", "end")
+            self._report_encoder = json.JSONEncoder(ensure_ascii=False, indent=2).iterencode(output)
+            self._report_pending = ""
+            self._report_chars = 0
+            self._append_report_chunk(generation)
         except Exception as exc:
             messagebox.showerror("Time Capsule error", str(exc))
+
+    def _append_report_chunk(self, generation):
+        """Render a bounded report over multiple UI turns to keep Tk responsive."""
+        if generation != getattr(self, "_report_generation", None):
+            return
+        parts = []
+        chunk_size = 0
+        truncated = False
+        while chunk_size < GUI_REPORT_CHUNK_CHARS:
+            if self._report_pending:
+                part = self._report_pending
+                self._report_pending = ""
+            else:
+                try:
+                    part = next(self._report_encoder)
+                except StopIteration:
+                    break
+            output_remaining = GUI_REPORT_MAX_CHARS - self._report_chars - chunk_size
+            chunk_remaining = GUI_REPORT_CHUNK_CHARS - chunk_size
+            allowed = min(output_remaining, chunk_remaining)
+            if allowed <= 0:
+                truncated = True
+                break
+            if len(part) > allowed:
+                rest = part[allowed:]
+                part = part[:allowed]
+                if output_remaining > allowed:
+                    self._report_pending = rest
+                else:
+                    truncated = True
+            parts.append(part)
+            chunk_size += len(part)
+            if truncated:
+                break
+        if parts:
+            self.log.insert("end", "".join(parts))
+            self._report_chars += chunk_size
+        if truncated or self._report_chars >= GUI_REPORT_MAX_CHARS:
+            self.log.insert("end", "\n\n[Display shortened at 256 KiB to keep the interface responsive. Use the CLI for the complete report.]\n")
+            return
+        if chunk_size:
+            self.after(1, lambda: self._append_report_chunk(generation))
 
     def _config_preview(self):
         """Explicit selection only; cancellation never starts comparison."""

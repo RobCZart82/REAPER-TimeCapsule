@@ -78,18 +78,23 @@ outside these guarantees.
 
 ## Completed: responsive GUI backup/verify/restore
 
-These three I/O operations use a single background worker. Tk field values are
-captured on the UI thread; workers do not access Tk. Results/errors are delivered
-through a queue and rendered by UI polling. Inputs and operation buttons are
-locked until completion, with an indeterminate busy indicator. It shows per-phase byte completion where known; there is no global ETA. Other audits/scans still run synchronously.
+Backup, verify, restore, scan, MIDI audit and ReaPack audit use a single background
+worker. Tk field values are captured on the UI thread; workers do not access Tk.
+Results/errors are delivered through a queue and rendered by UI polling. Inputs and
+operation buttons are locked until completion, with an indeterminate busy indicator.
+It shows per-phase completion where known; there is no global ETA. Large report
+previews are bounded to 256 KiB and inserted in 8 KiB UI callbacks; long strings,
+collections and deep values are shortened in this display-only copy. The full scan
+inventory remains available in File policies, and CLI reports are not shortened.
 
 Window closing is blocked during active work to avoid interrupting a write.
 Cooperative cancellation now checkpoints scanning/copying/verification and before
 publication, cleans temporary state and reports cancellation separately from errors.
-Per-phase byte progress replaces the busy indicator where totals are known. Headless worker/GUI tests
-cover single-job exclusion, captured inputs, pending/success/error handling, failed
-thread startup and the close guard. Native screen layout and dialogs have not been
-visually validated by these tests.
+Per-phase progress replaces the busy indicator where totals are known. Headless
+worker/GUI tests cover single-job exclusion, captured inputs, pending/success/error
+handling, failed thread startup, the close guard, and bounded/chunked rendering of
+large audit reports. Native screen layout and dialogs have not been visually
+validated by these tests.
 
 ## First limited beta release preparation
 
@@ -104,7 +109,7 @@ compatibility promise. Artifact build success still must be checked before relea
 
 - Extend destination-length/filesystem compatibility checks where needed.
 - Broaden tests for disk-full, permissions, cancellation and changing inputs.
-- Complete background audits/scans and broader native visual QA.
+- Broader native visual QA of audits and very large reports.
 - Validate supported resources in real temporary REAPER profiles on macOS/Windows.
 - Build and test standalone macOS/Windows distributions without Python installed.
 - Choose source license, record dependency licenses and settle signing/release policy.
