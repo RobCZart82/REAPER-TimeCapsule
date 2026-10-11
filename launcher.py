@@ -2,11 +2,24 @@
 import json
 import sys
 import tempfile
+import time
+from types import SimpleNamespace
 from pathlib import Path
 
 from reaper_timecapsule.core import VERSION, make_backup, verify_backup, restore_backup, preview
 from reaper_timecapsule.gui import App
 from reaper_timecapsule.operation import OperationControl, OperationCancelled
+
+
+def wait_for_geometry(app, width, height):
+    # Native window-manager configure events can arrive after idle layout.
+    deadline = time.monotonic() + 3
+    while time.monotonic() < deadline:
+        app.update()
+        if (app.winfo_width(), app.winfo_height()) == (width, height):
+            return
+        time.sleep(0.01)
+    raise AssertionError((app.winfo_width(), app.winfo_height(), width, height))
 
 
 def self_test(report):
@@ -48,6 +61,19 @@ def self_test(report):
         else:
             raise AssertionError('Cancellation failed')
         app = App()
+        wait_for_geometry(app, app.fixed_width, app.minimum_height)
+        assert tuple(map(int, app.resizable())) == (0, 1)
+        width, height = app.winfo_width(), app.winfo_height()
+        first, last = app.action_buttons[0], app.action_buttons[-1]
+        left_margin = first.winfo_rootx() - app.winfo_rootx()
+        right_margin = app.winfo_rootx() + width - last.winfo_rootx() - last.winfo_width()
+        assert abs(left_margin - right_margin) <= 1, (left_margin, right_margin)
+        log_height = app.log.winfo_height()
+        app._begin_vertical_resize(SimpleNamespace(y_root=0))
+        app._drag_vertical_resize(SimpleNamespace(y_root=40))
+        wait_for_geometry(app, width, height + 40)
+        assert app.winfo_width() == width and app.winfo_height() == height + 40
+        assert app.log.winfo_height() > log_height
         app.withdraw()
         app.update_idletasks()
         tcl_version = app.tk.call('info', 'patchlevel')
