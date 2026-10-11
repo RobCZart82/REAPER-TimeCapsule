@@ -27,9 +27,10 @@ python -m reaper_timecapsule midi-audit "/path/to/REAPER"
 Or use **MIDI Audit** in the Time Capsule desktop GUI.
 
 The audit uses the **MIDI piano roll context** REAPER action section (32060).
-It resolves `_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` identifiers against saved
-`ACT` or `SCR` definitions, finds missing script files, and flags
-absolute paths that would need remapping after an OS reinstall.
+It resolves Custom Action identifiers and supported ReaScript command IDs
+against saved `ACT` or `SCR` definitions, checks whether referenced script
+files were saved, and flags absolute paths that need remapping after an OS
+reinstall. Unrecognized action-record formats remain explicit parse findings.
 
 Other extension actions (for example SWS commands beginning with `_SWS`)
 are recorded as **unverified**, not assumed available. Script presence does
@@ -75,5 +76,7 @@ Duplicates are reported within files and across exports/live definitions. Identi
 duplicates require review; conflicting records or cycles produce invalid-action-graph.
 All record variants are examined, so conflicts cannot hide earlier dependencies.
 Numeric menu/action commands are unverified, not proof of missing commands.
-Deep chains use iterative traversal; output samples are capped with total issue counts.
+Deep chains use iterative traversal. Detail lists are capped at 100 entries; the
+report gives the full count for each issue category and marks categories whose
+details were truncated.
 No scripts execute, no identifiers are rewritten, and no commands are installed.
