@@ -8,7 +8,7 @@ class WorkflowPinTests(unittest.TestCase):
     REVIEWED_ACTIONS = Counter({
         'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683': 2,
         'actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065': 2,
-        'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02': 1,
+        'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9': 1,
     })
 
     def test_external_actions_are_pinned_to_full_commit_ids(self):
