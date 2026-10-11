@@ -32,6 +32,7 @@ class SnapshotInventoryTests(unittest.TestCase):
         kb = self.source / 'reaper-kb.ini'
         action = 'ACT 1 32060 "' + 'a' * 32 + '" "Synthetic" 40001\n'
         kb.write_text(action)
+        saved_ini, saved_kb = ini.read_bytes(), kb.read_bytes()
         seen = []
         def changed_source(snapshot, items):
             ini.write_text('repo=https://example.org/later.xml\n')
@@ -47,8 +48,8 @@ class SnapshotInventoryTests(unittest.TestCase):
                          ['https://example.org/archived.xml'])
         self.assertEqual(manifest['inventory']['midi_workflow']['validation']['action_definitions'], 1)
         with zipfile.ZipFile(self.archive) as z:
-            self.assertEqual(z.read('resources/reapack.ini'), original.encode())
-            self.assertEqual(z.read('resources/reaper-kb.ini'), action.encode())
+            self.assertEqual(z.read('resources/reapack.ini'), saved_ini)
+            self.assertEqual(z.read('resources/reaper-kb.ini'), saved_kb)
         self.assertFalse(seen[0].exists())
 
     def test_inventory_failure_cleans_snapshot_and_unpublished_zip(self):
@@ -114,15 +115,18 @@ class SnapshotInventoryTests(unittest.TestCase):
 
     def test_registry_mutation_after_copy_keeps_archived_package_count(self):
         import sqlite3
+        from contextlib import closing
         (self.source / 'ReaPack').mkdir()
         database = self.source / 'ReaPack/registry.db'
-        with sqlite3.connect(database) as db:
+        with closing(sqlite3.connect(database)) as db:
             db.execute('CREATE TABLE entries (id INTEGER, remote TEXT, category TEXT, package TEXT, version TEXT, flags INTEGER)')
             db.execute('CREATE TABLE files (entry INTEGER, path TEXT)')
             db.execute("INSERT INTO entries VALUES (1, 'Synthetic', 'MIDI', 'Original', '1.0', 0)")
+            db.commit()
         def mutate(snapshot, items):
-            with sqlite3.connect(database) as db:
+            with closing(sqlite3.connect(database)) as db:
                 db.execute('DELETE FROM entries')
+                db.commit()
             return build_inventory(snapshot, items)
         with patch('reaper_timecapsule.core.build_inventory', side_effect=mutate):
             make_backup(self.source, self.archive)
