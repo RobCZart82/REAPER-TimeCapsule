@@ -113,6 +113,15 @@ throughout the operation. Portable REAPER installations need their own resource 
 
 ## Installation and first backup
 
+The illustrated guides cover the unsigned macOS first-launch prompts, the main
+window, backup creation, verification and recovery:
+
+- [English user guide (PDF)](output/pdf/reaper-time-capsule-user-guide-en.pdf)
+- [Magyar felhasználói útmutató (PDF)](output/pdf/reaper-time-capsule-user-guide-hu.pdf)
+
+Both guides describe the published 0.9.0-beta.2 interface and include the same
+steps and safety notes in their respective languages.
+
 1. Download the ZIP for your platform and extract the complete package. Keep the
    application's companion files together. Start the included `.app` on macOS or
    `REAPER-TimeCapsule.exe` inside its application folder on Windows.
