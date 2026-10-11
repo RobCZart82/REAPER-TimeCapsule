@@ -61,3 +61,12 @@ prove the toolbar/menu has been activated by REAPER.
    the actual REAPER MIDI Editor before relying on the new installation.
 
 Do not upload a private REAPER resource archive to a public GitHub repository.
+
+## Development action graph audit
+
+Duplicates are reported within files and across exports/live definitions. Identical
+duplicates require review; conflicting records or cycles produce invalid-action-graph.
+All record variants are examined, so conflicts cannot hide earlier dependencies.
+Numeric menu/action commands are unverified, not proof of missing commands.
+Deep chains use iterative traversal; output samples are capped with total issue counts.
+No scripts execute, no identifiers are rewritten, and no commands are installed.

@@ -234,3 +234,5 @@ Bundled runtimes retain their own terms; see [third-party notices](THIRD_PARTY_N
 REAPER, proprietary plugins, third-party script bundles, personal profiles and
 registration keys are not distributed with this project. The project is not
 affiliated with or endorsed by Cockos / REAPER.
+
+MIDI Audit now reports duplicate/conflicting definitions, dependency cycles and unverified numeric commands. Resolving a menu reference does not prove its execution chain works in REAPER. Numeric commands remain unverified without an authoritative runtime action catalog.
