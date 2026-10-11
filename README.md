@@ -160,8 +160,8 @@ default. Inventory reports redact credentials in recognizable repository URLs;
 original backed-up configuration can still be private. Keep your archives private
 and do not attach full profiles or credentials to public issues.
 
-Backup creation requires writable storage with hard-link support. FAT/exFAT
-creation fails closed; create and verify locally, then copy the ZIP elsewhere.
+Backup creation requires writable storage with hard-link or native exclusive-rename
+support. Unsupported volumes fail closed; real FAT/exFAT testing is still required.
 Restore requires exclusive-rename support. Windows-invalid filenames,
 case/Unicode collisions and file/directory conflicts are rejected on every
 platform rather than renamed or dropped. Scan / Preview accepts native names
@@ -242,3 +242,5 @@ Development audits now run on the shared background worker: Scan / Preview, MIDI
 Native filenames, including macOS colons, can now be preserved through an explicit schema-3 backup. Original-name restoration requires the same platform; optional portable recovery isolates all files and records a reversible name map. See [native filename recovery](docs/NATIVE_FILENAMES.md) for commands, GUI opt-in and compatibility limits.
 
 Backup/restore staging now checks conservative free-space estimates. ZIP inspection bounds central-directory bytes and member count before loading its index; ZIP64 remains supported. Read-only `staging-residues PARENT` lists possible crash leftovers without reading their content or deleting them. See [resource budgets](docs/RESOURCE_BUDGETS.md).
+
+Recovery paths are checked against conservative filesystem limits before staging. Original timestamps and permissions are saved as informational metadata; restoring does not activate executable bits or copy ACLs/extended attributes. See [filesystem publication](docs/FILESYSTEM_PUBLICATION.md).

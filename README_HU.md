@@ -166,9 +166,8 @@ kimaradnak a mentésből. A leltárjelentések kitakarják a felismerhető repos
 hitelesítő adatait; az eredeti mentett konfiguráció ettől még privát lehet.
 Tartsd privátan az archívumaidat, és ne csatolj teljes profilt vagy hitelesítő adatot nyilvános hibajegyhez.
 
-A mentés létrehozásához írható, hard linket támogató tárhely szükséges. FAT/exFAT
-esetén biztonságosan hibával leáll; készítsd el és ellenőrizd helyben, majd másold
-máshová a ZIP-et. A visszaállításhoz kizárólagos átnevezés támogatása kell.
+A mentéshez írható, hard linket vagy natív kizárólagos átnevezést támogató tárhely
+szükséges. A nem támogatott kötetek biztonságosan hibával leállnak; valódi FAT/exFAT-teszt még szükséges. A visszaállításhoz kizárólagos átnevezés támogatása kell.
 A Windows alatt érvénytelen neveket, kis-/nagybetűs vagy Unicode-ütközéseket és
 fájl/mappa-konfliktusokat minden platformon elutasítja átnevezés vagy kihagyás helyett.
 A Scan / Preview elfogadja a natív neveket (például a macOS kettőspontos AU-presetneveit),
@@ -250,3 +249,5 @@ A fejlesztői verzióban a Scan / Preview, MIDI Audit és ReaPack Audit közös 
 A natív fájlnevek, például a macOS kettőspontos nevei, külön választható, 3-as sémájú mentésben megőrizhetők. Az eredeti nevű visszaállítás azonos platformot követel; a választható hordozható kinyerés minden fájlt elkülönít, és visszafejthető névleképezést rögzít. A parancsok, a GUI jóváhagyása és a kompatibilitási korlátok a [natív fájlnév-visszaállítás](docs/NATIVE_FILENAMES.md) leírásában találhatók.
 
 A mentés és visszaállítás előkészítése most konzervatív szabadhely-becslést ellenőriz. A ZIP-vizsgálat még a jegyzék betöltése előtt korlátozza annak bájtméretét és bejegyzésszámát; a ZIP64 továbbra is támogatott. A csak olvasó `staging-residues SZÜLŐMAPPA` tartalomolvasás és törlés nélkül listázza az esetleges összeomlási maradványokat. Lásd az [erőforráskorlátokat](docs/RESOURCE_BUDGETS.md).
+
+A visszaállítási útvonalakat még az előkészítés előtt konzervatív fájlrendszerkorlátokhoz ellenőrizzük. Az eredeti időbélyegek és jogosultságok tájékoztató metaadatként mentődnek; a visszaállítás nem aktivál futtatási jogosultságot, és nem másol ACL-t vagy kiterjesztett attribútumot. Lásd a [fájlrendszeres közzétételt](docs/FILESYSTEM_PUBLICATION.md).
