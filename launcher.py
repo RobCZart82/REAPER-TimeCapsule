@@ -66,7 +66,7 @@ def self_test(report):
         app.update()
         assert app._show_about() is about
         if app.tk.call('tk', 'windowingsystem') == 'aqua':
-            app.tk.call('tk::mac::ShowAbout')
+            app.tk.call('tkAboutDialog')
             assert app.about_window is about
         center_x = lambda widget: widget.winfo_rootx() + widget.winfo_width() / 2
         assert abs(center_x(about.icon_label) - center_x(about.logo_label)) <= 1
