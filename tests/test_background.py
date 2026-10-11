@@ -113,3 +113,16 @@ class GUIBackgroundTests(unittest.TestCase):
                     audit.return_value = {key: [] for key in ('files', 'counts', 'bytes', 'portable_names_ready', 'portability_issues', 'skipped_entries')}
                     action()
                     self.assertIs(audit.call_args.kwargs['control'], app.operation_control)
+
+    def test_nonportable_backup_never_retries_without_explicit_opt_in(self):
+        from reaper_timecapsule.core import NonPortableNames
+        app = self.app()
+        app._start_io = Mock()
+        app.operation_control.latest.return_value = None
+        app.runner.poll.return_value = ('error', NonPortableNames('synthetic'))
+        with patch('reaper_timecapsule.gui.messagebox.askyesno', return_value=False):
+            App._poll_io(app)
+        app._start_io.assert_not_called()
+        with patch('reaper_timecapsule.gui.messagebox.askyesno', return_value=True):
+            App._poll_io(app)
+        app._start_io.assert_called_once_with('native-backup')

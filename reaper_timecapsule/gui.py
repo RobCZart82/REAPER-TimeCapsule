@@ -6,7 +6,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from .background import BackgroundTask
 from .operation import OperationControl
-from .core import VERSION, default_resource, make_backup, preview, preview_backup, restore_backup, scan
+from .core import NonPortableNames, VERSION, default_resource, make_backup, preview, preview_backup, restore_backup, scan
 from .midi_validation import validate_midi_workflow
 from .config_migration import preview_migration
 from .inventory import audit_reapack
@@ -226,6 +226,7 @@ class App(tk.Tk):
             "scan": lambda: App._brief(preview(source, control=control)),
             "midi": lambda: validate_midi_workflow(Path(source), scan(source, control=control), control=control),
             "reapack": lambda: audit_reapack(source, control=control),
+            "native-backup": lambda: make_backup(source, archive, control=control, native_names=True),
             "backup": lambda: make_backup(source, archive, control=control),
             "verify": lambda: preview_backup(archive, control=control),
             "restore": lambda: restore_backup(archive, destination, control=control),
@@ -265,7 +266,15 @@ class App(tk.Tk):
             self.status.set("Operation cancelled; no completed result published")
         elif kind == "error":
             self.status.set("Operation failed")
-            messagebox.showerror("Time Capsule error", str(payload))
+            if isinstance(payload, NonPortableNames):
+                if messagebox.askyesno('Native filenames require a different backup format',
+                        'Some filenames cannot be represented in a portable backup. No files were renamed.\n\n'
+                        'Create a native-name capsule instead? This requires a newer Time Capsule build. '
+                        'Original-name recovery is restricted to the same platform; portable recovery '
+                        'uses isolated files and a name-mapping report.'):
+                    self._start_io('native-backup')
+            else:
+                messagebox.showerror("Time Capsule error", str(payload))
         else:
             self.status.set("Operation completed")
             self._do(lambda: payload)
