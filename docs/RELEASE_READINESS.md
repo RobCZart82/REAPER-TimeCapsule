@@ -82,20 +82,30 @@ outside these guarantees.
 These three I/O operations use a single background worker. Tk field values are
 captured on the UI thread; workers do not access Tk. Results/errors are delivered
 through a queue and rendered by UI polling. Inputs and operation buttons are
-locked until completion, with an indeterminate busy indicator. It does not show
-percent completion or an ETA. Other audits/scans still run synchronously.
+locked until completion, with an indeterminate busy indicator. It shows per-phase byte completion where known; there is no global ETA. Other audits/scans still run synchronously.
 
 Window closing is blocked during active work to avoid interrupting a write.
-Safe cancellation is not implemented; users must wait. Headless worker/GUI tests
+Cooperative cancellation now checkpoints scanning/copying/verification and before
+publication, cleans temporary state and reports cancellation separately from errors.
+Per-phase byte progress replaces the busy indicator where totals are known. Headless worker/GUI tests
 cover single-job exclusion, captured inputs, pending/success/error handling, failed
 thread startup and the close guard. Native screen layout and dialogs have not been
 visually validated by these tests.
 
-## Still required before public beta
+## First limited beta release preparation
+
+GPL-3.0-only was selected by the user. An unsigned beta was explicitly accepted.
+Native desktop CI builds bundle the runtime, matching tracked source and notices,
+and execute a synthetic backup/verify/restore/cancellation/Tk self-test using the
+actual binary. Release-specific scope and remaining limitations are documented
+in FIRST_BETA.md. This limited beta makes no automatic migration/runtime-workflow
+compatibility promise. Artifact build success still must be checked before release.
+
+## Remaining work for broader/stable release
 
 - Extend destination-length/filesystem compatibility checks where needed.
 - Broaden tests for disk-full, permissions, cancellation and changing inputs.
-- Complete the GUI flow, background audits/scans, meaningful progress and safe cancellation.
+- Complete background audits/scans and broader native visual QA.
 - Validate supported resources in real temporary REAPER profiles on macOS/Windows.
 - Build and test standalone macOS/Windows distributions without Python installed.
 - Choose source license, record dependency licenses and settle signing/release policy.

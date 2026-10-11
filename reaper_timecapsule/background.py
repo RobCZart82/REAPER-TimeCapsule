@@ -2,6 +2,8 @@
 import queue
 import threading
 
+from .operation import OperationCancelled
+
 
 class BackgroundTask:
     def __init__(self):
@@ -22,6 +24,8 @@ class BackgroundTask:
         def run():
             try:
                 result = ('success', action())
+            except OperationCancelled as exc:
+                result = ('cancelled', exc)
             except Exception as exc:
                 result = ('error', exc)
             self._results.put(result)

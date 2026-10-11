@@ -17,9 +17,10 @@ from pathlib import Path, PurePosixPath
 
 from .rules import decide
 from .publication import publish_directory
+from .operation import checkpoint
 from .inventory import build_inventory
 
-VERSION = "0.8.0-dev"
+VERSION = "0.9.0-beta.1"
 FORMAT = "reaper-timecapsule"
 SCHEMA = 2
 MAX_MANIFEST_BYTES = 16 * 1024 * 1024
@@ -82,17 +83,19 @@ def _validate_portable_paths(paths) -> None:
             prefixes[identity] = spelling, is_file
 
 
-def scan(source: Path) -> list[dict]:
+def scan(source: Path, *, control=None) -> list[dict]:
     """Non-invasive inventory; NEVER follows directory/file symlinks."""
     source = Path(source).expanduser().resolve(strict=True)
     if not source.is_dir():
         raise ValueError("Source must be a directory")
     result = []
     for base, folders, files in os.walk(source, followlinks=False):
+        checkpoint(control, "Scanning")
         folders[:] = sorted(
             x for x in folders if not (Path(base) / x).is_symlink() and x not in (".git", "__pycache__", ".svn")
         )
         for filename in sorted(files):
+            checkpoint(control, "Scanning")
             path = Path(base) / filename
             if path.is_symlink() or not path.is_file():
                 continue
@@ -114,7 +117,8 @@ def preview(source: Path) -> dict:
     return {"files": len(items), "counts": dict(counts), "bytes": dict(sizes), "items": items, "inventory": build_inventory(Path(source), items)}
 
 
-def make_backup(source: Path, destination: Path) -> dict:
+def make_backup(source: Path, destination: Path, *, control=None) -> dict:
+    checkpoint(control, "Preparing backup")
     source = Path(source).expanduser().resolve(strict=True)
     destination = Path(destination).expanduser().absolute()
     if source == destination or source in destination.parents:
@@ -122,7 +126,7 @@ def make_backup(source: Path, destination: Path) -> dict:
     if destination.exists() or destination.is_symlink():
         raise FileExistsError("Refusing to overwrite an existing backup")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    items = scan(source)
+    items = scan(source, control=control)
     selected = [x for x in items if x["policy"] in ("keep", "review")]
     if len(selected) > MAX_FILES or sum(x["size"] for x in selected) > MAX_TOTAL_BYTES:
         raise ValueError("Backup exceeds safe snapshot limits")
@@ -132,9 +136,12 @@ def make_backup(source: Path, destination: Path) -> dict:
     fd, staging = tempfile.mkstemp(prefix=".timecapsule-", suffix=".zip", dir=destination.parent)
     os.close(fd)
     manifest_files = []
+    completed = 0
+    total = sum(item["size"] for item in selected)
     try:
         with zipfile.ZipFile(staging, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6, allowZip64=True) as out:
             for item in selected:
+                checkpoint(control, "Copying backup", completed, total)
                 p = source.joinpath(*item["path"].split("/"))
                 if p.is_symlink() or not p.is_file():
                     raise ValueError("Source changed during backup: " + item["path"])
@@ -145,7 +152,9 @@ def make_backup(source: Path, destination: Path) -> dict:
                 with p.open("rb") as src, out.open(entry, "w") as dst:
                     before = os.fstat(src.fileno())
                     for block in iter(lambda: src.read(BLOCK_SIZE), b""):
+                        checkpoint(control, "Copying backup", completed, total)
                         bytes_written += len(block)
+                        completed += len(block)
                         if bytes_written > MAX_SINGLE_FILE:
                             raise ValueError("Changed source exceeds size limit")
                         hash_value.update(block)
@@ -168,7 +177,8 @@ def make_backup(source: Path, destination: Path) -> dict:
                 "notes": "review items are backed up but never restored into active REAPER resources automatically",
             }
             out.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
-        verify_backup(Path(staging))
+        verify_backup(Path(staging), control=control)
+        checkpoint(control, "Publishing backup")
         # Atomic exclusive publication: linking fails if ANY destination entry
         # exists, including a concurrently created file or dangling symlink.
         # Staging is in the same directory/filesystem. Never fall back to rename
@@ -228,19 +238,22 @@ def _unique_manifest_object(pairs):
     return result
 
 
-def verify_backup(archive: Path) -> dict:
+def verify_backup(archive: Path, *, control=None) -> dict:
     """Normalize malformed archive/encoding errors for API, GUI and CLI callers."""
     try:
-        return _verify_backup(archive)
+        return _verify_backup(archive, control=control)
     except (zipfile.BadZipFile, zipfile.LargeZipFile, UnicodeError,
             json.JSONDecodeError, EOFError, zlib.error, RuntimeError, NotImplementedError):
         raise ValueError("Invalid or unsupported backup archive") from None
 
 
-def _verify_backup(archive: Path) -> dict:
+def _verify_backup(archive: Path, *, control=None) -> dict:
+    checkpoint(control, "Preparing verification")
     archive = Path(archive)
     with zipfile.ZipFile(archive) as z:
         infos = z.infolist()
+        completed = 0
+        progress_total = sum(info.file_size for info in infos if info.filename.startswith("resources/"))
         if len(infos) > MAX_FILES + 1:
             raise ValueError("Too many archive members")
         names = [x.filename for x in infos]
@@ -265,6 +278,7 @@ def _verify_backup(archive: Path) -> dict:
         expected = {"manifest.json"}
         total_bytes = 0
         for item in files:
+            checkpoint(control, "Verifying", completed, progress_total)
             if not isinstance(item, dict):
                 raise ValueError("Invalid file record")
             rel = item.get("path")
@@ -293,22 +307,26 @@ def _verify_backup(archive: Path) -> dict:
             h = hashlib.sha256()
             with z.open(info) as fp:
                 for block in iter(lambda: fp.read(BLOCK_SIZE), b""):
+                    checkpoint(control, "Verifying", completed, progress_total)
+                    completed += len(block)
                     h.update(block)
             if h.hexdigest() != item["sha256"]:
                 raise ValueError("Checksum mismatch: " + rel)
         if expected != set(names):
             raise ValueError("Unexpected archive members")
+        checkpoint(control, "Verification complete", completed, progress_total)
         return manifest
 
 
-def restore_backup(archive: Path, destination: Path) -> dict:
+def restore_backup(archive: Path, destination: Path, *, control=None) -> dict:
     """Restore into a NEW folder, in staging. Review files remain quarantined.
 
     Never merges into a running REAPER config, overwrites, or installs native plugins.
     """
     archive = Path(archive).expanduser().resolve(strict=True)
     destination = Path(destination).expanduser().absolute()
-    manifest = verify_backup(archive)
+    manifest = verify_backup(archive, control=control)
+    checkpoint(control, "Preparing restore")
     if destination.exists() or destination.is_symlink():
         raise FileExistsError("Choose a NEW destination folder; existing folders are never overwritten")
     parent = destination.parent.resolve(strict=True)
@@ -316,9 +334,12 @@ def restore_backup(archive: Path, destination: Path) -> dict:
         raise ValueError("Restore parent must be a directory")
     staging = Path(tempfile.mkdtemp(prefix=".timecapsule-restore-", dir=parent))
     counts = Counter()
+    completed = 0
+    progress_total = sum(item["size"] for item in manifest["files"])
     try:
         with zipfile.ZipFile(archive) as z:
             for item in manifest["files"]:
+                checkpoint(control, "Restoring", completed, progress_total)
                 # Old policy metadata is advisory: the CURRENT policy rules
                 # decide which destination is safe, even for legacy snapshots.
                 effective = _effective_policy(
@@ -334,6 +355,8 @@ def restore_backup(archive: Path, destination: Path) -> dict:
                 with z.open("resources/" + item["path"]) as src, target.open("xb") as dst:
                     h = hashlib.sha256()
                     for block in iter(lambda: src.read(BLOCK_SIZE), b""):
+                        checkpoint(control, "Restoring", completed, progress_total)
+                        completed += len(block)
                         h.update(block)
                         dst.write(block)
                 if h.hexdigest() != item["sha256"]:
@@ -347,6 +370,7 @@ def restore_backup(archive: Path, destination: Path) -> dict:
             "inventory": manifest.get("inventory", {}),
         }
         (staging / "RESTORE_REPORT.json").write_text(json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
+        checkpoint(control, "Publishing restore")
         publish_directory(staging, parent / destination.name)
         return {"destination": str(destination), **info}
     finally:
@@ -354,8 +378,8 @@ def restore_backup(archive: Path, destination: Path) -> dict:
             shutil.rmtree(staging)
 
 
-def preview_backup(archive: Path) -> dict:
-    manifest = verify_backup(archive)
+def preview_backup(archive: Path, *, control=None) -> dict:
+    manifest = verify_backup(archive, control=control)
     counts = Counter(x["policy"] for x in manifest["files"])
     omitted = Counter(x["policy"] for x in manifest["omitted"])
     return {"saved": dict(counts), "omitted": dict(omitted), "created_utc": manifest["created_utc"], "inventory": manifest.get("inventory", {})}

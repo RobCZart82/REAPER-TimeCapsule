@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from .background import BackgroundTask
+from .operation import OperationControl
 from .core import VERSION, default_resource, make_backup, preview, preview_backup, restore_backup, scan
 from .midi_validation import validate_midi_workflow
 from .config_migration import preview_migration
@@ -38,6 +39,13 @@ class App(tk.Tk):
             browse = ttk.Button(row, text="Browse", command=lambda v=variable, c=chooser: v.set(c() or v.get()))
             browse.pack(side="left", padx=8)
             self.interactive.extend((entry, browse))
+        archive_choices = ttk.Frame(body)
+        archive_choices.pack(anchor="w", pady=3)
+        for label, chooser in (("Open existing snapshot", lambda: filedialog.askopenfilename(filetypes=[("ZIP files", "*.zip")])),
+                               ("Choose new backup ZIP", lambda: filedialog.asksaveasfilename(defaultextension=".zip", filetypes=[("ZIP files", "*.zip")]))):
+            button = ttk.Button(archive_choices, text=label, command=lambda c=chooser: self.archive.set(c() or self.archive.get()))
+            button.pack(side="left", padx=5)
+            self.interactive.append(button)
         row = ttk.Frame(body)
         row.pack(anchor="w", pady=17)
         for label, fn in (
@@ -61,6 +69,8 @@ class App(tk.Tk):
         ttk.Label(body, textvariable=self.status).pack(anchor="w")
         self.progress = ttk.Progressbar(body, mode="indeterminate")
         self.progress.pack(fill="x", pady=4)
+        self.cancel_button = ttk.Button(body, text="Cancel operation", command=self._cancel_io, state="disabled")
+        self.cancel_button.pack(anchor="w")
         self.log = tk.Text(body, height=10, wrap="word")
         self.log.pack(fill="both", expand=True, pady=10)
         self.log.insert("end", "Scan the source before creating a backup.\n")
@@ -122,7 +132,9 @@ class App(tk.Tk):
         for widget in self.interactive:
             widget.configure(state="disabled" if busy else "normal")
         self.status.set(label if busy else "Ready")
+        self.cancel_button.configure(state="normal" if busy else "disabled")
         if busy:
+            self.progress.configure(mode="indeterminate")
             self.progress.start(12)
         else:
             self.progress.stop()
@@ -132,10 +144,12 @@ class App(tk.Tk):
             return
         # Capture Tk values on the main thread. Workers see ordinary strings only.
         source, archive, destination = self.source.get(), self.archive.get(), self.destination.get()
+        self.operation_control = OperationControl()
+        control = self.operation_control
         actions = {
-            "backup": lambda: make_backup(source, archive),
-            "verify": lambda: preview_backup(archive),
-            "restore": lambda: restore_backup(archive, destination),
+            "backup": lambda: make_backup(source, archive, control=control),
+            "verify": lambda: preview_backup(archive, control=control),
+            "restore": lambda: restore_backup(archive, destination, control=control),
         }
         self._set_busy(True, operation.capitalize() + " in progress — please wait")
         try:
@@ -146,14 +160,29 @@ class App(tk.Tk):
             return
         self.after(100, self._poll_io)
 
+    def _cancel_io(self):
+        if self.runner.active:
+            self.operation_control.cancel()
+            self.cancel_button.configure(state="disabled")
+            self.status.set("Cancellation requested — waiting for safe cleanup")
+
     def _poll_io(self):
+        progress = self.operation_control.latest()
+        if progress is not None:
+            phase, completed, total = progress
+            if total > 0 and not self.operation_control.cancel_requested:
+                self.progress.stop()
+                self.progress.configure(mode="determinate", maximum=total, value=completed)
+                self.status.set(f"{phase}: {min(100, completed * 100 // total)}% of this phase")
         result = self.runner.poll()
         if result is None:
             self.after(100, self._poll_io)
             return
         self._set_busy(False)
         kind, payload = result
-        if kind == "error":
+        if kind == "cancelled":
+            self.status.set("Operation cancelled; no completed result published")
+        elif kind == "error":
             self.status.set("Operation failed")
             messagebox.showerror("TimeCapsule error", str(payload))
         else:
@@ -163,7 +192,7 @@ class App(tk.Tk):
     def _on_close(self):
         if self.runner.active:
             messagebox.showinfo("Operation in progress", "Wait for the operation to finish before closing. "
-                                "Safe cancellation is not yet available.")
+                                "Use Cancel operation and wait for cleanup.")
             return
         self.destroy()
 
