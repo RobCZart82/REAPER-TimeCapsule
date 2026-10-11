@@ -13,6 +13,9 @@ from contextlib import closing
 from pathlib import Path
 import re
 import sqlite3
+import time
+
+from .operation import checkpoint
 
 from urllib.parse import urlsplit
 
@@ -209,12 +212,15 @@ def _empty_registry(status: str, note: str = "") -> dict:
     }
 
 
-def inspect_registry(database_path: Path) -> dict:
+def inspect_registry(database_path: Path, *, control=None, query_timeout=5.0) -> dict:
     """Audit the ReaPack/registry.db SQLite file via a read-only connection.
 
     Uses immutable=1 to avoid creating SHM/WAL files and refuses nonempty WAL
     sidecars: do not claim a consistent snapshot of a running ReaPack registry.
     """
+    checkpoint(control, "Inspecting ReaPack registry")
+    if query_timeout <= 0:
+        raise ValueError("Registry query timeout must be positive")
     database_path = Path(database_path)
     try:
         if database_path.is_symlink() or not database_path.is_file():
@@ -236,24 +242,35 @@ def inspect_registry(database_path: Path) -> dict:
     # URI uses percent-encoding from Path.as_uri; never interpolate a
     # database-controlled string into SQL.
     uri = database_path.resolve().as_uri() + "?mode=ro&immutable=1"
+    deadline = time.monotonic() + query_timeout
+    timed_out = False
+    def interrupted():
+        nonlocal timed_out
+        timed_out = time.monotonic() >= deadline
+        return int(timed_out or control is not None and control.cancel_requested)
     try:
         with closing(sqlite3.connect(uri, uri=True, timeout=1.0)) as db:
-            db.execute("PRAGMA query_only=ON")
-            names = {x[0] for x in db.execute(
+            db.set_progress_handler(interrupted, 1000)
+            def execute(sql, params=()):
+                if interrupted():
+                    raise sqlite3.OperationalError("Registry inspection interrupted")
+                return db.execute(sql, params)
+            execute("PRAGMA query_only=ON")
+            names = {x[0] for x in execute(
                 "SELECT name FROM sqlite_master WHERE type='table'"
             )}
             if not {"entries", "files"}.issubset(names):
                 return _empty_registry("unsupported", "Missing ReaPack 1.x registry tables")
-            columns = {x[1] for x in db.execute("PRAGMA table_info(entries)")}
+            columns = {x[1] for x in execute("PRAGMA table_info(entries)")}
             if not {"id", "remote", "category", "package", "version", "flags"}.issubset(columns):
                 return _empty_registry("unsupported", "Unrecognized entries table columns")
-            file_columns = {x[1] for x in db.execute("PRAGMA table_info(files)")}
+            file_columns = {x[1] for x in execute("PRAGMA table_info(files)")}
             if not {"entry", "path"}.issubset(file_columns):
                 return _empty_registry("unsupported", "Unrecognized files table columns")
 
-            installed = db.execute("SELECT COUNT(*) FROM entries").fetchone()[0]
-            file_count = db.execute("SELECT COUNT(*) FROM files").fetchone()[0]
-            rows = db.execute(
+            installed = execute("SELECT COUNT(*) FROM entries").fetchone()[0]
+            file_count = execute("SELECT COUNT(*) FROM files").fetchone()[0]
+            rows = execute(
                 "SELECT e.remote, e.category, e.package, e.version, e.flags, "
                 "COUNT(f.entry) FROM entries e "
                 "LEFT JOIN files f ON f.entry=e.id "
@@ -262,6 +279,7 @@ def inspect_registry(database_path: Path) -> dict:
             ).fetchall()
             packages = []
             for remote, category, name, version, flags, count in rows:
+                checkpoint(control, "Reporting ReaPack packages")
                 flagbits = flags if isinstance(flags, int) else 0
                 packages.append({
                     "repository": str(remote),
@@ -283,4 +301,7 @@ def inspect_registry(database_path: Path) -> dict:
                 ],
             }
     except (sqlite3.Error, OSError, ValueError):
+        checkpoint(control, "Inspecting ReaPack registry")
+        if timed_out:
+            return _empty_registry("timed-out", "Registry query exceeded the inspection time budget")
         return _empty_registry("invalid", "Could not read a consistent ReaPack 1.x registry")

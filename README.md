@@ -236,3 +236,5 @@ registration keys are not distributed with this project. The project is not
 affiliated with or endorsed by Cockos / REAPER.
 
 MIDI Audit now reports duplicate/conflicting definitions, dependency cycles and unverified numeric commands. Resolving a menu reference does not prove its execution chain works in REAPER. Numeric commands remain unverified without an authoritative runtime action catalog.
+
+Development audits now run on the shared background worker: Scan / Preview, MIDI Audit and ReaPack Audit keep the interface responsive and support cooperative cancellation. Read-only ReaPack SQL inspection has a five-second query budget and reports `timed-out` separately from invalid data. Cancellation can wait for an active operating-system file read; it is not forced thread termination.

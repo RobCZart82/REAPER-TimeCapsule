@@ -244,3 +244,5 @@ személyes profilokat vagy regisztrációs kulcsokat. Nem áll kapcsolatban a Co
 és nem rendelkezik annak hivatalos támogatásával.
 
 A MIDI Audit már jelzi a duplikált/ütköző definíciókat, függőségi ciklusokat és ellenőrizetlen numerikus parancsokat. Egy menühivatkozás feloldása nem igazolja a műveletlánc REAPER-beli működését. Hiteles futásidejű műveletkatalógus nélkül a numerikus parancsok ellenőrizetlenek maradnak.
+
+A fejlesztői verzióban a Scan / Preview, MIDI Audit és ReaPack Audit közös háttérfeldolgozóban fut: a felület válaszképes marad, és a műveletek együttműködően megszakíthatók. A csak olvasó ReaPack SQL-elemzés öt másodperces lekérdezési keretet kapott; túllépéskor külön `timed-out` állapotot jelez. A megszakítás megvárhat egy folyamatban lévő rendszeroldali fájlolvasást; nem kényszerített szálleállítás.

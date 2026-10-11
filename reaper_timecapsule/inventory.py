@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from .midi_validation import validate_midi_workflow
 from .reapack_profile import inspect_registry, parse_profile, _empty_profile, _empty_registry
+from .operation import checkpoint
 from .safe_paths import trusted_resource_file
 
 MAX_REAPACK_INI_BYTES = 2 * 1024 * 1024
@@ -57,8 +58,9 @@ def _public_repo_urls(ini_file: Path) -> list[str]:
     return sorted(output)
 
 
-def build_inventory(source: Path, items: list[dict]) -> dict:
+def build_inventory(source: Path, items: list[dict], *, control=None, include_midi=True) -> dict:
     """Inventory strictly from paths plus the configured ReaPack INI file."""
+    checkpoint(control, "Inspecting inventory")
     source = Path(source)
     portable = {x["path"] for x in items if x["policy"] == "keep"}
     review = {x["path"] for x in items if x["policy"] == "review"}
@@ -101,7 +103,7 @@ def build_inventory(source: Path, items: list[dict]) -> dict:
             if selected_path(relative) is None:
                 database = None
     profile = parse_profile(ini) if ini else _empty_profile("missing", "No selected trusted reapack.ini")
-    registry = inspect_registry(database) if database else _empty_registry("missing", "No selected trusted registry")
+    registry = inspect_registry(database, control=control) if database else _empty_registry("missing", "No selected trusted registry")
     # Legacy URL-only scan remains a compatibility fallback when an INI
     # predates the 1.x [remotes] section or uses an unknown format.
     repo_urls = ([x["index_url"] for x in profile["repositories"]]
@@ -139,7 +141,7 @@ def build_inventory(source: Path, items: list[dict]) -> dict:
             "custom_actions_saved": "reaper-kb.ini" in portable,
             "custom_toolbar_settings_saved": "reaper-menu.ini" in portable,
             "dependency_resolution": "static-action-and-script-audit",
-            "validation": validate_midi_workflow(source, items),
+            "validation": validate_midi_workflow(source, items, control=control) if include_midi else None,
         },
         "sws_settings": sorted(
             x for x in portable if x.lower() in ("s&m.ini", "br.ini", "sws-autocoloricon.ini")
@@ -161,8 +163,8 @@ def inventory_input_limit(relative):
     return 0
 
 
-def audit_reapack(source):
+def audit_reapack(source, *, control=None):
     """Resource-boundary checked GUI/CLI audit, without reading linked parents."""
     from .core import scan
-    result = build_inventory(Path(source).expanduser().resolve(strict=True), scan(source))["reapack"]
+    result = build_inventory(Path(source).expanduser().resolve(strict=True), scan(source, control=control), control=control, include_midi=False)["reapack"]
     return {"profile": result["profile"], "registry": result["registry"]}
