@@ -259,3 +259,5 @@ After Scan / Preview, **File policies…** opens a read-only searchable policy l
 A verified capsule can produce a read-only [MIDI/ReaPack recovery plan](docs/RECOVERY_PLANNING.md) with `recovery-plan capsule.zip`. It preserves repository states/package pins for review and marks unresolved dependencies, legacy inventory and missing runtime integration. No installation or resource write is performed.
 
 Configuration Preview now includes its exact evidence catalog. Only two binary appearance preferences are approved for consideration after matching caller-supplied REAPER versions; theme-only directives and every unknown key stay in review. The catalog cites the official [REAPER theme reference](https://www.reaper.fm/sdk/walter/images.php), while documenting where that evidence does not establish an equivalent `reaper.ini` key.
+
+GitHub Actions are pinned to full commit IDs from verified upstream releases. Dependabot checks weekly for action updates; review updates through a pull request and CI before merging.

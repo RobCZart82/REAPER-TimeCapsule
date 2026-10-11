@@ -266,3 +266,5 @@ A Scan / Preview után a **File policies…** gomb csak olvasó, kereshető szab
 Ellenőrzött kapszulából a `recovery-plan capsule.zip` csak olvasó [MIDI/ReaPack-helyreállítási tervet](docs/RECOVERY_PLANNING.md) készít. Ellenőrzéshez megőrzi a repository-állapotokat/csomagrögzítéseket, és jelzi a megoldatlan függőségeket, régi leltárt és hiányzó futás közbeni integrációt. Nem telepít és nem ír erőforrást.
 
 A Config Preview most már a pontos bizonyítékkatalógust is tartalmazza. Két bináris megjelenési beállítás jöhet szóba azonos, felhasználó által megadott REAPER-verzió mellett; a csak témákban dokumentált direktívák és minden ismeretlen kulcs felülvizsgálaton marad. A katalógus hivatkozik a hivatalos [REAPER témadokumentációra](https://www.reaper.fm/sdk/walter/images.php), és jelzi, hol nem bizonyít ez egyenértékű `reaper.ini`-kulcsot.
+
+A GitHub Actions-műveletek hivatalos kiadások teljes commitazonosítóihoz vannak rögzítve. A Dependabot hetente ellenőrzi a frissítéseket; a változtatásokat merge előtt PR-ban és CI-vel kell ellenőrizni.
