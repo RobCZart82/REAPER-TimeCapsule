@@ -71,8 +71,6 @@ class App(tk.Tk):
         self.last_report_source_root = None
         self.operation_source_root = None
         self.report_window = None
-        if self.tk.call("tk", "windowingsystem") == "aqua":
-            self.createcommand("tkAboutDialog", self._show_about)
         self.runner = BackgroundTask()
         self.interactive = []
         self.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -184,6 +182,10 @@ class App(tk.Tk):
         self.geometry(f"{self.default_width}x{self.minimum_height}")
         self.minsize(self.default_width, self.minimum_height)
         self.resizable(True, True)
+        # Replace TkAqua's application-menu About hook after the UI is built,
+        # matching the established order for custom Aqua About dialogs.
+        if self.tk.call("tk", "windowingsystem") == "aqua":
+            self.createcommand("tkAboutDialog", self._show_about)
 
     @staticmethod
     def _scroll_visibility(scrollbar, first, last):

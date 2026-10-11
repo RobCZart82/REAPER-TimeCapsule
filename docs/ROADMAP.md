@@ -44,6 +44,9 @@ and the linked issue for each remaining area.
 - The macOS and Windows bundled executable self-tests render a synthetic over-limit
   report and require the truncation notice plus both scrollbars. This covers packaged
   Tk behavior in CI; a visual human check on clean machines remains.
+- The macOS packaged self-test closes and reopens the custom About window through
+  TkAqua's tkAboutDialog hook. The native menu item itself still needs a visual
+  smoke check on macOS.
 - If the GUI report cap is reached, **Save full report…** writes the complete JSON
   report only to a user-selected location outside the scanned resource tree and will
   not replace existing files. The on-screen notice identifies the export control;
