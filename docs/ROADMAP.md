@@ -41,9 +41,9 @@ and the linked issue for each remaining area.
 
 - The UI-freeze fix is on `main` in PR #44: bound display data to 256 KiB and insert
   no more than 8 KiB per UI callback.
-- Test large MIDI/ReaPack reports in the packaged macOS and Windows builds, including
-  vertical and horizontal scrolling. Synthetic UI tests cannot confirm native Tk
-  behavior on every machine.
+- The macOS and Windows bundled executable self-tests render a synthetic over-limit
+  report and require the truncation notice plus both scrollbars. This covers packaged
+  Tk behavior in CI; a visual human check on clean machines remains.
 - If the GUI report cap is reached, direct users to the complete local CLI report;
   never silently imply the shortened display is the complete audit.
 
