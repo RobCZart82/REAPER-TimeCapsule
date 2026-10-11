@@ -66,6 +66,11 @@ def self_test(report):
         app.update()
         assert app._show_about() is about
         assert all(image.width() > 0 and image.height() > 0 for image in about.images.values())
+        # Tk must accept signed absolute coordinates for secondary monitors.
+        original_geometry = about.geometry()
+        about.geometry('+-10+-10')
+        app.update()
+        about.geometry(original_geometry)
         about.event_generate('<Escape>')
         app.update()
         if about.winfo_exists():

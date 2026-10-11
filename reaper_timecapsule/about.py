@@ -63,4 +63,6 @@ class AboutWindow(tk.Toplevel):
         self.update_idletasks()
         x = parent.winfo_rootx() + (parent.winfo_width() - self.winfo_reqwidth()) // 2
         y = parent.winfo_rooty() + (parent.winfo_height() - self.winfo_reqheight()) // 2
-        self.geometry(f'+{max(0, x)}+{max(0, y)}')
+        # A leading '+' selects absolute desktop coordinates; the following
+        # signed value preserves monitors left of/above the primary display.
+        self.geometry(f'+{x}+{y}')
