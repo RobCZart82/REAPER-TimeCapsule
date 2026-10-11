@@ -62,7 +62,7 @@
 
 ## Implemented in 0.7 (selective preference staging)
 - Separate CLI opt-in export with exact changed approved key selection.
-- Exclusive new ZIP creation in a dedicated external TimeCapsule-Staging folder.
+- Exclusive new ZIP creation in a dedicated external `TimeCapsule-Staging` folder.
 - Selected preference DATA and reverse values only; no full INI or unknown values.
 - Input-content fingerprints; no writes to source/target or active resource files.
 - Partial write failure cleanup of the archive owned by this operation.
@@ -116,3 +116,8 @@
 - No upload of personal resource directories or license keys to GitHub
 - No silent overwrite of user's active REAPER directory
 - No executing untrusted scripts during archive inspection
+
+## Reliability audit
+
+See [the checked audit findings](AUDIT_REVIEW_2026-10-11.md) for confirmed
+reliability defects and the recommended order before broader release work.

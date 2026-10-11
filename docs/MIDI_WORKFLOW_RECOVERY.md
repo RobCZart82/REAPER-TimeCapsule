@@ -24,7 +24,7 @@ python -m reaper_timecapsule midi-audit
 python -m reaper_timecapsule midi-audit "/path/to/REAPER"
 ```
 
-Or use **MIDI Audit** in the TimeCapsule desktop GUI.
+Or use **MIDI Audit** in the Time Capsule desktop GUI.
 
 The audit uses the **MIDI piano roll context** REAPER action section (32060).
 It resolves `_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` identifiers against saved
@@ -52,7 +52,7 @@ prove the toolbar/menu has been activated by REAPER.
 ## Restoring to a clean installation
 
 1. Install REAPER for the destination OS and architecture; run once and exit.
-2. Use TimeCapsule restore into a **new empty folder**, not over the active
+2. Use Time Capsule restore into a **new empty folder**, not over the active
    REAPER settings. Review `RESTORE_REPORT.json`.
 3. Ensure script dependencies and appropriate ReaPack/SWS extension versions
    are present. Inspect `NeedsReview/` manually.

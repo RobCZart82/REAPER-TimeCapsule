@@ -1,4 +1,8 @@
-# REAPER TimeCapsule
+# REAPER Time Capsule
+
+Hivatalos alkalmazásnév: **REAPER Time Capsule**. A fejlesztői build már ezt
+használja; a lent hivatkozott publikált bétafájlok eredeti neve megmarad.
+[Az audit ellenőrzése és a javítási sorrend](docs/AUDIT_REVIEW_2026-10-11.md).
 
 **Őrizd meg a REAPER-beállításaidat. Állítsd vissza őket biztonsággal.**
 
@@ -8,7 +12,7 @@ meg a hordozható fájlokat, és elkülöníti a kézi felülvizsgálatot igény
 
 [English](README.md)
 
-![REAPER TimeCapsule 0.9.0-beta.2 macOS-en, a Scan / Preview eredményével](docs/screenshots/timecapsule-scan-preview-0.9.0-beta.2-macos.png)
+![REAPER Time Capsule 0.9.0-beta.2 macOS-en, a Scan / Preview eredményével](docs/screenshots/timecapsule-scan-preview-0.9.0-beta.2-macos.png)
 
 *A projekt tulajdonosa által készített valódi macOS-képernyőkép, 2026. október 11.
 A Scan / Preview egy fájlnév hordozhatósági problémáját jelzi; nem befejezett mentést mutat.*
@@ -82,7 +86,7 @@ Hordozható REAPER-telepítésnél annak saját erőforrásútvonalát kell mega
    Az alkalmazás kísérőfájljait tartsd együtt. macOS-en indítsd a mellékelt `.app`-ot,
    Windowson az alkalmazásmappában található `REAPER-TimeCapsule.exe` fájlt.
 2. Zárd be a REAPER-t. Az erőforrásútvonalat megnyitó REAPER-menüből keresd meg
-   az erőforrásmappát, és válaszd ki azt a TimeCapsule-ban.
+   az erőforrásmappát, és válaszd ki azt a Time Capsule-ban.
 3. Használd a **Scan / Preview**, majd a **Choose new backup ZIP** gombot; válassz
    új archívumot az erőforrásmappán kívül. A **Backup** után várd meg az ellenőrzést.
 4. Az **Open existing snapshot** és **Verify** gombbal ellenőrizhetsz korábbi mentést.
@@ -119,7 +123,7 @@ ellenőrzi. Egyik parancs sem alkalmaz beállításokat vagy biztosít teljes vi
 A visszaállítás nem ír felül létező célmappát és nem olvaszt fájlokat az aktív
 REAPER-mappába. A régi VST/AU/CLAP-vizsgálati cache-ek és letöltött ReaPack-indexek
 újragenerálandók; a régi telepítettcsomag-nyilvántartás a `NeedsReview/` alá kerül.
-A TimeCapsule nem szinkronizál ReaPackot, nem módosítja annak nyilvántartását,
+A Time Capsule nem szinkronizál ReaPackot, nem módosítja annak nyilvántartását,
 nem telepít plugint vagy natív kiegészítőt, nem visz át licenceket és nem tölt le automatikusan összetevőket.
 
 A regisztrációs/licencfájlok és nyilvánvaló hitelesítő adatok alapértelmezetten
@@ -198,7 +202,7 @@ Fejlesztő: **RobCZart82**. Hibát a [GitHub Issues](https://github.com/RobCZart
 oldalon jelezz, a verzióval, operációs rendszerrel, architektúrával és reprodukciós
 lépésekkel, csökkentett vagy szintetikus példák használatával.
 
-A TimeCapsule forráskódja [GPL-3.0-only](LICENSE) licencű, garancia nélkül.
+A Time Capsule forráskódja [GPL-3.0-only](LICENSE) licencű, garancia nélkül.
 A csomagolt futtatókörnyezetek saját feltételeiket őrzik; lásd a [külső összetevők megjegyzéseit](THIRD_PARTY_NOTICES.md).
 A projekt nem terjeszt REAPER-t, saját tulajdonú plugineket, külső scriptcsomagokat,
 személyes profilokat vagy regisztrációs kulcsokat. Nem áll kapcsolatban a Cockos / REAPER-rel,

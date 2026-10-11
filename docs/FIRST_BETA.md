@@ -53,7 +53,7 @@ power-loss durability or hostile filesystem-race guarantee is provided.
 
 ## License and source
 
-TimeCapsule is GPL-3.0-only. Each binary archive includes the matching tracked
+Time Capsule is GPL-3.0-only. Each binary archive includes the matching tracked
 source snapshot, GPL text, upstream runtime notices, build provenance, checksums
 and self-test report. REAPER, proprietary plugins, personal profiles, licenses and
 third-party workflow bundles are not shipped. Report bugs with synthetic/reduced

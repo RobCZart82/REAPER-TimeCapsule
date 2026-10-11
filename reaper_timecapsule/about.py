@@ -17,7 +17,7 @@ def brand_image(master, name, *, half=False):
 class AboutWindow(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.title('About REAPER TimeCapsule')
+        self.title('About REAPER Time Capsule')
         self.transient(parent)
         self.resizable(False, False)
         bg, paper, muted, accent = '#14222e', '#eee9dc', '#a8bbc5', '#32b9b1'
@@ -34,7 +34,7 @@ class AboutWindow(tk.Toplevel):
         tk.Label(heading, image=self.images['icon'], background=bg).pack(side='left', padx=(0, 22))
         title = tk.Frame(heading, background=bg)
         title.pack(side='left')
-        tk.Label(title, text='REAPER TimeCapsule', font=('Arial', 22, 'bold'),
+        tk.Label(title, text='REAPER Time Capsule', font=('Arial', 22, 'bold'),
                  foreground=paper, background=bg).pack(anchor='w')
         tk.Label(title, text='Preserve your REAPER setup.\nRestore with confidence.',
                  font=('Arial', 11), justify='left', foreground=muted, background=bg).pack(anchor='w', pady=(8, 0))

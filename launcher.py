@@ -147,4 +147,4 @@ if __name__ == '__main__':
     elif len(sys.argv) == 1:
         App().mainloop()
     else:
-        raise SystemExit('Usage: REAPER-TimeCapsule [--self-test REPORT]')
+        raise SystemExit('Usage: REAPER Time Capsule [--self-test REPORT]')

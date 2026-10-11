@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "reaper-timecapsule"
 version = "0.9.0b2"
-description = "Offline smart backup and non-destructive recovery for REAPER resources"
+description = "REAPER Time Capsule: offline smart backup and non-destructive recovery for REAPER resources"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}

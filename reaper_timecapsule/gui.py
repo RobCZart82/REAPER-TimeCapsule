@@ -16,7 +16,7 @@ from .about import AboutWindow, brand_image
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("REAPER TimeCapsule " + VERSION)
+        self.title("REAPER Time Capsule " + VERSION)
         self.app_icon = brand_image(self, 'timecapsule-128.png')
         self.small_icon = brand_image(self, 'timecapsule-32.png')
         self.iconphoto(True, self.app_icon, self.small_icon)
@@ -31,7 +31,7 @@ class App(tk.Tk):
         body.pack(fill="both", expand=True)
         header = ttk.Frame(body)
         header.pack(fill="x", pady=(0, 14))
-        ttk.Label(header, text="REAPER TimeCapsule — Smart Backup", font=("Arial", 17, "bold")).pack(side="left")
+        ttk.Label(header, text="REAPER Time Capsule — Smart Backup", font=("Arial", 17, "bold")).pack(side="left")
         ttk.Button(header, text="About", command=self._show_about).pack(side="right")
         paths = ttk.Frame(body)
         paths.pack(fill="x")
@@ -167,7 +167,7 @@ class App(tk.Tk):
             self.log.insert("end", json.dumps(output, ensure_ascii=False, indent=2) + "\n")
             self.log.see("end")
         except Exception as exc:
-            messagebox.showerror("TimeCapsule error", str(exc))
+            messagebox.showerror("Time Capsule error", str(exc))
 
     def _config_preview(self):
         """Explicit selection only; cancellation never starts comparison."""
@@ -233,7 +233,7 @@ class App(tk.Tk):
             self.runner.submit(actions[operation])
         except Exception as exc:
             self._set_busy(False)
-            messagebox.showerror("TimeCapsule error", str(exc))
+            messagebox.showerror("Time Capsule error", str(exc))
             return
         self.after(100, self._poll_io)
 
@@ -261,7 +261,7 @@ class App(tk.Tk):
             self.status.set("Operation cancelled; no completed result published")
         elif kind == "error":
             self.status.set("Operation failed")
-            messagebox.showerror("TimeCapsule error", str(payload))
+            messagebox.showerror("Time Capsule error", str(payload))
         else:
             self.status.set("Operation completed")
             self._do(lambda: payload)
