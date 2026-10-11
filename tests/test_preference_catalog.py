@@ -1,4 +1,8 @@
+import json
+import subprocess
+import sys
 import unittest
+from pathlib import Path
 
 from reaper_timecapsule.config_migration import APPROVED_PREFERENCES
 from reaper_timecapsule.preference_catalog import preference_catalog
@@ -30,3 +34,12 @@ class PreferenceCatalogTests(unittest.TestCase):
     def test_catalog_is_read_only_and_cli_exports_same_evidence(self):
         with self.assertRaises(TypeError):
             APPROVED_PREFERENCES[('reaper', 'new-key')] = frozenset({'1'})
+
+        root = Path(__file__).resolve().parents[1]
+        result = subprocess.run([sys.executable, '-m', 'reaper_timecapsule', 'config-catalog'],
+                                cwd=root, capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        cli_catalog = json.loads(result.stdout)
+        cli_identities = {(entry['section'], entry['key'])
+                          for entry in cli_catalog['preferences']}
+        self.assertEqual(cli_identities, set(APPROVED_PREFERENCES))
