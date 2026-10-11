@@ -2,14 +2,8 @@
 import re
 import hashlib
 from pathlib import Path
-from types import MappingProxyType
+from .preference_catalog import APPROVED_PREFERENCES, preference_catalog
 
-# Exact identities only. Deliberately limited to binary appearance preferences.
-# Cockos: https://www.cockos.com/reaper/sdk/walter/images.php
-APPROVED_PREFERENCES = MappingProxyType({
-    ('reaper', 'tinttcp'): frozenset({'0', '1'}),
-    ('reaper', 'peaksedges'): frozenset({'0', '1'}),
-})
 MAX_BYTES = 4 * 1024 * 1024
 BLOCKED = re.compile(
     r'audio|asio|wasapi|coreaudio|midi|device|driver|vst|aucache|clap|plugin|'
@@ -103,6 +97,7 @@ def _compare_entries(old, new, source_version, target_version):
             row.update(source_value=before, target_value=after)
         rows.append(row)
     return dict(schema=1, read_only=True, writes_performed=False,
+                preference_catalog=preference_catalog(),
                 version_compatible=known_version, entries=rows,
                 changes={change: sum(r['change'] == change for r in rows)
                          for change in ('same', 'conflict', 'source_only', 'target_only')},

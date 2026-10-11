@@ -219,6 +219,7 @@ class App(tk.Tk):
             "Summary": report["summary"],
             "Changes": report["changes"],
             "Entries": report["entries"],
+            "Preference evidence catalog": report["preference_catalog"],
             "Next step": "Review conflicts manually. No merge or export is available.",
         }
 
