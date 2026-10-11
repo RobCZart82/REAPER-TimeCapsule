@@ -117,6 +117,15 @@ Hordozható REAPER-telepítésnél annak saját erőforrásútvonalát kell mega
 
 ## Telepítés és első mentés
 
+A képes útmutatók bemutatják az aláíratlan macOS-alkalmazás első indítását,
+a főablakot, a mentés elkészítését, az ellenőrzést és a visszaállítást:
+
+- [Angol felhasználói útmutató (PDF)](output/pdf/reaper-time-capsule-user-guide-en.pdf)
+- [Magyar felhasználói útmutató (PDF)](output/pdf/reaper-time-capsule-user-guide-hu.pdf)
+
+Mindkét útmutató a publikált 0.9.0-beta.2 felületet ismerteti, és azonos
+részletességgel tartalmazza a lépéseket és biztonsági tudnivalókat.
+
 1. Töltsd le a platformodhoz tartozó ZIP-et, és bontsd ki a teljes csomagot.
    Az alkalmazás kísérőfájljait tartsd együtt. macOS-en indítsd a mellékelt `.app`-ot,
    Windowson az alkalmazásmappában található `REAPER-TimeCapsule.exe` fájlt.
