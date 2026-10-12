@@ -197,6 +197,20 @@ ellenőrzött alapcommithoz tartoznak.
 - ReaPack/config kódolási provenance és valódi profilok továbbra külön vizsgálat;
   ez a MIDI-olvasási útvonal diagnosztikai javítása.
 
+### Elvégzett javítás: ReaPack legacy-kódolás jelzése (2026-10-12)
+
+- Alap: `f7ae9937a86ad91792af05a543ae2d79a73cfb75`; 4. prioritás, új #16.
+- A cp1252 fallback korábban figyelmeztetés nélkül `parsed` profilt adhatott.
+  Most a bizonytalan kódolás a notes listában megjelenik és a felismert profil
+  `partial` marad. Invalid/unsupported/hiányos profilnál is megmarad a jelzés.
+  Repository-sorrend, engedélyezés és URL-titokszűrés változatlan.
+- `test_reapack_encoding.py`: UTF-8/BOM és valódi U+FFFD kontroll, cp1252,
+  undefined bájt, hibás/nem támogatott/hiányos INI, változatlan eredeti bájtok
+  és titokszűrés. Helyi Windows/Python 3.13: 220 teszt OK, 13 skip;
+  dedikált szintetikus mappában, a sandbox útvonalelérési korlátja miatt azon kívül.
+- Nincs általános kódolásfelismerés; aktív konfiguráció nem módosul. Valódi
+  REAPER-profil és konfigurációmigráció kódolási ellenőrzése továbbra külön feladat.
+
 ### Ellenőrzési napló és munkaszabály
 
 - Kód/teszt/docs olvasás az alapcommitról; az átadott külső jelentés
