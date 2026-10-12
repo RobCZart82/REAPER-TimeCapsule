@@ -2,7 +2,7 @@
 
 This page describes current `main` capabilities and the ordered work required
 before the first stable `1.0.0` release. It is a development plan, not a release
-announcement. Status was checked against GitHub on 2026-10-11: `main` is the default
+announcement. Status was checked against GitHub on 2026-10-12: `main` is the default
 branch, there are no open pull requests, and issues #3 and #4 remain open. The last
 published version recorded by this project is `0.9.0-beta.2`; newer fixes on `main`
 still need validation in fresh packaged applications. No `1.0.0` release is ready
@@ -38,6 +38,110 @@ or published.
 See [the current audit status](AUDIT_REVIEW_2026-10-11.md), [release readiness](RELEASE_READINESS.md)
 and the linked issue for each remaining area.
 
+## Összefésült audit és végrehajtási sorrend (2026-10-12)
+
+Az alábbi kiegészítés a TC-001–TC-024 korábbi auditot és a felhasználó által
+2026-10-12-én átadott, 19 állításból álló külső jelentést egyesíti a meglévő
+1.0.0-tervvel. Ellenőrzött alap: `f188765572e150a50e4c2a1680bd34caa30e8d25`.
+A külső jelentés nem ad vizsgált commitot vagy működő reprodukciót; súlyosságait
+nem vesszük át automatikusan. A lent jelzett vizsgálatok nem bizonyított hibák.
+Az eredeti jelentés személyes csatolmányának elérési útját nem tesszük közzé.
+
+Ez a ROADMAP az egyetlen végrehajtási terv; az
+[AUDIT_REVIEW_2026-10-11.md](AUDIT_REVIEW_2026-10-11.md) történeti státuszforrás.
+A korábbi chatből elérhető audit TC-014 közben csonkolódott; TC-014–TC-024
+azonosításához a repository auditkövetését használtuk. Az eredeti teljes
+dokumentum minden elfogadási feltételével való egyezés külön ellenőrzendő,
+ha a teljes dokumentum elérhetővé válik.
+
+### Prioritások és elfogadási feltételek
+
+| Sorrend | Feladat / kapcsolódó tételek | Elfogadási feltétel |
+|---|---|---|
+| 1 — kiadási kapu | Az alábbi 2–3. lépés: kapszula és csomagolt GUI végponttól végpontig; TC-001/003/004/005/006/010/011/021. | Friss macOS/Windows csomag, eldobható profil: backup → verify → új mappás restore; bájt/hash egyezés, meglévő cél megőrzése, hibák és megszakítás takarítása, natív nevek, nagy jelentés/export és About. Platformonként PASS/FAIL/NOT RUN napló. |
+| 2 — kiadási kapu | TC-008/015/017/020/021: tárhely-, fájlrendszer- és útvonalhatárok. | Valódi cserélhető és kiválasztott hálózati kötet tesztje; ENOSPC/jogosultsági hiba és megszakítás; a nem támogatott eset egyértelműen leáll. Nincs csendes kihagyás/felülírás. A becslés és crash-maradványok korlátai láthatók. |
+| 3 — célzott ellenőrzés | MIDI-gráf szemantikája és további regisztrációformák; TC-007/013, új jelentés #2/#17. | Önhurok, különálló/átfedő ciklus, aciklikus keresztél, mély lánc, hibás/olvashatatlan bemenet. Független referencia ellenőrzi a ciklus létezését; a jelentés nem nevezi a DFS visszaéleinek számát az összes egyszerű ciklus számának. Csak reprodukált hibára készüljön algoritmusjavítás. |
+| 4 — diagnosztika | Kódolási bizonytalanság, erőforráskorlátok és hibaüzenetek; TC-008/016/018, új #8/#15/#16/#19. | UTF-8/BOM/cp1252/hibás bájt tesztek; eredeti mentett bájtok változatlanok, bizonytalan dekódolás jelzett. CLI/GUI a limiteket és a túllépés okát megmutatja. Nagy registry benchmark alapján döntsünk SQL-optimalizálásról; read-only/deadline/megszakítás megmarad. |
+| 5 — funkcionális határ | A lentebbi 4–6. lépés: issue #3/#4, TC-012/013/014. | Toolbar/icon csak igazolt formátummal; runtime csak eldobható REAPER-ben. ReaPack terv őrzi a sorrendet/verziót/pint, de nem állít telepítést vagy letöltés-ellenőrzést. Kétkulcsos konfiguráció-preview/staging marad; aktív apply külön rollback-terv nélkül tilos. |
+| 6 — kiadási kapu | A lentebbi 7–10. lépés: TC-016/022/024, dokumentáció, CI és release candidate. | Kétnyelvű dokumentáció/útmutatók egyeznek a csomaggal; kötelező CI és kézi elfogadási tesztek zöldek; letölthető csomagok ellenőrzöttek. Új verzió és publikálás külön kiadási döntés. |
+| 7 — későbbi fejlesztés | TC-009/019/023, Linux felderítés (#18), konfiguráció-apply, ReaPack 2.x/telepítés. | Külön specifikáció: titkosítás/hitelesítés, metaadatmegőrzés, signing/notarization és platformfelderítés. Nem feltétele az explicit korlátokkal kiadott béta működésének, nem jelölhető késznek dokumentáció alapján. |
+
+### TC-001–TC-024 státusz és hátralévő munka
+
+A „javított” a konkrét eredeti hibamódot jelenti kód és célzott regresszió alapján,
+nem minden profil/fájlrendszer általános tanúsítását. A források és tesztek az
+ellenőrzött alapcommithoz tartoznak.
+
+| ID | Státusz | Bizonyíték / következő feladat |
+|---|---|---|
+| TC-001 | Javított | `scan()` onerror/lstat hibái leállítanak; `test_scan_reliability.py`. Megőrizni a publikálást tiltó regressziót. |
+| TC-002 | Javított | Link/reparse/special elem jelentett, célja nem olvasott; `test_scan_reliability.py`. Linkcélok mentése továbbra sem automatikus. |
+| TC-003 | Részben | `native_names=True`, schema 3, izolált névtérkép; `test_native_names.py`. Normál portable mód továbbra elutasít; script/menu útvonalak nem átírtak. |
+| TC-004 | Javított | Ugyanazon archivált bájtfolyam parsermásolata; `test_snapshot_inventory.py`. Nem teljes tranzakciós profilpillanatkép. |
+| TC-005 | Javított | Preview/restore közös effektív policy, eredeti döntés és indok; `test_legacy_reapack.py`. |
+| TC-006 | Javított | Szülőkomponens- és kiválasztottfájl-ellenőrzés, sidecar-határ; `test_snapshot_inventory.py`. Ellenséges path-swap garancia nincs. |
+| TC-007 | Javított | Duplikáció, numerikus unverified, hiány és ciklus; `test_midi_validation.py`. Gráfszemantika további ellenőrzése a 3. prioritás. |
+| TC-008 | Részben | ZIP-index/manifeszt/payload és szabadhely-preflight; `test_resource_budget.py`. Konfigurálható budget és általános CPU/memória-korlát nincs. |
+| TC-009 | Nyitott | Nincs integrált titkosítás/aláírás vagy teljes érzékenyadat-felismerés. Kapszulák és exportok privátak. |
+| TC-010 | Javított | Feloldott/rögzített célszülő, kizárólagos publikálás; alias/race/no-overwrite tesztek. Bind-mount és minden ellenséges race nincs tanúsítva. |
+| TC-011 | Javított | Háttérworker, korlátozott/darabolt GUI-preview, File policies és teljes export; `test_background.py`, `test_report_export.py`. Kézi nagyprofil-GUI teszt marad. |
+| TC-012 | Nyitott | Bizonyítékkatalógus, de csak tinttcp/peaksedges; nincs aktív apply, teljes konfliktuskezelés/rollback. Issue #4. |
+| TC-013 | Részben | Statikus gráf és recovery plan van; toolbar/icon és REAPER-runtime nincs. Issue #3. |
+| TC-014 | Részben | `recovery_plan.py`: repositorysorrend, állapot, verzió/pin; `test_recovery_plan.py`. Elérhetőség, telepítés és szinkronizálás nincs. |
+| TC-015 | Részben | Hard-link után natív no-replace rename; `test_file_publication.py`. Valódi FAT/exFAT/hálózati validálás hiányzik. |
+| TC-016 | Részben | Verziózott jelentés, időpont, forrás, vizsgálati alap, teljes JSON-export már van. Hitelesített eredet/aláírás nincs. Az auditkövetés exportot jövőbeli feladatnak nevező mondata elavult. |
+| TC-017 | Részben | Névtér és végleges/ideiglenes path-capacity preflight; Windows UTF-16 teszt. Szokatlan FS/alias és hosszúútvonal-kompatibilitás korlátozott. |
+| TC-018 | Javított | SQLite read-only, méret/sor és 5 s query-budget, progress-handler; `test_audit_cancellation.py`. Ez nem általános OS I/O-deadline. |
+| TC-019 | Nyitott | Timestamp/mode információ mentett, restore friss fájlalapértékeket használ; ACL/owner/xattr/Finder nincs megőrizve. |
+| TC-020 | Részben | Helybecslés, kezelt hiba/interruption cleanup és read-only residue lista. Crash-durability és tranzakciós garancia nincs. |
+| TC-021 | Részben | Szintetikus hibainjektálás/race/határtesztek és csomagolt self-test bővült. Valódi izolált REAPER és tisztagépes QA szükséges. |
+| TC-022 | Részben | Actions commit-SHA és packager pin tesztelt; `test_workflow_pins.py`. A latest runner/OS toolchain változhat, bitazonos reprodukálhatóság nincs. |
+| TC-023 | Nyitott, elfogadott béta-korlát | Unsigned csomagok; signing/notarization külön terjesztési fejlesztés. |
+| TC-024 | Részben | GPL és kétnyelvű dokumentáció/útmutatók vannak. Következő csomaghoz képek, útmutatók és release notes újra egyeztetendők. |
+
+### Az új 19 tételes jelentés ellenőrzése
+
+| Új ID | Minősítés | Ellenőrzés és döntés |
+|---|---|---|
+| #1 | Cáfolt szintaktikai hiba | A `gui.py` 92. sorának lambda/tuple kifejezése szabályos; a zárójel és vessző közötti szóköz stílus. Korábbi CI compile és GUI-import sikeres. Nincs kritikus javítás. |
+| #2 | Nem igazolt algoritmushiba | Iteratív, aktív/befejezett állapotú DFS van. Helyi, fájlírás nélküli próba mind az 512 háromcsúcsú irányított gráfnál egyezett a független tranzitív lezárással a ciklus létezéséről. Ez nem bizonyít minden gráfot vagy minden egyszerű ciklus felsorolását; a fenti 3. prioritás szerint bővítsük a lefedettséget. |
+| #3 | Cáfolt archive-validációs rés | `_valid_path()` NULL-t tilt; `_validate_portable_paths()` kontrollokat/surrogate-okat is tilt a schema-2 verify előtt. A schema-3 eredeti név validátora ugyancsak tiltja őket. Teljes hívási útvonalat kell tesztelni, nem csak a segédfüggvényt. |
+| #4 | Cáfolt; a javaslat gyengítené az opt-int | `opt_in is not True` szándékosan csak a valódi True-t fogadja el; 1 vagy truthy objektum nem felhasználói jóváhagyás. Megőrizni. |
+| #5 | Cáfolt konkrét None/AttributeError állítás | Invalid globális booleanhoz note/partial státusz, invalid repository-enabled értékhez kihagyás és partial státusz tartozik. Nem történik None attribútumhívás. |
+| #6 | Cáfolt kezelt-hiba cleanup hiány | TemporaryDirectory context manager, stream ExitStack és staging finally van; `test_inventory_failure_cleans_snapshot_and_unpublished_zip` lefedi. Process-crash külön TC-020 korlát; nem memóriaszivárgásként címkézzük. |
+| #7 | Cáfolt az ellenőrzött mainen | A GUI-feltétel már `items` ÉS `portable_names_ready` jelenlétét ellenőrzi. A belső eredményszerződés további típusellenőrzése csak hibás eredményreprodukció esetén szükséges. |
+| #8 | Mérendő optimalizálási ötlet | `sqlite_master` táblaneveinek materializálása csökkenthető célzott lekérdezéssel. Már van méret/deadline/megszakítás-védelem; nagy schema benchmark és változatlan unsupported-schema viselkedés kell, mielőtt hibának vagy prioritásos lassulásnak neveznénk. |
+| #9 | Már dokumentált határ | A docstring és kimenet kimondja, hogy extension/runtime aktiválás nincs ellenőrizve. A toolbar/runtime hiány TC-013/issue #3 része. |
+| #10 | Cáfolt traversal/OOB állítás | Fullmatch csak canonical `objects/[0-9]{6}.bin` nevet fogad el; a manifest/taglista létezést és egyediséget ellenőriz. Az ordinal nem listaindex, a hiányzó sorszám önmagában nem OOB. Nem kell indokolatlan szekvenciafeltétel. |
+| #11 | Alacsony stílusötlet | A fájlazonosság-lambda kiemelése csak kapcsolódó karbantartáskor; nem változtatja a backup korrekt működését. |
+| #12 | Cáfolt redundanciaállítás | Forrás konfigurációszülője, cél konfigurációszülője és alapértelmezett erőforrás három külön tiltott határ. Refaktor nem törölhet határellenőrzést. |
+| #13 | Nem igazolt kommenthiba | A komment 32060-ra korlátozott piano-roll feldolgozást és más sectionök óvatosságát írja le, összhangban a kóddal. Bővítés issue #3-ban csak igazolt formátummal. |
+| #14 | Valós, alacsony stíluseltérés | A 92. sor `)) ,` formázása későbbi kis takarítás; nem szintaktikai vagy funkcionális bug. |
+| #15 | Hasznos diagnosztikai ötlet | A verifier felsorolt parser/ZIP kivételeket normalizál; I/O hibatípusokat nem nyel el általánosan. Opcionális fejlesztői hibakategória/debug ok vizsgálandó, privát tartalom kiszivárogtatása és felhasználói traceback nélkül. |
+| #16 | Részben hasznos kódolási kockázat | Érvényes UTF-8 először sikeresen dekódolódik; cp1252 csak UnicodeDecodeError után jön. Nem változtat archivált bájtokat, de sérült/nem támogatott encoding félreértelmezett leltárt adhat. Kódolási provenance/figyelmeztetés és fixture-ek a 4. prioritásban. |
+| #17 | Cáfolt None-kezelési hiány | Mind az action-, mind a menüolvasó hívó `contents is not None` ellenőrzést használ. Olvashatatlan bemenet jelentett probléma, nem bizonyított AttributeError. |
+| #18 | Nem igazolt Linux-default bug | A fix `~/.config/REAPER` alapútvonal létezik a kódban, de a jelentés nem igazol alternatív REAPER-konvenciót. Későbbi opt-in felderítéshez hivatalos/eldobható REAPER-bizonyíték, portable/XDG eset és explicit felhasználói forrásválasztás kell. |
+| #19 | Dokumentációban már megoldott, GUI/CLI javítható | `RESOURCE_BUDGETS.md` tartalmazza a 200000 rekord / 200001 ZIP-member / 8 GiB / 32 GiB / 16 MiB / 64 MiB limiteket. Egységes felhasználói limitösszegzés még hasznos. |
+
+### Ellenőrzési napló és munkaszabály
+
+- Kód/teszt/docs olvasás az alapcommitról; az átadott külső jelentés
+  állításai külön minősítve. A számozás nem új GitHub issue-szám.
+- A helyi próba csak a mainből kiemelt `_action_cycles()` függvényt futtatta
+  memóriában, szintetikus gráfokkal; nem a teljes alkalmazás tesztje.
+- Az előző ellenőrzés alapcommithoz tartozó main CI-je:
+  [Tests 38175204213](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38175204213)
+  és [Desktop builds 38175204227](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38175204227)
+  sikeres volt. Olvasott macOS 3.12 napló: 192 teszt OK; Windows 3.12:
+  192 teszt OK, 2 skip. Ez nem a dokumentációmódosítás saját CI-eredménye.
+- Teljes új helyi suite és valódi REAPER-integráció e tervfrissítésben:
+  NOT RUN. A terv nem jelöl reprodukció nélkül új kritikus hibát.
+- Implementáció előtt új main-SHA rögzítése, konkrét reprodukció és negatív
+  kontroll; javítás külön kis PR-ben, célzott regresszióval és releváns CI-vel.
+- A már javított TC-tételeket ne nyissuk újra bizonyíték nélkül. A privát profil,
+  licenc, DMG, workflow-bundle és jelentés nem kerülhet a repository-ba.
+- A terv frissítése nem kódjavítás, merge-, release- vagy publikálási engedély.
+
 ## Ordered work before `1.0.0`
 
 ### 1. Lock the first-release scope
@@ -59,6 +163,7 @@ and the linked issue for each remaining area.
 - Verify the behavior in the packaged GUI, not only through unit tests. Cover an
   empty selection, directory, corrupt archive, existing destination, cancellation,
   and a valid backup/verify/restore cycle.
+- Include the priority-2 real-volume, free-space, cleanup and path-capacity matrix above.
 - Compare the restored files with the manifest and hashes. Run only against
   synthetic fixtures or disposable profiles; do not add the user's capsule or
   configuration to the repository.
@@ -75,6 +180,8 @@ and the linked issue for each remaining area.
 
 ### 4. Finish or explicitly bound the MIDI audit (#3)
 
+- Validate graph cycle-detection semantics and unreadable-input handling using the
+  independent fixtures specified in priority 3 above; do not replace DFS without a reproducer.
 - Evaluate remaining ReaScript registration formats with synthetic fixtures and
   make sure summary counts stay complete when detailed findings are capped.
 - Verify toolbar-to-icon parsing only if the saved file format and path rules are
@@ -103,6 +210,8 @@ and the linked issue for each remaining area.
   which are placed under `NeedsReview/`.
 - State that the ReaPack database is review-only under current policy; its presence
   in a backup does not mean installed packages or registry state are activated.
+- Evaluate uncertain text-decoding provenance, actionable validation categories,
+  registry schema benchmark results and visible resource-limit summaries (priority 4).
 - Confirm reports distinguish complete counts from capped detail lists, and clearly
   label checks that were not performed.
 
