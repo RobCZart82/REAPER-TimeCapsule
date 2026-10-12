@@ -1,5 +1,6 @@
 """Offline runtime-notice retry regressions; no network or real Tk window."""
 import io
+import http.client
 import tempfile
 import unittest
 import urllib.error
@@ -134,3 +135,20 @@ class RuntimeLicenseTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "CPython-LICENSE.txt"):
                     notices.main()
             self.assertFalse((root / "runtime-licenses" / "SOURCES.txt").exists())
+
+    def test_main_identifies_truncated_http_notice_and_preserves_cause(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            app = MagicMock()
+            app.tk.call.side_effect = ["8.6.16", "8.6.16"]
+            failure = http.client.IncompleteRead(b"partial", 100)
+            with patch.object(notices, "__file__", str(root / "scripts" / "runtime_licenses.py")), \
+                 patch.object(notices.tkinter, "Tk", return_value=app), \
+                 patch.object(notices.importlib.metadata, "version", return_value="6.16.0"), \
+                 patch.object(notices.ssl, "OPENSSL_VERSION", "OpenSSL 3.1.0 synthetic"), \
+                 patch.object(notices, "fetch_notice", side_effect=failure):
+                with self.assertRaisesRegex(RuntimeError, "CPython-LICENSE.txt") as caught:
+                    notices.main()
+            self.assertIs(caught.exception.__cause__, failure)
+            self.assertEqual(list((root / "runtime-licenses").iterdir()), [])
+

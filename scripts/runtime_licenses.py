@@ -1,6 +1,7 @@
 """Collect upstream notices for the concrete Python/Tcl/Tk build runtime."""
 import sys
 import ssl
+import http.client
 import time
 import tkinter
 import urllib.error
@@ -87,7 +88,7 @@ def main():
     for name, url in urls.items():
         try:
             data = fetch_notice(url)
-        except (OSError, RuntimeError) as exc:
+        except (OSError, RuntimeError, http.client.HTTPException) as exc:
             raise RuntimeError("Could not collect required runtime notice: " + name) from exc
         (root / name).write_bytes(data)
     (root / 'SOURCES.txt').write_text('\n'.join(name + ': ' + url for name, url in urls.items()) + '\n', encoding='utf-8')
@@ -95,3 +96,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
