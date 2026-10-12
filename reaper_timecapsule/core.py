@@ -139,6 +139,12 @@ def scan(source: Path, *, control=None) -> list[dict]:
         raise ValueError("Source must be a directory")
     result = []
 
+    def append_record(record):
+        # Every reported entry consumes budget, including directory links.
+        if len(result) >= MAX_FILES:
+            raise ValueError("Source inventory exceeds file inspection budget")
+        result.append(record)
+
     def walk_error(error):
         raise OSError(error.errno, "Cannot scan source directory: " + str(error), error.filename) from error
 
@@ -147,7 +153,7 @@ def scan(source: Path, *, control=None) -> list[dict]:
         linked = stat.S_ISLNK(metadata.st_mode) or bool(
             getattr(metadata, 'st_file_attributes', 0) & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0))
         if linked:
-            result.append({"path": path.relative_to(source).as_posix(), "size": 0,
+            append_record({"path": path.relative_to(source).as_posix(), "size": 0,
                            "policy": "exclude", "reason": "Link/reparse point omitted; target not read",
                            "kind": "link"})
         return linked
@@ -163,8 +169,6 @@ def scan(source: Path, *, control=None) -> list[dict]:
                 traversed.append(name)
         folders[:] = traversed
         for filename in sorted(files):
-            if len(result) >= MAX_FILES:
-                raise ValueError("Source inventory exceeds file inspection budget")
             checkpoint(control, "Scanning")
             path = Path(base) / filename
             metadata = path.lstat()
@@ -172,13 +176,13 @@ def scan(source: Path, *, control=None) -> list[dict]:
                 continue
             rel = path.relative_to(source).as_posix()
             if not stat.S_ISREG(metadata.st_mode):
-                result.append({"path": rel, "size": 0, "policy": "exclude",
+                append_record({"path": rel, "size": 0, "policy": "exclude",
                                "reason": "Special filesystem entry omitted; content not read",
                                "kind": "special"})
                 continue
             # Native names are inventory input; portability is a separate preflight.
             rule = decide(rel)
-            result.append({"path": rel, "size": metadata.st_size, "policy": rule.policy, "reason": rule.reason})
+            append_record({"path": rel, "size": metadata.st_size, "policy": rule.policy, "reason": rule.reason})
     return result
 
 
