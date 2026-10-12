@@ -154,6 +154,8 @@ selected INI files and produce a redacted diff. Only exact approved section,
 key and value combinations are candidates; unknown keys require review, while
 hardware, platform, plugin-cache and private state are excluded. Neither input
 nor the active REAPER resource directory is modified. No active merge is implemented.
+The report records strict UTF-8 validation, BOM presence and byte counts for both
+inputs. Unsupported encoding stops comparison; it is never silently converted.
 
 `theme-preview` compares source, factory and target ColorThemes directories,
 identifying byte-identical packed factory themes, modified variants, user themes

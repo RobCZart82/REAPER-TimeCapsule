@@ -35,6 +35,8 @@ class ConfigurationPreviewGUITests(unittest.TestCase):
         self.assertEqual(report['Changes']['conflict'], 1)
         self.assertNotIn('PRIVATE', json.dumps(report))
         self.assertIn('Read-only', report['Configuration preview'])
+        self.assertEqual(report['Input encoding inspection']['source']['decoding'], 'strict')
+        self.assertFalse(report['Input encoding inspection']['target']['fallback_used'])
         self.assertEqual(len(report['Preference evidence catalog']['preferences']), 2)
         self.assertFalse(report['Preference evidence catalog']['active_writes_supported'])
         self.assertEqual(before, [p.read_bytes() for p in (self.source, self.target)])

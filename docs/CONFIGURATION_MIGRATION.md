@@ -52,6 +52,11 @@ and key names remain visible, so treat reports as private metadata.
 
 - Explicit regular files only, no symlink file inputs; no automatic file discovery.
 - UTF-8 with optional BOM, LF/CRLF and full-line `;`/`#` comments supported.
+- CLI `input_provenance` and the GUI **Input encoding inspection** report the
+  source and target separately: strict UTF-8 validation, BOM presence, byte count,
+  and no decoding fallback. These fields come from the same bytes parsed for the
+  comparison. They do not detect the file’s historical encoding or disclose paths
+  or unknown values. Invalid UTF-8 still stops preview and staging export.
 - Maximum 4 MiB per input. Legacy encodings require conversion of a private copy.
 - Duplicate case-insensitive sections/keys, DEFAULT inheritance, NUL, bare keys,
   malformed section headers, indented entries/continuation lines and unsupported

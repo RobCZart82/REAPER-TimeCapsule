@@ -72,6 +72,47 @@ class ConfigurationMigrationTests(unittest.TestCase):
         self.assertEqual(self.preview()['summary']['candidate'], 1)
         self.assertNotIn('%(password)s', json.dumps(self.preview()))
 
+    def test_encoding_provenance_comes_from_each_input_without_private_values(self):
+        self.write('\ufeff[REAPER]\r\ntinttcp=0\r\nunknown=PRIVATE_árvíz\r\n')
+        before = {p: (p.read_bytes(), p.stat().st_mtime_ns) for p in (self.old, self.new)}
+        report = self.preview()
+        for role, path, bom in (('source', self.old, True), ('target', self.new, False)):
+            provenance = report['input_provenance'][role]
+            self.assertEqual(provenance['encoding'], 'utf-8')
+            self.assertEqual(provenance['utf8_bom'], bom)
+            self.assertEqual(provenance['bytes_read'], len(before[path][0]))
+            self.assertEqual(provenance['decoding'], 'strict')
+            self.assertFalse(provenance['fallback_used'])
+        self.assertNotIn('PRIVATE', json.dumps(report))
+        self.assertNotIn(str(self.root), json.dumps(report))
+        self.assertEqual(before, {p: (p.read_bytes(), p.stat().st_mtime_ns) for p in before})
+
+    def test_uncertain_encoding_never_yields_candidates_or_staging(self):
+        from reaper_timecapsule.config_staging import export_preferences
+        staging_tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(staging_tmp.cleanup)
+        stage = Path(staging_tmp.name).resolve() / 'TimeCapsule-Staging'
+        stage.mkdir()
+        archive = stage / 'test.timecapsule-stage.zip'
+        valid = b'[REAPER]\ntinttcp=0\n'
+        for role in ('source', 'target'):
+            for raw in (b'[REAPER]\ntinttcp=0\nunknown=PRIVATE_\xe9\n',
+                        '[REAPER]\ntinttcp=0\n'.encode('utf-16'),
+                        b'[REAPER]\ntinttcp=0\nunknown=\xc3\n'):
+                with self.subTest(role=role, raw=raw):
+                    self.old.write_bytes(raw if role == 'source' else valid)
+                    self.new.write_bytes(raw if role == 'target' else valid.replace(b'=0', b'=1'))
+                    before = [p.read_bytes() for p in (self.old, self.new)]
+                    with self.assertRaisesRegex(ValueError, 'must be UTF-8') as error:
+                        self.preview()
+                    self.assertNotIn('PRIVATE', str(error.exception))
+                    with self.assertRaisesRegex(ValueError, 'must be UTF-8'):
+                        export_preferences(self.old, self.new, archive,
+                                           selections=['reaper/tinttcp'], opt_in=True,
+                                           source_version='7.82', target_version='7.82')
+                    self.assertFalse(archive.exists())
+                    self.assertEqual(before, [p.read_bytes() for p in (self.old, self.new)])
+
     def test_malformed_ambiguous_and_multiline_fail_closed(self):
         for data in ('tinttcp=0', '[REAPER]\nSECRET', '[REAPER]\ntinttcp=0\nTINTTCP=1',
                      '[REAPER]\na=1\n[reaper]\nb=2', '[DEFAULT]\ntinttcp=0',
@@ -123,6 +164,7 @@ class ConfigurationMigrationTests(unittest.TestCase):
         result = subprocess.run(command, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(json.loads(result.stdout)['read_only'])
+        self.assertEqual(json.loads(result.stdout)['input_provenance']['source']['decoding'], 'strict')
         self.write('[REAPER]\nPRIVATE_SECRET')
         result = subprocess.run(command, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)

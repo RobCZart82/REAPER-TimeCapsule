@@ -160,6 +160,8 @@ eltérésjelentést készít. Csak pontosan jóváhagyott szakasz-, kulcs- és �
 lehetnek jelöltek; az ismeretlen kulcsok felülvizsgálatot igényelnek, a hardver-,
 platform-, plugincache- és privát állapotadatok kizártak. A bemenetek és az aktív
 REAPER-erőforrásmappa változatlanok maradnak. Aktív összefésülés nincs megvalósítva.
+A jelentés mindkét bemenet szigorú UTF-8-ellenőrzését, BOM-jelenlétét és bájtszámát
+rögzíti. Nem támogatott kódolásnál az összehasonlítás leáll; nincs csendes átalakítás.
 
 A `theme-preview` forrás-, gyári és cél-ColorThemes mappákat hasonlít össze:
 azonosítja a bájtszinten egyező csomagolt gyári témákat, módosított változatokat,
