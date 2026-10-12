@@ -89,7 +89,7 @@ class App(tk.Tk):
         self.path_labels, self.path_entries, self.browse_buttons = [], [], []
         for index, (label, variable, chooser) in enumerate((
             ("REAPER resource folder", self.source, filedialog.askdirectory),
-            ("Snapshot ZIP", self.archive, lambda: filedialog.asksaveasfilename(defaultextension=".zip", filetypes=[("ZIP files", "*.zip")])) ,
+            ("Snapshot ZIP", self.archive, lambda: filedialog.asksaveasfilename(defaultextension=".zip", filetypes=[("ZIP files", "*.zip")])),
             ("Restore to NEW folder", self.destination, self._select_restore_destination),
         )):
             caption = ttk.Label(paths, text=label)
