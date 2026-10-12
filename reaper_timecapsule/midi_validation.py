@@ -46,7 +46,16 @@ def _text(source: Path, relative: str, problems: list[dict], problem_count: list
             data = stream.read(MAX_TEXT_BYTES + 1)
         if len(data) > MAX_TEXT_BYTES:
             raise ValueError("file exceeds 8 MiB parser limit")
-        return data.decode("utf-8-sig", errors="replace")
+        try:
+            return data.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            _record_problem(problems, problem_count, {
+                "file": relative,
+                "problem": "Invalid UTF-8 bytes replaced for static inspection; text encoding is uncertain.",
+                "encoding": "utf-8-sig",
+                "decoding": "replacement",
+            })
+            return data.decode("utf-8-sig", errors="replace")
     except (OSError, ValueError) as exc:
         _record_problem(problems, problem_count, {"file": relative, "problem": str(exc)})
         return None
