@@ -88,12 +88,14 @@ def parse_profile(config_file: Path) -> dict:
     except OSError:
         return _empty_profile("unreadable", "Could not open reapack.ini")
 
+    decoding_notes = []
     try:
         text = contents.decode("utf-8-sig")
     except UnicodeDecodeError:
         # Win32 legacy INI files may use Windows ANSI encoding. Preserve bytes
         # elsewhere in the backup; this fallback is for display only.
         text = contents.decode("cp1252", errors="replace")
+        decoding_notes.append("UTF-8 decoding failed; cp1252 fallback used for display only. Original encoding is uncertain and source bytes are unchanged.")
 
     config = configparser.RawConfigParser(
         interpolation=None, strict=True, delimiters=("=",),
@@ -102,7 +104,9 @@ def parse_profile(config_file: Path) -> dict:
     try:
         config.read_string(text)
     except (configparser.Error, ValueError):
-        return _empty_profile("invalid", "INI syntax not recognized; saved original remains available")
+        result = _empty_profile("invalid", "INI syntax not recognized; saved original remains available")
+        result["notes"] = decoding_notes + result["notes"]
+        return result
 
     raw_version = config.get("general", "version", fallback=None)
     try:
@@ -113,6 +117,7 @@ def parse_profile(config_file: Path) -> dict:
         return {
             **_empty_profile("unsupported", "Unsupported ReaPack configuration version"),
             "configuration_version": version,
+            "notes": decoding_notes + ["Unsupported ReaPack configuration version"],
         }
 
     defaults = {
@@ -122,7 +127,7 @@ def parse_profile(config_file: Path) -> dict:
         "expand_search_synonyms": ("browser", "synonyms", True),
     }
     options = {}
-    notes = []
+    notes = list(decoding_notes)
     for label, (section, key, default) in defaults.items():
         raw_value = config.get(section, key, fallback=None)
         value = _boolean(raw_value, default)
@@ -185,7 +190,7 @@ def parse_profile(config_file: Path) -> dict:
     if missing_or_invalid:
         notes.append(f"{missing_or_invalid} malformed or missing repository record(s)")
     # A recognized profile can contain zero remotes; do not invent defaults.
-    status = "parsed" if missing_or_invalid == 0 and all(
+    status = "parsed" if not decoding_notes and missing_or_invalid == 0 and all(
         row["value"] is not None for row in options.values()
     ) else "partial"
     return {
@@ -305,3 +310,4 @@ def inspect_registry(database_path: Path, *, control=None, query_timeout=5.0) ->
         if timed_out:
             return _empty_registry("timed-out", "Registry query exceeded the inspection time budget")
         return _empty_registry("invalid", "Could not read a consistent ReaPack 1.x registry")
+
