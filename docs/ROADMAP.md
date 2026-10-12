@@ -1,6 +1,6 @@
 # REAPER Time Capsule — egységes fejlesztési és kiadási terv
 
-Frissítve: **2026-10-12**. Ellenőrzött main: `c4e266f91398b04f4ae64da698e54c44032bb1c7`.
+Frissítve: **2026-10-12**. Ellenőrzött main: `d2542e4f446bf84cf4f7e996cc52e07b6b307577`.
 Ez az egyetlen végrehajtási terv. A [release readiness](RELEASE_READINESS.md)
 a megvalósított garanciák technikai háttéranyaga; a
 [korábbi audit](AUDIT_REVIEW_2026-10-11.md) történeti bizonyíték, nem párhuzamos feladatlista.
@@ -14,8 +14,8 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
   A későbbi main-javítások ettől még nem publikált release-ek.
 - E tervmódosítás előtti pillanatképben nincs nyitott PR; issue [#3](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/3)
   és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
-- Main [Tests 38231756996](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38231756996)
-  és [Desktop builds 38231757016](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38231757016): PASS.
+- Main [Tests 38233328054](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38233328054)
+  és [Desktop builds 38233328182](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38233328182): PASS.
 - Legutóbbi helyi Windows/Python 3.13 suite: **220 teszt OK, 13 skip**.
   Szintetikus adatok, dedikált munkamappa; sandboxon kívüli futás az ideiglenesútvonal-korlát miatt.
 - Tisztagépes telepítés, kézi GUI, valódi FAT/exFAT/hálózati kötet és izolált REAPER:
@@ -38,6 +38,17 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
 Ezeket ne nyissuk újra reprodukció nélkül. Az összes egyszerű ciklus felsorolása,
 általános encoding-felismerés és teljes build-reprodukálhatóság nincs megvalósítva.
 
+## Legutóbbi repository-felülvizsgálat
+
+A 2026-10-12-i felülvizsgálat a main kódját, CLI/GUI belépési pontokat,
+archiválást/restore-t, auditokat, migrációt/staginget, build/CI konfigurációt és
+dokumentációs állapotot vizsgálta. A változtatás előtti macOS suite: **220 teszt OK**;
+a config-provenance változtatás utáni suite: **222 teszt OK**.
+A config-preview külön forrás/cél kódolási provenanciát ad (szigorú UTF-8,
+BOM, bájtszám, fallback nélkül); hibás UTF-8/UTF-16/legacy bemenet továbbra leállítja
+a preview-t és staginget. Ez nem általános encoding-felismerés. Kézi tisztagépes és
+REAPER-runtime elfogadás ettől még NOT RUN. A szintetikus tesztek privát profilt nem használnak.
+
 ## Kiadási határ
 
 A következő korlátozott béta alapígérete: felmérés, ellenőrzött mentés és
@@ -57,7 +68,7 @@ Linux desktop-csomag külön későbbi munka; Linux jelenleg source-only.
 | 1 | **Következő kiadási kapu: csomagolt alapfolyamat — nyitott** (TC-001/003/004/005/006/010/021) | Friss Windows/macOS csomag, eldobható profil: backup → verify → új mappás restore; bájt/hash-egyezés. Üres kiválasztás, könyvtár, sérült ZIP, meglévő cél, megszakítás és takarítás, natív nevek. Platformonként PASS/FAIL/NOT RUN, csomag és commit azonosító. |
 | 2 | **Következő kiadási kapu: kézi GUI — nyitott** (TC-011/021) | Scan, File policies, MIDI/ReaPack, Config Preview/staging, verify/restore, teljes export, fájlválasztók; nagy jelentések, görgetés, reagálás és macOS natív About. Tiszta támogatott környezetben kézi bizonyíték. |
 | 3 | **Fájlrendszer-validálás — nyitott** (TC-008/015/017/020) | Valódi FAT/exFAT és kiválasztott hálózati kötet, hosszú útvonal, ENOSPC/jogosultsági hiba/megszakítás. Nincs csendes kihagyás/felülírás; unsupported eset leáll. A nem validált köteteket a kiadási támogatási körből ki kell zárni vagy korlátként egyértelműen jelölni. |
-| 4 | **Célzott fejlesztés — részben kész** (TC-007/013/016/018, külső #8/#15/#16/#19) | MIDI-gráf és MIDI/ReaPack encoding-diagnosztika kész. Következő: regisztrációformák és hibás/olvashatatlan bemenetek; config encoding-provenance; GUI/CLI limitösszegzés. Nagy registry benchmark után döntsünk SQL-optimalizálásról; read-only/deadline/cancel megmarad. Csak reprodukált hibára algoritmusjavítás. |
+| 4 | **Célzott fejlesztés — részben kész** (TC-007/013/016/018, külső #8/#15/#16/#19) | MIDI-gráf, MIDI/ReaPack encoding-diagnosztika és config encoding-provenance kész. Következő: regisztrációformák és hibás/olvashatatlan bemenetek; GUI/CLI limitösszegzés. Nagy registry benchmark után döntsünk SQL-optimalizálásról; read-only/deadline/cancel megmarad. Csak reprodukált hibára algoritmusjavítás. |
 | 5 | **Dokumentáció és kiadásjelölt — nyitott** (TC-016/022/024) | Verzióválasztás (új béta vagy 1.0.0), changelog/release notes, README EN/HU, PDF/képek és About egyezzen a csomaggal. GPL/runtime notice, csomagmanifest, ellenőrzőösszegek és unsigned státusz ellenőrzése; upstream licencek rögzítése külön reprodukálhatósági feladat. |
 | 6 | **Végső kiadási kapu — nyitott** | A pontos candidate teljes CI-mátrixa és csomagolt self-test PASS; letölthető csomagok tisztagépes install/first-launch/backup/restore PASS. Main szabályok/required checks/force-push védelem ellenőrzése. Nincs ismert kritikus/magas hiba a vállalt folyamatokban, nincs privát adat a csomagban; publikálás külön döntés. |
 | 7 | **Külön funkcionális mérföldkövek — nyitott** (TC-012/013/014) | #3: igazolt toolbar/icon formátum és izolált runtime próba. #4: explicit opt-in, teljes ellenőrzött rollback, target fingerprint/conflict, atomic apply/recovery és eldobhatóprofil-tesztek. ReaPack telepítés/elérhetőség külön specifikáció; audit nem állíthat működő telepítést. |
@@ -150,7 +161,7 @@ nem minden profil/fájlrendszer általános tanúsítását. A státuszok a lent
 | #13 | Nem igazolt kommenthiba | A komment 32060-ra korlátozott piano-roll feldolgozást és más sectionök óvatosságát írja le, összhangban a kóddal. Bővítés issue #3-ban csak igazolt formátummal. |
 | #14 | Javított stíluseltérés | PR #62 eltávolította a Snapshot ZIP sor vessző előtti szóközét; nem szintaktikai vagy funkcionális bug. |
 | #15 | Hasznos diagnosztikai ötlet | A verifier felsorolt parser/ZIP kivételeket normalizál; I/O hibatípusokat nem nyel el általánosan. Opcionális fejlesztői hibakategória/debug ok vizsgálandó, privát tartalom kiszivárogtatása és felhasználói traceback nélkül. |
-| #16 | Részben hasznos kódolási kockázat | Érvényes UTF-8 először sikeresen dekódolódik; cp1252 csak UnicodeDecodeError után jön. Nem változtat archivált bájtokat, de sérült/nem támogatott encoding félreértelmezett leltárt adhat. PR #59: MIDI-dekódolási figyelmeztetés; PR #60: ReaPack cp1252 fallback notes és partial státusz; UTF-8/BOM/legacy/sérült bájt fixture-ek. Config-migráció és általános encoding-felismerés külön nyitott. |
+| #16 | Részben hasznos kódolási kockázat | Érvényes UTF-8 először sikeresen dekódolódik; cp1252 csak UnicodeDecodeError után jön. Nem változtat archivált bájtokat, de sérült/nem támogatott encoding félreértelmezett leltárt adhat. PR #59: MIDI-dekódolási figyelmeztetés; PR #60: ReaPack cp1252 fallback notes és partial státusz; UTF-8/BOM/legacy/sérült bájt fixture-ek. Config-migráció szigorú UTF-8 provenanciája kész; általános encoding-felismerés külön nyitott. |
 | #17 | Cáfolt None-kezelési hiány | Mind az action-, mind a menüolvasó hívó `contents is not None` ellenőrzést használ. Olvashatatlan bemenet jelentett probléma, nem bizonyított AttributeError. |
 | #18 | Nem igazolt Linux-default bug | A fix `~/.config/REAPER` alapútvonal létezik a kódban, de a jelentés nem igazol alternatív REAPER-konvenciót. Későbbi opt-in felderítéshez hivatalos/eldobható REAPER-bizonyíték, portable/XDG eset és explicit felhasználói forrásválasztás kell. |
 | #19 | Dokumentációban már megoldott, GUI/CLI javítható | `RESOURCE_BUDGETS.md` tartalmazza a 200000 rekord / 200001 ZIP-member / 8 GiB / 32 GiB / 16 MiB / 64 MiB limiteket. Egységes felhasználói limitösszegzés még hasznos. |

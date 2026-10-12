@@ -12,7 +12,7 @@ BLOCKED = re.compile(
     r'linux|win32|win64|macos|osx|hardware', re.I)
 
 
-def _read(path, *, with_digest=False):
+def _read(path, *, with_digest=False, with_provenance=False):
     path = Path(path)
     if path.is_symlink() or not path.is_file():
         raise ValueError('Configuration must be a regular non-symlink file')
@@ -56,6 +56,12 @@ def _read(path, *, with_digest=False):
             raise ValueError(f'Malformed configuration at line {number}')
     if not sections:
         raise ValueError('Configuration has no sections')
+    if with_provenance:
+        return entries, {
+            'encoding': 'utf-8', 'utf8_bom': raw.startswith(b'\xef\xbb\xbf'),
+            'decoding': 'strict', 'fallback_used': False, 'bytes_read': len(raw),
+            'basis': 'validated input bytes; not original encoding detection',
+        }
     return (entries, hashlib.sha256(raw).hexdigest()) if with_digest else entries
 
 
@@ -66,8 +72,11 @@ def preview_migration(source, target, *, source_version=None, target_version=Non
     Only identical REAPER 5+ versions permit approved candidates. A candidate is
     still a proposal requiring review, never permission to overwrite a target.
     """
-    old, new = _read(source), _read(target)
-    return _compare_entries(old, new, source_version, target_version)
+    old, source_provenance = _read(source, with_provenance=True)
+    new, target_provenance = _read(target, with_provenance=True)
+    report = _compare_entries(old, new, source_version, target_version)
+    report['input_provenance'] = {'source': source_provenance, 'target': target_provenance}
+    return report
 
 
 def _compare_entries(old, new, source_version, target_version):

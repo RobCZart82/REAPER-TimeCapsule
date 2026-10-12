@@ -363,6 +363,7 @@ class App(tk.Tk):
             "Configuration preview": "Read-only; neither file has been modified.",
             "Version provenance": "Caller supplied; executable versions are not verified.",
             "Version compatible": report["version_compatible"],
+            "Input encoding inspection": report["input_provenance"],
             "Summary": report["summary"],
             "Changes": report["changes"],
             "Entries": report["entries"],
