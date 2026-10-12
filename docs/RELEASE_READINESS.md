@@ -1,4 +1,8 @@
-# First public beta readiness
+# Release readiness — implemented guarantees
+
+> Current execution order, release gates and audit status live in [ROADMAP.md](ROADMAP.md).
+> This document records technical guarantees and historical beta preparation, not a second task list.
+> Refreshed 2026-10-12 against main `35b7ded15a0b381d73c4eb5b1da24e9ea59e0b00`.
 
 Target scope: verified backup, read-only audits and recovery into a new external
 folder. Automatic active-configuration migration is outside the first beta scope.
@@ -116,23 +120,15 @@ in FIRST_BETA.md. This limited beta makes no automatic migration/runtime-workflo
 compatibility promise. The release artifacts and checksums are linked from the
 README; later releases require their own clean validation.
 
-## Development and validation before a later beta
+## Remaining release validation
 
-- Smoke-test large MIDI and ReaPack reports in packaged macOS and Windows builds,
-  including native scrolling and file dialogs; synthetic Tk tests do not replace this.
-- Verify toolbar/icon references from reliable REAPER format evidence and design
-  a disposable REAPER integration test. Static audit does not execute or validate actions.
-- Keep configuration preview and staging read-only. Expand the two-key allowlist
-  only with exact evidence and isolated runtime validation; active apply and rollback
-  remain out of scope until separately designed and tested.
-- Treat ReaPack 2.x parsing, package installation and synchronization as separate
-  future work; the current verified profile/registry support is ReaPack 1.x.
-- Validate on clean supported macOS and Windows environments, and broaden checks
-  for removable/network filesystems, destination path limits and failure recovery.
-- Refresh the bilingual PDF guides, screenshots, release notes and package manifests
-  together when the next beta candidate is ready. Do not publish a release from this
-  checklist alone.
+Use [ROADMAP.md — Egyetlen végrehajtási sorrend](ROADMAP.md#egyetlen-végrehajtási-sorrend)
+for the current seven-step plan and acceptance criteria. Packaged clean-machine
+backup/verify/restore, manual GUI checks and real-volume validation remain without
+recorded acceptance evidence in this update. Current main CI is green; this does
+not certify a new release.
 
-Green CI and synthetic tests are necessary but do not replace these real-application
-and clean-environment checks. Full rollback, active configuration merge and automatic
-ReaPack installation remain separate future milestones.
+A later limited beta may retain explicit static-audit/read-only migration limits.
+Issue #3 toolbar/runtime and issue #4 active apply/rollback remain separate milestones.
+Version selection, bilingual documentation, package contents/checksums and final
+candidate validation must precede a separate publication decision.
