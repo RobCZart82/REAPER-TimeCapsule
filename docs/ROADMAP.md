@@ -123,6 +123,26 @@ ellenőrzött alapcommithoz tartoznak.
 | #18 | Nem igazolt Linux-default bug | A fix `~/.config/REAPER` alapútvonal létezik a kódban, de a jelentés nem igazol alternatív REAPER-konvenciót. Későbbi opt-in felderítéshez hivatalos/eldobható REAPER-bizonyíték, portable/XDG eset és explicit felhasználói forrásválasztás kell. |
 | #19 | Dokumentációban már megoldott, GUI/CLI javítható | `RESOURCE_BUDGETS.md` tartalmazza a 200000 rekord / 200001 ZIP-member / 8 GiB / 32 GiB / 16 MiB / 64 MiB limiteket. Egységes felhasználói limitösszegzés még hasznos. |
 
+### Elvégzett javítás: a felmérési rekordkeret megkerülése (2026-10-12)
+
+- Alap: `26451c9d59c01ea1edf167b6bae4701acc11bea0`; TC-008/TC-021, a
+  fenti 2. prioritás erőforrás-határvizsgálata.
+- Reprodukált hiba: a `MAX_FILES` ellenőrzés csak a fájlciklusban futott,
+  a könyvtárként jelentett linkek/reparse pontok korlátlanul bővíthették a leltárt.
+- Javítás: minden leltárrekord hozzáadásakor közös keretellenőrzés. Túllépéskor
+  nincs részleges eredmény és a backup még a parserleltár/célmappa/staging előtt leáll.
+  Linkcélok olvasása és az üres normál könyvtárak rekordként számolása nem szükséges.
+- Regresszió: `tests/test_scan_budget.py`, öt szintetikus teszt.
+  Javítás előtt három túllépési eset FAIL, két kontroll PASS;
+  javítás után 5/5 PASS. A junction-esetek attribútumszimulációt használnak.
+- Helyi Windows/Python 3.13 teljes suite: 197 teszt, OK, 13 skip.
+  A sandbox ideiglenes útvonal-hozzáférési korlátja miatt a sikeres futás
+  sandboxon kívül, kizárólag dedikált szintetikus munkamappában történt.
+  Natív macOS/Linux, Python 3.10/3.12 és csomagolt GUI: a PR CI-je ellenőrizze.
+- Valódi cserélhető/hálózati kötet és élő REAPER: NOT RUN. Üreskönyvtár-bejárás,
+  általános CPU/memóriabudget és konfigurálható limitek továbbra nyitottak;
+  TC-008 ettől részben javított marad.
+
 ### Ellenőrzési napló és munkaszabály
 
 - Kód/teszt/docs olvasás az alapcommitról; az átadott külső jelentés
