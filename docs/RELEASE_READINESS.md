@@ -2,7 +2,7 @@
 
 > Current execution order, release gates and audit status live in [ROADMAP.md](ROADMAP.md).
 > This document records technical guarantees and historical beta preparation, not a second task list.
-> Refreshed 2026-10-12 against main `35b7ded15a0b381d73c4eb5b1da24e9ea59e0b00`.
+> Refreshed 2026-10-12 against main `c4e266f91398b04f4ae64da698e54c44032bb1c7`.
 
 Target scope: verified backup, read-only audits and recovery into a new external
 folder. Automatic active-configuration migration is outside the first beta scope.

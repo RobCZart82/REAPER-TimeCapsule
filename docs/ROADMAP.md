@@ -1,6 +1,6 @@
 # REAPER Time Capsule — egységes fejlesztési és kiadási terv
 
-Frissítve: **2026-10-12**. Ellenőrzött main: `35b7ded15a0b381d73c4eb5b1da24e9ea59e0b00`.
+Frissítve: **2026-10-12**. Ellenőrzött main: `c4e266f91398b04f4ae64da698e54c44032bb1c7`.
 Ez az egyetlen végrehajtási terv. A [release readiness](RELEASE_READINESS.md)
 a megvalósított garanciák technikai háttéranyaga; a
 [korábbi audit](AUDIT_REVIEW_2026-10-11.md) történeti bizonyíték, nem párhuzamos feladatlista.
@@ -14,8 +14,8 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
   A későbbi main-javítások ettől még nem publikált release-ek.
 - E tervmódosítás előtti pillanatképben nincs nyitott PR; issue [#3](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/3)
   és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
-- Main [Tests 38211571830](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38211571830)
-  és [Desktop builds 38211571816](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38211571816): PASS.
+- Main [Tests 38231756996](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38231756996)
+  és [Desktop builds 38231757016](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38231757016): PASS.
 - Legutóbbi helyi Windows/Python 3.13 suite: **220 teszt OK, 13 skip**.
   Szintetikus adatok, dedikált munkamappa; sandboxon kívüli futás az ideiglenesútvonal-korlát miatt.
 - Tisztagépes telepítés, kézi GUI, valódi FAT/exFAT/hálózati kötet és izolált REAPER:
@@ -32,6 +32,8 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
 | [#58](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/58) | MIDI-gráf ellenőrzése; visszaélszám pontosítása | `test_midi_graph.py`, 512 gráf, 3000 elemű lánc, részletkorlát |
 | [#59](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/59) | MIDI hibás UTF-8 olvasás már figyelmeztet | `test_midi_encoding.py`; eredeti bájtok változatlanok |
 | [#60](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/60) | ReaPack cp1252 fallback bizonytalanság jelzett, partial státusz | `test_reapack_encoding.py`; URL-titokszűrés megmarad |
+| [#61](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/61) | Egyetlen fejlesztési terv és összehangolt kiadási feltételek | ROADMAP és RELEASE_READINESS |
+| [#62](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/62) | Snapshot ZIP sor vessző előtti szóköze eltávolítva | Csak formázás; PR és main CI PASS |
 
 Ezeket ne nyissuk újra reprodukció nélkül. Az összes egyszerű ciklus felsorolása,
 általános encoding-felismerés és teljes build-reprodukálhatóság nincs megvalósítva.
@@ -62,6 +64,22 @@ Linux desktop-csomag külön későbbi munka; Linux jelenleg source-only.
 
 A 4. lépés fejlesztése folytatható a kézi/platformpróbák mellett. A nyitott
 tétel csak bizonyítékkal lezárható; egy korlát dokumentálása nem funkciómegvalósítás.
+
+## A dokumentáció frissítési szabálya
+
+- Minden repository-munkában ellenőrizzük, érinti-e a változás a tervet, auditstátuszt,
+  felhasználói viselkedést, korlátokat vagy kiadási feltételeket. Az érintett dokumentáció
+  ugyanabban a PR-ben frissüljön; a csak formázási változás státuszát a következő
+  tervfrissítéskor is elegendő rögzíteni.
+- Új bizonyíték, lezárt mérföldkő, release, támogatottplatform-változás vagy kiadási
+  döntés esetén frissítsük az érintett státuszokat és hivatkozásokat. Ne legyen
+  külön párhuzamos feladatlista a release-dokumentumban.
+- Az ellenőrzött main-SHA és a hozzá tartozó CI egy dátumozott pillanatkép,
+  nem folyamatos élő állapot. Egy csak dokumentációt módosító merge miatt nem
+  szükséges önmagát követő újabb dokumentációs PR; a következő érdemi felülvizsgálat
+  rögzítse az akkori main-SHA-t. Új tesztet kizárólag tényleges futás alapján írjunk PASS-nak.
+- A szabály a repository-n végzett munka része; önmagában nem indít időzített
+  háttérfigyelést vagy automatikus publikálást.
 
 ## Munkaszabály és bizonyíték
 
@@ -130,7 +148,7 @@ nem minden profil/fájlrendszer általános tanúsítását. A státuszok a lent
 | #11 | Alacsony stílusötlet | A fájlazonosság-lambda kiemelése csak kapcsolódó karbantartáskor; nem változtatja a backup korrekt működését. |
 | #12 | Cáfolt redundanciaállítás | Forrás konfigurációszülője, cél konfigurációszülője és alapértelmezett erőforrás három külön tiltott határ. Refaktor nem törölhet határellenőrzést. |
 | #13 | Nem igazolt kommenthiba | A komment 32060-ra korlátozott piano-roll feldolgozást és más sectionök óvatosságát írja le, összhangban a kóddal. Bővítés issue #3-ban csak igazolt formátummal. |
-| #14 | Valós, alacsony stíluseltérés | A 92. sor `)) ,` formázása későbbi kis takarítás; nem szintaktikai vagy funkcionális bug. |
+| #14 | Javított stíluseltérés | PR #62 eltávolította a Snapshot ZIP sor vessző előtti szóközét; nem szintaktikai vagy funkcionális bug. |
 | #15 | Hasznos diagnosztikai ötlet | A verifier felsorolt parser/ZIP kivételeket normalizál; I/O hibatípusokat nem nyel el általánosan. Opcionális fejlesztői hibakategória/debug ok vizsgálandó, privát tartalom kiszivárogtatása és felhasználói traceback nélkül. |
 | #16 | Részben hasznos kódolási kockázat | Érvényes UTF-8 először sikeresen dekódolódik; cp1252 csak UnicodeDecodeError után jön. Nem változtat archivált bájtokat, de sérült/nem támogatott encoding félreértelmezett leltárt adhat. PR #59: MIDI-dekódolási figyelmeztetés; PR #60: ReaPack cp1252 fallback notes és partial státusz; UTF-8/BOM/legacy/sérült bájt fixture-ek. Config-migráció és általános encoding-felismerés külön nyitott. |
 | #17 | Cáfolt None-kezelési hiány | Mind az action-, mind a menüolvasó hívó `contents is not None` ellenőrzést használ. Olvashatatlan bemenet jelentett probléma, nem bizonyított AttributeError. |
