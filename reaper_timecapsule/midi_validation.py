@@ -79,7 +79,11 @@ def _action_records(text: str, filename: str, problems: list[dict], problem_coun
 
 
 def _action_cycles(graph, control=None):
-    """Iterative DFS: deep action chains cannot exhaust Python recursion."""
+    """Return bounded cycle witnesses and the complete DFS back-edge count.
+
+    The count detects cyclic dependencies; it is not an enumeration of all
+    simple cycles. Iterative DFS avoids recursion limits on deep action chains.
+    """
     state, cycles = {}, []
     count = 0
     for origin in sorted(graph):
@@ -268,6 +272,7 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
         "menu_custom_references": sum(x["command"].startswith("_") for x in references),
         "duplicate_definitions": duplicates[:MAX_ISSUES],
         "dependency_cycles": cycles,
+        "cycle_count_semantics": "DFS back edges; not all simple cycles. Cycle witnesses may be truncated.",
         "unverified_numeric_commands": [{"section": section, "command": cmd}
                                         for section, cmd in sorted(numeric)[:MAX_ISSUES]],
         "issue_counts": {"duplicates": len(duplicates), "cycles": cycle_count,
@@ -295,3 +300,4 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
         "parse_problems": problems[:MAX_ISSUES],
         "note": "Static inspection only. Toolbar/icon bindings are not checked; verify action registration, icons and native extensions in REAPER after installing.",
     }
+
