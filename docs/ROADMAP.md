@@ -143,6 +143,28 @@ ellenőrzött alapcommithoz tartoznak.
   általános CPU/memóriabudget és konfigurálható limitek továbbra nyitottak;
   TC-008 ettől részben javított marad.
 
+### Elvégzett javítás: átmeneti HTTP-hiba a runtime-licenceknél (2026-10-12)
+
+- Alap: `0d8c02ce8a274dd21b8507d2e06cd382fdd51cf7`; TC-022 és a kiadási kapu CI-stabilitása.
+- Bizonyíték: a beolvasztás utáni
+  [macOS build 38206357459](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38206357459)
+  a runtime-licencek gyűjtésekor HTTP 429-cel leállt; ugyanakkor a tesztek és a
+  Windows build sikeresek voltak. Ez külső letöltési hiba, nem a scan-regresszió bukása.
+- Javítás: 429/500/502/503/504 esetén legfeljebb négy kísérlet, exponenciális
+  várakozás és numerikus/HTTP-dátum Retry-After, várakozásonként legfeljebb 30 s.
+  Egy kérés timeoutja 30 s, válaszmérete legfeljebb 1 MiB; legalább 100 bájt kell.
+  Permanent HTTP-hiba, nem HTTP hálózati hiba, túl rövid/nagy válasz vagy kimerített
+  próbák esetén a build továbbra leáll. Nincs hiányzó licenc átugrása, TLS-lazítás
+  vagy alternatív forrásból ellenőrizetlen helyettesítés.
+- A script importálása nem nyit GUI-t, nem ír fájlt és nem indít hálózati kérést.
+  A szükséges licencek és forrásjegyzék továbbra a tényleges build során készülnek.
+- Offline regresszió: `test_runtime_licenses.py`, 11/11 PASS, ideértve a
+  sikeres retryt, végleges hibát, próbák kimerítését és mind a tíz notice gyűjtését.
+  Teljes helyi Windows/Python 3.13 suite: 208 teszt, OK, 13 skip.
+- A valós hálózati letöltést és macOS/Windows csomagolást a PR CI-jével kell
+  ellenőrizni. A változó upstream master-licencek rögzítése és teljes build-
+  reprodukálhatóság külön TC-022 feladat marad; retry nem jelent tartalomhitelesítést.
+
 ### Ellenőrzési napló és munkaszabály
 
 - Kód/teszt/docs olvasás az alapcommitról; az átadott külső jelentés
