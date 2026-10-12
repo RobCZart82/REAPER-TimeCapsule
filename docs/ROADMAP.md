@@ -165,6 +165,24 @@ ellenőrzött alapcommithoz tartoznak.
   ellenőrizni. A változó upstream master-licencek rögzítése és teljes build-
   reprodukálhatóság külön TC-022 feladat marad; retry nem jelent tartalomhitelesítést.
 
+### Elvégzett ellenőrzés: MIDI-gráf és ciklusszám (2026-10-12)
+
+- Alap: `3d9c0d1daab73227a5c5618df38e26503ddaa9db`; TC-007/013 és a
+  3. prioritás gráfszemantikai ellenőrzése.
+- `test_midi_graph.py`: mind az 512 háromcsúcsú irányított gráf összevetése
+  független tranzitív lezárással; a nem csonkolt ciklusok minden éle ellenőrzött.
+  Különálló és átfedő ciklusok, aciklikus keresztél, 3000 csúcsú lánc és
+  részletkorlát mellett is teljes visszaélszám: PASS.
+- Ciklusdetektálási algoritmushiba nem reprodukálódott. A szám DFS-visszaéleket
+  jelent, nem minden egyszerű ciklust: egy háromciklusos fixture-nél két visszaél
+  van. Az új `cycle_count_semantics` jelentésmező ezt egyértelművé teszi;
+  a meglévő számlálók és cikluslista szerződése megmarad.
+- Helyi Windows/Python 3.13 teljes suite: 214 teszt, OK, 13 skip.
+  A dedikált szintetikus tesztmappa sandboxon kívül futott az útvonalelérés korlátja miatt.
+  Natív többi platform/csomagolás: a PR CI-je ellenőrizze.
+- További regisztrációformák, hibás/olvashatatlan bemenetek bővebb ellenőrzése,
+  toolbar/icon és valódi REAPER-runtime továbbra nyitott. TC-013 részben javított.
+
 ### Ellenőrzési napló és munkaszabály
 
 - Kód/teszt/docs olvasás az alapcommitról; az átadott külső jelentés
@@ -329,3 +347,4 @@ Publish `1.0.0` only when all of the following are true:
   environment are not guaranteed.
 - Green synthetic CI is necessary but does not replace clean-machine or isolated
   real-REAPER acceptance testing.
+
