@@ -14,8 +14,8 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
   A későbbi main-javítások ettől még nem publikált release-ek.
 - E tervmódosítás előtti pillanatképben nincs nyitott PR; issue [#3](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/3)
   és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
-- Main [Tests 38231756996](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38231756996)
-  és [Desktop builds 38231757016](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38231757016): PASS.
+- Main [Tests 38233328054](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38233328054)
+  és [Desktop builds 38233328182](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38233328182): PASS.
 - Legutóbbi helyi Windows/Python 3.13 suite: **220 teszt OK, 13 skip**.
   Szintetikus adatok, dedikált munkamappa; sandboxon kívüli futás az ideiglenesútvonal-korlát miatt.
 - Tisztagépes telepítés, kézi GUI, valódi FAT/exFAT/hálózati kötet és izolált REAPER:
