@@ -183,6 +183,20 @@ ellenőrzött alapcommithoz tartoznak.
 - További regisztrációformák, hibás/olvashatatlan bemenetek bővebb ellenőrzése,
   toolbar/icon és valódi REAPER-runtime továbbra nyitott. TC-013 részben javított.
 
+### Elvégzett javítás: MIDI-szöveg dekódolási bizonytalansága (2026-10-12)
+
+- Alap: `db3022e8567dc63189022e42eb181daab4aeac93`; 4. prioritás, új jelentés #16.
+- A MIDI-parser korábban jelzés nélkül helyettesítette az érvénytelen UTF-8
+  bájtokat. Most először szigorú UTF-8/BOM dekódolás történik; hiba esetén a
+  meglévő helyettesítő olvasás megmarad, de fájlonként kódolási figyelmeztetés,
+  `encoding` és `decoding` mező kerül a korlátozott parse-problémalistába.
+- Nincs automatikus cp1252-felismerési állítás vagy eredetifájl-átírás.
+  `test_midi_encoding.py`: UTF-8/BOM, valódi U+FFFD, legacy/sérült bájtok,
+  menüreferenciák megőrzése és változatlan forrásbájtok. Helyi Windows/Python 3.13:
+  217 teszt OK, 13 skip. Dedikált szintetikus tesztmappa sandboxon kívül futtatva.
+- ReaPack/config kódolási provenance és valódi profilok továbbra külön vizsgálat;
+  ez a MIDI-olvasási útvonal diagnosztikai javítása.
+
 ### Ellenőrzési napló és munkaszabály
 
 - Kód/teszt/docs olvasás az alapcommitról; az átadott külső jelentés
