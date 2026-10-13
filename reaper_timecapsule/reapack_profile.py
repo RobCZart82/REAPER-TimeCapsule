@@ -62,6 +62,7 @@ def _empty_profile(status: str, note: str = "") -> dict:
     return {
         "status": status,
         "configuration_version": None,
+        "repository_layout_recognized": False,
         "repositories": [],
         "repository_count": 0,
         "enabled_count": 0,
@@ -200,6 +201,7 @@ def parse_profile(config_file: Path) -> dict:
     return {
         "status": status,
         "configuration_version": version,
+        "repository_layout_recognized": True,
         "repositories": repositories,
         "repository_count": len(repositories),
         "enabled_count": sum(x["enabled"] for x in repositories),

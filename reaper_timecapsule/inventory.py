@@ -17,7 +17,7 @@ from .safe_paths import trusted_resource_file
 
 MAX_REAPACK_INI_BYTES = 2 * 1024 * 1024
 MAX_URLS = 1000
-URL_PATTERN = re.compile(r"https?://[^\s<>\"']+", flags=re.IGNORECASE)
+URL_PATTERN = re.compile(r"https?://[^\s<>\"'|]+", flags=re.IGNORECASE)
 EXTENSION_SUFFIXES = (".dylib", ".dll", ".so")
 
 
@@ -110,7 +110,7 @@ def build_inventory(source: Path, items: list[dict], *, control=None, include_mi
     # Legacy URL-only scan remains a compatibility fallback when an INI
     # predates the 1.x [remotes] section or uses an unknown format.
     repo_urls = ([x["index_url"] for x in profile["repositories"]]
-                 if profile["status"] == "parsed" else
+                 if profile["status"] == "parsed" or profile.get("repository_layout_recognized") else
                  _public_repo_urls(ini) if ini else [])
     menu_files = sorted(
         x for x in portable if x.lower().startswith("menusets/") and x.lower().endswith(".reapermenu")

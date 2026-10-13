@@ -54,9 +54,10 @@ nyitott PR; #3/#4 továbbra nyitott. A main Tests és Desktop builds PASS.
 A helyi kiinduló suite **222 teszt OK**. Reprodukált új hibamód: explicit hibás
 ReaPack auto-install override érvényes öröklésként jelent meg. Javítás után a
 rekord kihagyott, a profil partial és titokmentes számlálófigyelmeztetést ad;
+a felismert részleges repository-formátum leltára nem keres URL-t elutasított mezőkben;
 a hárommezős legacy rekord és 0/1/2 továbbra támogatott. A profilolvasó és URL-fallback
 méretellenőrzés után növekvő INI olvasása is korlátozott lett. Szintetikus
-regressziókkal a helyi suite **225 teszt OK**. Ez nem runtime vagy tisztagépes elfogadás.
+regressziókkal a helyi suite **226 teszt OK**. Ez nem runtime vagy tisztagépes elfogadás.
 
 ## Kiadási határ
 

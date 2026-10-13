@@ -140,6 +140,18 @@ class ReaPackProfileTests(unittest.TestCase):
                 self.assertNotIn("secret", str(parsed))
                 self.assertEqual(ini.read_bytes(), original)
 
+    def test_partial_profile_url_fallback_respects_remote_field_boundaries(self):
+        from reaper_timecapsule.inventory import build_inventory
+        for override in ("invalid", "https://secret.example/private.xml"):
+            with self.subTest(override=override):
+                self.put("reapack.ini", "[remotes]\nsize=1\n"
+                         "remote0=Good|https://user:password@good.example/real.xml?token=private|1|" + override + "\n")
+                report = build_inventory(self.root, [{"path": "reapack.ini", "policy": "keep", "size": 300}], include_midi=False)
+                self.assertEqual(report["reapack"]["profile"]["status"], "partial")
+                self.assertEqual(report["reapack"]["repository_index_urls"], [])
+                self.assertNotIn("secret.example", str(report))
+                self.assertNotIn("password", str(report))
+
     def test_valid_override_and_legacy_omission_remain_supported(self):
         for suffix, expected in (("", None), ("|0", False), ("|1", True), ("|2", None)):
             with self.subTest(suffix=suffix):
