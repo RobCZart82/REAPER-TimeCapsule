@@ -158,9 +158,12 @@ def _script_resolution(script_path: str, known_files: set[str]) -> str:
     parts = PurePosixPath(normalized).parts
     if not parts or ".." in parts:
         return "invalid-relative-path"
-    folded = {p.casefold() for p in known_files}
-    if normalized.casefold() in folded or ("Scripts/" + normalized).casefold() in folded:
+    candidates = (normalized, "Scripts/" + normalized)
+    if any(candidate in known_files for candidate in candidates):
         return "saved"
+    folded = {p.casefold() for p in known_files}
+    if any(candidate.casefold() in folded for candidate in candidates):
+        return "case-mismatch-requires-review"
     return "missing-from-backup"
 
 

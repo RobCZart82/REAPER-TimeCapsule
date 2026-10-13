@@ -59,6 +59,20 @@ class MIDIWorkflowValidationTests(unittest.TestCase):
         self.put("Scripts/my.lua", "-- a test script, not an executable fixture\n")
         self.assertEqual(self.report()["script_registration_issues"], [])
 
+    def test_script_case_mismatch_requires_review(self):
+        self.put("Scripts/Case.lua", "-- synthetic\n")
+        self.put("reaper-kb.ini", f'SCR 4 32060 "{GUID}" "Test" "Scripts/case.lua"\n')
+        result = self.report()
+        self.assertEqual(result["status"], "missing-dependencies")
+        self.assertEqual(result["script_registration_issues"][0]["reason"], "case-mismatch-requires-review")
+
+    def test_exact_script_names_and_relative_script_base_remain_saved(self):
+        self.put("Scripts/Case.lua", "-- synthetic\n")
+        for script_path in ("Scripts/Case.lua", "Case.lua", "Scripts\\Case.lua"):
+            with self.subTest(script_path=script_path):
+                self.put("reaper-kb.ini", f'SCR 4 32060 "{GUID}" "Test" "{script_path}"\n')
+                self.assertEqual(self.report()["script_registration_issues"], [])
+
     def test_absolute_script_reference_requires_remapping(self):
         self.put("reaper-kb.ini",
                  'SCR 4 32060 "' + GUID + '" "Custom: test.lua" "/Users/old/Library/Application Support/REAPER/Scripts/test.lua"\n')
