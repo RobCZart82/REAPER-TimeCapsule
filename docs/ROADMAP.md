@@ -1,6 +1,6 @@
 # REAPER Time Capsule — egységes fejlesztési és kiadási terv
 
-Frissítve: **2026-10-13**. Ellenőrzött main: `cc668fb8444a35075db179ccf55f851e0eea32b6`.
+Frissítve: **2026-10-13**. Ellenőrzött main: `c00060521a10f74a0e71e7ffc186393ebb4d3462`.
 Ez az egyetlen végrehajtási terv. A [release readiness](RELEASE_READINESS.md)
 a megvalósított garanciák technikai háttéranyaga; a
 [korábbi audit](AUDIT_REVIEW_2026-10-11.md) történeti bizonyíték, nem párhuzamos feladatlista.
@@ -14,8 +14,8 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
   A későbbi main-javítások ettől még nem publikált release-ek.
 - E tervmódosítás előtti pillanatképben nincs nyitott PR; issue [#3](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/3)
   és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
-- Main [Tests 38275695216](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38275695216)
-  és [Desktop builds 38275694994](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38275694994): PASS.
+- Main [Tests 38434520448](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38434520448)
+  és [Desktop builds 38434520559](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38434520559): PASS.
 - Legutóbbi helyi Windows/Python 3.13 suite: **220 teszt OK, 13 skip**.
   Szintetikus adatok, dedikált munkamappa; sandboxon kívüli futás az ideiglenesútvonal-korlát miatt.
 - Tisztagépes telepítés, kézi GUI, valódi FAT/exFAT/hálózati kötet és izolált REAPER:
@@ -59,6 +59,13 @@ a hárommezős legacy rekord és 0/1/2 továbbra támogatott. A profilolvasó é
 méretellenőrzés után növekvő INI olvasása is korlátozott lett. Szintetikus
 regressziókkal a helyi suite **226 teszt OK**. Ez nem runtime vagy tisztagépes elfogadás.
 
+A következő fejlesztés a 4. lépés GUI/CLI limitösszegzése: a csak tájékoztató
+`inspection-limits` parancs és az Inspection limits… GUI-gomb a tényleges kód-
+konstansokból mutatja a limiteket, profilolvasás/beállításváltoztatás nélkül.
+Kiinduló main: PR #65, mindkét CI PASS. Helyi suite: **229 teszt OK**;
+a CLI headless/olvasásmentes működése, a konstansok követése és a GUI-jelentés
+megőrzése tesztelt. Kézi GUI/tisztagépes elfogadás továbbra NOT RUN.
+
 ## Kiadási határ
 
 A következő korlátozott béta alapígérete: felmérés, ellenőrzött mentés és
@@ -78,7 +85,7 @@ Linux desktop-csomag külön későbbi munka; Linux jelenleg source-only.
 | 1 | **Következő kiadási kapu: csomagolt alapfolyamat — nyitott** (TC-001/003/004/005/006/010/021) | Friss Windows/macOS csomag, eldobható profil: backup → verify → új mappás restore; bájt/hash-egyezés. Üres kiválasztás, könyvtár, sérült ZIP, meglévő cél, megszakítás és takarítás, natív nevek. Platformonként PASS/FAIL/NOT RUN, csomag és commit azonosító. |
 | 2 | **Következő kiadási kapu: kézi GUI — nyitott** (TC-011/021) | Scan, File policies, MIDI/ReaPack, Config Preview/staging, verify/restore, teljes export, fájlválasztók; nagy jelentések, görgetés, reagálás és macOS natív About. Tiszta támogatott környezetben kézi bizonyíték. |
 | 3 | **Fájlrendszer-validálás — nyitott** (TC-008/015/017/020) | Valódi FAT/exFAT és kiválasztott hálózati kötet, hosszú útvonal, ENOSPC/jogosultsági hiba/megszakítás. Nincs csendes kihagyás/felülírás; unsupported eset leáll. A nem validált köteteket a kiadási támogatási körből ki kell zárni vagy korlátként egyértelműen jelölni. |
-| 4 | **Célzott fejlesztés — részben kész** (TC-007/013/016/018, külső #8/#15/#16/#19) | MIDI-gráf, MIDI/ReaPack encoding-diagnosztika és config encoding-provenance kész. Következő: regisztrációformák és hibás/olvashatatlan bemenetek; GUI/CLI limitösszegzés. Nagy registry benchmark után döntsünk SQL-optimalizálásról; read-only/deadline/cancel megmarad. Csak reprodukált hibára algoritmusjavítás. |
+| 4 | **Célzott fejlesztés — részben kész** (TC-007/013/016/018, külső #8/#15/#16/#19) | MIDI-gráf, MIDI/ReaPack encoding-diagnosztika és config encoding-provenance kész. Következő: regisztrációformák és hibás/olvashatatlan bemenetek; GUI/CLI limitösszegzés kész. Nagy registry benchmark után döntsünk SQL-optimalizálásról; read-only/deadline/cancel megmarad. Csak reprodukált hibára algoritmusjavítás. |
 | 5 | **Dokumentáció és kiadásjelölt — nyitott** (TC-016/022/024) | Verzióválasztás (új béta vagy 1.0.0), changelog/release notes, README EN/HU, PDF/képek és About egyezzen a csomaggal. GPL/runtime notice, csomagmanifest, ellenőrzőösszegek és unsigned státusz ellenőrzése; upstream licencek rögzítése külön reprodukálhatósági feladat. |
 | 6 | **Végső kiadási kapu — nyitott** | A pontos candidate teljes CI-mátrixa és csomagolt self-test PASS; letölthető csomagok tisztagépes install/first-launch/backup/restore PASS. Main szabályok/required checks/force-push védelem ellenőrzése. Nincs ismert kritikus/magas hiba a vállalt folyamatokban, nincs privát adat a csomagban; publikálás külön döntés. |
 | 7 | **Külön funkcionális mérföldkövek — nyitott** (TC-012/013/014) | #3: igazolt toolbar/icon formátum és izolált runtime próba. #4: explicit opt-in, teljes ellenőrzött rollback, target fingerprint/conflict, atomic apply/recovery és eldobhatóprofil-tesztek. ReaPack telepítés/elérhetőség külön specifikáció; audit nem állíthat működő telepítést. |
