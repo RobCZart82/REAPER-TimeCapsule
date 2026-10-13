@@ -281,3 +281,5 @@ Ellenőrzött kapszulából a `recovery-plan capsule.zip` csak olvasó [MIDI/Rea
 A Config Preview most már a pontos bizonyítékkatalógust is tartalmazza. Két bináris megjelenési beállítás jöhet szóba azonos, felhasználó által megadott REAPER-verzió mellett; a csak témákban dokumentált direktívák és minden ismeretlen kulcs felülvizsgálaton marad. A katalógus hivatkozik a hivatalos [REAPER témadokumentációra](https://www.reaper.fm/sdk/walter/images.php), és jelzi, hol nem bizonyít ez egyenértékű `reaper.ini`-kulcsot.
 
 A GitHub Actions-műveletek hivatalos kiadások teljes commitazonosítóihoz vannak rögzítve. A Dependabot hetente ellenőrzi a frissítéseket; a változtatásokat merge előtt PR-ban és CI-vel kell ellenőrizni.
+
+A GUI **Inspection limits…** gombja és a `python -m reaper_timecapsule inspection-limits` parancs megmutatja az aktuális build rögzített archívum-, MIDI-, ReaPack- és konfigurációvizsgálati korlátait. Nem olvasnak erőforrásfájlokat és nem módosítanak beállítást. A jelentésrészletek csonkolása eltér a bemenet elutasításától; ezek nem általános memória-/CPU-garanciák.

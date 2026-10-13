@@ -4,6 +4,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
+from .inspection_limits import inspection_limits_text
 from .background import BackgroundTask
 from .operation import OperationControl
 from .core import NonPortableNames, VERSION, default_resource, make_backup, preview, preview_backup, restore_backup, scan
@@ -83,6 +84,7 @@ class App(tk.Tk):
         header.pack(fill="x", pady=(0, 14))
         ttk.Label(header, text="REAPER Time Capsule — Smart Backup", font=("Arial", 17, "bold")).pack(side="left")
         ttk.Button(header, text="About", command=self._show_about).pack(side="right")
+        ttk.Button(header, text="Inspection limits…", command=self._show_limits).pack(side="right", padx=(0, 10))
         paths = ttk.Frame(body)
         paths.pack(fill="x")
         paths.columnconfigure(1, weight=1)
@@ -204,6 +206,9 @@ class App(tk.Tk):
             self.report_window.lift()
             return
         self.report_window = ReportBrowser(self, self.last_scan_report)
+
+    def _show_limits(self):
+        messagebox.showinfo("Inspection limits", inspection_limits_text(), parent=self)
 
     def _show_about(self):
         if self.about_window is not None and self.about_window.winfo_exists():

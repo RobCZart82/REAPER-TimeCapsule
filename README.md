@@ -274,3 +274,5 @@ A verified capsule can produce a read-only [MIDI/ReaPack recovery plan](docs/REC
 Configuration Preview now includes its exact evidence catalog. Only two binary appearance preferences are approved for consideration after matching caller-supplied REAPER versions; theme-only directives and every unknown key stay in review. The catalog cites the official [REAPER theme reference](https://www.reaper.fm/sdk/walter/images.php), while documenting where that evidence does not establish an equivalent `reaper.ini` key.
 
 GitHub Actions are pinned to full commit IDs from verified upstream releases. Dependabot checks weekly for action updates; review updates through a pull request and CI before merging.
+
+The GUI **Inspection limits…** button and `python -m reaper_timecapsule inspection-limits` show the fixed archive, MIDI, ReaPack and configuration inspection budgets for the current build. They read no resource files and change no settings. Report-detail truncation is distinct from input rejection; these budgets are not general memory/CPU guarantees.
