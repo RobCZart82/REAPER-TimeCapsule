@@ -41,6 +41,24 @@ configuration format may differ. The parser is intentionally limited to
 recognized **1.x** configuration versions (through format version 4).
 Unknown versions are kept unchanged in backup, but not claimed to be parsed.
 
+## Incomplete or changing configuration inputs
+
+An explicitly supplied auto-install override must be `0`, `1`, or `2`.
+An empty or otherwise invalid fourth field makes that repository record malformed:
+it is omitted from the interpreted repository list and the profile is `partial`
+with a count-only warning. A legacy record without a fourth field remains supported;
+it is represented as no override. Other valid repository records retain their order.
+No malformed value or credential-bearing URL is added to the warning.
+A recognized partial repository layout uses only its validated repository list,
+even when empty; it does not fall back to scanning rejected fields for URLs.
+Legacy URL-only scanning remains for unrecognized layouts and stops at `|` field boundaries.
+
+Both the profile parser and the legacy URL-only fallback read at most the 2 MiB
+INI limit plus one sentinel byte, even if the file grows after its initial size
+check. Oversize input yields `too-large` from the parser and no fallback URLs.
+This bounds those reads; it does not make a live, changing profile a transactional
+snapshot. Original backup bytes and read-only behavior are unchanged.
+
 ## Backup behavior
 
 | Resource | Action | Rationale |

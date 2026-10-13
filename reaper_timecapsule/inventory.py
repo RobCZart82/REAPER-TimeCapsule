@@ -17,7 +17,7 @@ from .safe_paths import trusted_resource_file
 
 MAX_REAPACK_INI_BYTES = 2 * 1024 * 1024
 MAX_URLS = 1000
-URL_PATTERN = re.compile(r"https?://[^\s<>\"']+", flags=re.IGNORECASE)
+URL_PATTERN = re.compile(r"https?://[^\s<>\"'|]+", flags=re.IGNORECASE)
 EXTENSION_SUFFIXES = (".dylib", ".dll", ".so")
 
 
@@ -30,7 +30,10 @@ def _public_repo_urls(ini_file: Path) -> list[str]:
     try:
         if ini_file.is_symlink() or ini_file.stat().st_size > MAX_REAPACK_INI_BYTES:
             return []
-        raw = ini_file.read_bytes()
+        with ini_file.open("rb") as stream:
+            raw = stream.read(MAX_REAPACK_INI_BYTES + 1)
+        if len(raw) > MAX_REAPACK_INI_BYTES:
+            return []
     except (OSError, ValueError):
         return []
     contents = raw.decode("utf-8-sig", errors="replace")
@@ -107,7 +110,7 @@ def build_inventory(source: Path, items: list[dict], *, control=None, include_mi
     # Legacy URL-only scan remains a compatibility fallback when an INI
     # predates the 1.x [remotes] section or uses an unknown format.
     repo_urls = ([x["index_url"] for x in profile["repositories"]]
-                 if profile["status"] == "parsed" else
+                 if profile["status"] == "parsed" or profile.get("repository_layout_recognized") else
                  _public_repo_urls(ini) if ini else [])
     menu_files = sorted(
         x for x in portable if x.lower().startswith("menusets/") and x.lower().endswith(".reapermenu")

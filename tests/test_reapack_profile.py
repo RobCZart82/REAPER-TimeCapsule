@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import sqlite3
+from io import BytesIO
+from unittest.mock import Mock, patch
 import tempfile
 import unittest
 from pathlib import Path
@@ -122,6 +124,58 @@ class ReaPackProfileTests(unittest.TestCase):
             "remote0=B|https://b.org/index.xml|0|2\n"
         ))
         self.assertEqual(parse_profile(ini)["status"], "invalid")
+
+    def test_invalid_override_is_not_reported_as_valid_inheritance(self):
+        for override in ("", "3", "yes", "private-invalid-value"):
+            with self.subTest(override=override):
+                ini = self.put("reapack.ini", "[remotes]\nsize=2\n"
+                               "remote0=Bad|https://user:secret@example.org/index.xml?token=private|1|" + override + "\n"
+                               "remote1=Good|https://good.example/index.xml|0|2\n")
+                original = ini.read_bytes()
+                parsed = parse_profile(ini)
+                self.assertEqual(parsed["status"], "partial")
+                self.assertEqual([row["name"] for row in parsed["repositories"]], ["Good"])
+                self.assertIn("1 malformed", parsed["notes"][0])
+                self.assertNotIn("private", str(parsed))
+                self.assertNotIn("secret", str(parsed))
+                self.assertEqual(ini.read_bytes(), original)
+
+    def test_partial_profile_url_fallback_respects_remote_field_boundaries(self):
+        from reaper_timecapsule.inventory import build_inventory
+        for override in ("invalid", "https://secret.example/private.xml"):
+            with self.subTest(override=override):
+                self.put("reapack.ini", "[remotes]\nsize=1\n"
+                         "remote0=Good|https://user:password@good.example/real.xml?token=private|1|" + override + "\n")
+                report = build_inventory(self.root, [{"path": "reapack.ini", "policy": "keep", "size": 300}], include_midi=False)
+                self.assertEqual(report["reapack"]["profile"]["status"], "partial")
+                self.assertEqual(report["reapack"]["repository_index_urls"], [])
+                self.assertNotIn("secret.example", str(report))
+                self.assertNotIn("password", str(report))
+
+    def test_valid_override_and_legacy_omission_remain_supported(self):
+        for suffix, expected in (("", None), ("|0", False), ("|1", True), ("|2", None)):
+            with self.subTest(suffix=suffix):
+                ini = self.put("reapack.ini", "[remotes]\nsize=1\nremote0=Good|https://example.org/index.xml|1" + suffix + "\n")
+                parsed = parse_profile(ini)
+                self.assertEqual(parsed["status"], "parsed")
+                self.assertIs(parsed["repositories"][0]["auto_install_override"], expected)
+
+    def test_ini_read_is_bounded_if_file_grows_after_stat(self):
+        from reaper_timecapsule.inventory import _public_repo_urls
+        ini = self.put("reapack.ini", "small")
+        for reader in (parse_profile, _public_repo_urls):
+            with self.subTest(reader=reader.__name__):
+                stream = BytesIO(b"x" * 100)
+                stream.read = Mock(wraps=stream.read)
+                with patch("reaper_timecapsule.reapack_profile.MAX_INI_BYTES", 64), \
+                     patch("reaper_timecapsule.inventory.MAX_REAPACK_INI_BYTES", 64), \
+                     patch.object(Path, "open", return_value=stream):
+                    result = reader(ini)
+                stream.read.assert_called_once_with(65)
+                if reader is parse_profile:
+                    self.assertEqual(result["status"], "too-large")
+                else:
+                    self.assertEqual(result, [])
 
     def test_backup_inventory_retains_repository_profile(self):
         self.standard_ini()
