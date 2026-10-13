@@ -1,6 +1,6 @@
 # REAPER Time Capsule — egységes fejlesztési és kiadási terv
 
-Frissítve: **2026-10-13**. Ellenőrzött main: `1ce7208ef606e7dc3b6e260c8c46121f79d1bc68`.
+Frissítve: **2026-10-13**. Ellenőrzött main: `0c2627d8096560970538eb6d827ae792bec7c111`.
 Ez az egyetlen végrehajtási terv. A [release readiness](RELEASE_READINESS.md)
 a megvalósított garanciák technikai háttéranyaga; a
 [korábbi audit](AUDIT_REVIEW_2026-10-11.md) történeti bizonyíték, nem párhuzamos feladatlista.
@@ -14,8 +14,8 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
   A későbbi main-javítások ettől még nem publikált release-ek.
 - E tervmódosítás előtti pillanatképben nincs nyitott PR; issue [#3](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/3)
   és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
-- Main [Tests 38436679713](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38436679713)
-  és [Desktop builds 38436679702](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38436679702): PASS.
+- Main [Tests 38437749952](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38437749952)
+  és [Desktop builds 38437750020](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38437750020): PASS.
 - Legutóbbi helyi Windows/Python 3.13 suite: **220 teszt OK, 13 skip**.
   Szintetikus adatok, dedikált munkamappa; sandboxon kívüli futás az ideiglenesútvonal-korlát miatt.
 - Tisztagépes telepítés, kézi GUI, valódi FAT/exFAT/hálózati kötet és izolált REAPER:
@@ -73,6 +73,12 @@ vagy más sectionben lévő regisztrációt missing-dependencies státusszal jel
 Hibás RS és SWS token továbbra unverified; scriptfuttatás/runtime nincs.
 A javítás előtti negatív kontroll hibázott, utána **232 helyi teszt OK**.
 Ez a 4. lépés regisztrációformáinak célzott bővítése, nem #3 runtime-teljesítés.
+
+A scriptútvonalak új negatív kontrollja kimutatta, hogy case-only eltérés is
+biztosan mentett fájlként jelent meg. A javítás pontos egyezést kér, eltérő
+kis-/nagybetűt `case-mismatch-requires-review` script-issue-ként jelez;
+relatív Scripts-bázis és Windows elválasztó továbbra támogatott.
+Helyi suite: **234 teszt OK**. Platformfüggő runtime-feloldás nincs igazolva.
 
 ## Kiadási határ
 

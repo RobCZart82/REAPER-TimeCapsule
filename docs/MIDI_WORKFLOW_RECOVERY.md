@@ -30,7 +30,13 @@ The audit uses the **MIDI piano roll context** REAPER action section (32060).
 It resolves Custom Action identifiers and supported ReaScript command IDs
 against saved `ACT` or `SCR` definitions, checks whether referenced script
 files were saved, and flags absolute paths that need remapping after an OS
-reinstall. Unrecognized action-record formats remain explicit parse findings.
+reinstall. Exact script-path spelling is required for a saved-file match; a
+case-only mismatch is reported as `case-mismatch-requires-review` rather than
+assumed portable across case-sensitive and case-insensitive volumes. The report
+uses the existing `missing-dependencies` status for script-path issues, including
+this review case; it does not assert that the file is absent on every platform.
+Relative Scripts-folder paths and Windows path separators remain supported.
+Unrecognized action-record formats remain explicit parse findings.
 
 Other extension actions (for example SWS commands beginning with `_SWS`)
 are recorded as **unverified**, not assumed available. Script presence does
