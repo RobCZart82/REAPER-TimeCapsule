@@ -248,7 +248,7 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
                                      "problem": "Unrecognized action dependency"})
                     continue
                 token = token.casefold()
-                if RE_GUID.fullmatch(token):
+                if RE_GUID.fullmatch(token) or RE_SCRIPT_ID.fullmatch(token):
                     if (section, token) not in definitions:
                         missing.add(("Custom Action " + command, token))
                     else:

@@ -75,6 +75,13 @@ Do not upload a private REAPER resource archive to a public GitHub repository.
 Duplicates are reported within files and across exports/live definitions. Identical
 duplicates require review; conflicting records or cycles produce invalid-action-graph.
 All record variants are examined, so conflicts cannot hide earlier dependencies.
+Custom Action dependency tokens use the same supported ReaScript ID forms as
+menu references (`_RS` + 40 hex digits or `_RS` + 4 hex digits + `_` + 40 hex digits).
+A matching registration must exist in the same action section; a saved script file
+alone does not satisfy a missing registration. Missing registrations are reported
+in `missing_custom_actions` (the existing named-dependency list includes ReaScripts).
+Malformed RS tokens and other extension commands remain unverified. Script-file
+presence is checked separately, and no script is executed.
 Numeric menu/action commands are unverified, not proof of missing commands.
 Deep chains use iterative traversal. Detail lists are capped at 100 entries; the
 report gives the full count for each issue category and marks categories whose
