@@ -1,6 +1,6 @@
 # REAPER Time Capsule — egységes fejlesztési és kiadási terv
 
-Frissítve: **2026-10-13**. Ellenőrzött main: `c00060521a10f74a0e71e7ffc186393ebb4d3462`.
+Frissítve: **2026-10-13**. Ellenőrzött main: `1ce7208ef606e7dc3b6e260c8c46121f79d1bc68`.
 Ez az egyetlen végrehajtási terv. A [release readiness](RELEASE_READINESS.md)
 a megvalósított garanciák technikai háttéranyaga; a
 [korábbi audit](AUDIT_REVIEW_2026-10-11.md) történeti bizonyíték, nem párhuzamos feladatlista.
@@ -14,8 +14,8 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
   A későbbi main-javítások ettől még nem publikált release-ek.
 - E tervmódosítás előtti pillanatképben nincs nyitott PR; issue [#3](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/3)
   és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
-- Main [Tests 38434520448](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38434520448)
-  és [Desktop builds 38434520559](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38434520559): PASS.
+- Main [Tests 38436679713](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38436679713)
+  és [Desktop builds 38436679702](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38436679702): PASS.
 - Legutóbbi helyi Windows/Python 3.13 suite: **220 teszt OK, 13 skip**.
   Szintetikus adatok, dedikált munkamappa; sandboxon kívüli futás az ideiglenesútvonal-korlát miatt.
 - Tisztagépes telepítés, kézi GUI, valódi FAT/exFAT/hálózati kötet és izolált REAPER:
@@ -65,6 +65,14 @@ konstansokból mutatja a limiteket, profilolvasás/beállításváltoztatás né
 Kiinduló main: PR #65, mindkét CI PASS. Helyi suite: **229 teszt OK**;
 a CLI headless/olvasásmentes működése, a konstansok követése és a GUI-jelentés
 megőrzése tesztelt. Kézi GUI/tisztagépes elfogadás továbbra NOT RUN.
+
+A következő MIDI-regresszió igazolta: a támogatott ReaScript ID-k menühivatkozásként
+feloldódtak, Custom Action függőségként viszont unverified státuszt kaptak.
+A javítás mindkét támogatott RS-formát azonos action sectionben keres, hiányzó
+vagy más sectionben lévő regisztrációt missing-dependencies státusszal jelent.
+Hibás RS és SWS token továbbra unverified; scriptfuttatás/runtime nincs.
+A javítás előtti negatív kontroll hibázott, utána **232 helyi teszt OK**.
+Ez a 4. lépés regisztrációformáinak célzott bővítése, nem #3 runtime-teljesítés.
 
 ## Kiadási határ
 

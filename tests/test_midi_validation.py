@@ -84,6 +84,39 @@ class MIDIWorkflowValidationTests(unittest.TestCase):
         self.assertEqual(result["script_registration_issues"], [])
         self.assertEqual(result["issue_counts"]["parse_problems"], 0)
 
+    def test_custom_action_resolves_supported_reascript_dependencies(self):
+        for rs_id in ("RS" + "a" * 40, "RS1234_" + "b" * 40):
+            with self.subTest(rs_id=rs_id):
+                self.put("Scripts/test.lua", "error('must never execute')\n")
+                self.put("reaper-menu.ini", f"[MIDI piano roll context]\nitem_0=_{GUID} Test\n")
+                self.put("reaper-kb.ini", f'ACT 1 32060 "{GUID}" "Test" _{rs_id}\n'
+                         f'SCR 4 32060 {rs_id} "Test" "Scripts/test.lua"\n')
+                result = self.report()
+                self.assertEqual(result["status"], "ok")
+                self.assertEqual(result["unverified_extension_commands"], [])
+                self.assertEqual(result["missing_custom_actions"], [])
+                self.assertEqual(result["script_registration_issues"], [])
+                self.assertEqual(result["runtime_validation"]["status"], "not-performed")
+
+    def test_custom_action_reports_missing_or_wrong_section_reascript(self):
+        rs_id = "RS" + "a" * 40
+        for registration in ("", f'SCR 4 0 {rs_id} "Test" "Scripts/test.lua"\n'):
+            with self.subTest(registration=registration):
+                self.put("Scripts/test.lua", "-- synthetic\n")
+                self.put("reaper-kb.ini", f'ACT 1 32060 "{GUID}" "Test" _{rs_id}\n' + registration)
+                result = self.report()
+                self.assertEqual(result["status"], "missing-dependencies")
+                self.assertEqual(result["issue_counts"]["missing"], 1)
+                self.assertEqual(result["missing_custom_actions"][0]["command"], "_" + rs_id.lower())
+                self.assertEqual(result["unverified_extension_commands"], [])
+
+    def test_malformed_rs_and_extension_dependencies_remain_unverified(self):
+        self.put("reaper-kb.ini", f'ACT 1 32060 "{GUID}" "Test" _RSshort _SWS_TEST\n')
+        result = self.report()
+        self.assertEqual(result["status"], "needs-review")
+        self.assertEqual(result["unverified_extension_commands"], ["_rsshort", "_sws_test"])
+        self.assertEqual(result["missing_custom_actions"], [])
+
     def test_external_extension_is_unverified_not_dropped(self):
         self.put("MenuSets/midi.ReaperMenu", "[MIDI piano roll context]\nitem_1=_SWS_MY_ACTION Menu\n")
         result = self.report()
