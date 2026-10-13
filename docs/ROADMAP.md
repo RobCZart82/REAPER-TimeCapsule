@@ -1,6 +1,6 @@
 # REAPER Time Capsule — egységes fejlesztési és kiadási terv
 
-Frissítve: **2026-10-12**. Ellenőrzött main: `d2542e4f446bf84cf4f7e996cc52e07b6b307577`.
+Frissítve: **2026-10-13**. Ellenőrzött main: `cc668fb8444a35075db179ccf55f851e0eea32b6`.
 Ez az egyetlen végrehajtási terv. A [release readiness](RELEASE_READINESS.md)
 a megvalósított garanciák technikai háttéranyaga; a
 [korábbi audit](AUDIT_REVIEW_2026-10-11.md) történeti bizonyíték, nem párhuzamos feladatlista.
@@ -14,8 +14,8 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
   A későbbi main-javítások ettől még nem publikált release-ek.
 - E tervmódosítás előtti pillanatképben nincs nyitott PR; issue [#3](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/3)
   és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
-- Main [Tests 38233328054](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38233328054)
-  és [Desktop builds 38233328182](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38233328182): PASS.
+- Main [Tests 38275695216](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38275695216)
+  és [Desktop builds 38275694994](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38275694994): PASS.
 - Legutóbbi helyi Windows/Python 3.13 suite: **220 teszt OK, 13 skip**.
   Szintetikus adatok, dedikált munkamappa; sandboxon kívüli futás az ideiglenesútvonal-korlát miatt.
 - Tisztagépes telepítés, kézi GUI, valódi FAT/exFAT/hálózati kötet és izolált REAPER:
@@ -48,6 +48,15 @@ A config-preview külön forrás/cél kódolási provenanciát ad (szigorú UTF-
 BOM, bájtszám, fallback nélkül); hibás UTF-8/UTF-16/legacy bemenet továbbra leállítja
 a preview-t és staginget. Ez nem általános encoding-felismerés. Kézi tisztagépes és
 REAPER-runtime elfogadás ettől még NOT RUN. A szintetikus tesztek privát profilt nem használnak.
+
+A 2026-10-13-i felülvizsgálatkor nincs új main-változás a PR #64 után, nincs
+nyitott PR; #3/#4 továbbra nyitott. A main Tests és Desktop builds PASS.
+A helyi kiinduló suite **222 teszt OK**. Reprodukált új hibamód: explicit hibás
+ReaPack auto-install override érvényes öröklésként jelent meg. Javítás után a
+rekord kihagyott, a profil partial és titokmentes számlálófigyelmeztetést ad;
+a hárommezős legacy rekord és 0/1/2 továbbra támogatott. A profilolvasó és URL-fallback
+méretellenőrzés után növekvő INI olvasása is korlátozott lett. Szintetikus
+regressziókkal a helyi suite **225 teszt OK**. Ez nem runtime vagy tisztagépes elfogadás.
 
 ## Kiadási határ
 

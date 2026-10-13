@@ -84,7 +84,10 @@ def parse_profile(config_file: Path) -> dict:
             return _empty_profile("missing", "No trusted reapack.ini available")
         if config_file.stat().st_size > MAX_INI_BYTES:
             return _empty_profile("too-large", "reapack.ini exceeds parser size limit")
-        contents = config_file.read_bytes()
+        with config_file.open("rb") as stream:
+            contents = stream.read(MAX_INI_BYTES + 1)
+        if len(contents) > MAX_INI_BYTES:
+            return _empty_profile("too-large", "reapack.ini exceeds parser size limit")
     except OSError:
         return _empty_profile("unreadable", "Could not open reapack.ini")
 
@@ -175,7 +178,8 @@ def parse_profile(config_file: Path) -> dict:
         clean_url = _safe_url(original_url)
         enabled = _boolean(enabled_raw)
         per_repo_auto = _tri(components[3]) if len(components) > 3 else None
-        if clean_url is None or enabled is None or name in seen_names:
+        if (clean_url is None or enabled is None or name in seen_names
+                or len(components) > 3 and components[3].strip() not in ("0", "1", "2")):
             missing_or_invalid += 1
             continue
         seen_names.add(name)

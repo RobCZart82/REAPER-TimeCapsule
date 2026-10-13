@@ -30,7 +30,10 @@ def _public_repo_urls(ini_file: Path) -> list[str]:
     try:
         if ini_file.is_symlink() or ini_file.stat().st_size > MAX_REAPACK_INI_BYTES:
             return []
-        raw = ini_file.read_bytes()
+        with ini_file.open("rb") as stream:
+            raw = stream.read(MAX_REAPACK_INI_BYTES + 1)
+        if len(raw) > MAX_REAPACK_INI_BYTES:
+            return []
     except (OSError, ValueError):
         return []
     contents = raw.decode("utf-8-sig", errors="replace")
