@@ -2,7 +2,7 @@
 
 > Current execution order, release gates and audit status live in [ROADMAP.md](ROADMAP.md).
 > This document records technical guarantees and historical beta preparation, not a second task list.
-> Refreshed 2026-10-14 against main `2d09b97090bfb2c6f8048bb6efbecbc244a8437e` (functional code baseline `e4e25c82daec1316364669c312fddbdb370e0c9c`); the current 1.0.0 candidate and release gates are summarized in [ROADMAP.md](ROADMAP.md).
+> Refreshed 2026-10-14 against the v1.0.0 release commit `c495a66b9059f561951ef09fdd880a6bbdb64309`; current post-release priorities remain in [ROADMAP.md](ROADMAP.md).
 
 Target scope: verified backup, read-only audits and recovery into a new external
 folder. Automatic active-configuration migration is outside the first beta scope.
@@ -138,45 +138,13 @@ Issue #3 toolbar/runtime and issue #4 active apply/rollback remain separate mile
 The user selected 1.0.0 stable and authorized publication of unsigned packages. Bilingual README, final About label and 1.0.0 release notes are prepared on PR #77. Merge and publication remain contingent on green final-head tests/builds; clean-machine and real-volume validation are disclosed as outstanding limitations.
 
 
-## 1.0.0 candidate snapshot — 2026-10-14
+## Latest stable release — v1.0.0 — 2026-10-14
 
-The current release checklist and execution order remain in [ROADMAP.md](ROADMAP.md).
-PR #77 was an unpublished draft candidate at tested revision `42ef450cb9b217ba01906ac4187696a72f1faf9b`.
-Its Tests run 38525955324 and Desktop beta builds run 38525955034 passed; both native
-platform builds and packaged self-tests succeeded. Current Windows and macOS artifact
-IDs and archive digests are recorded in ROADMAP.md.
+The public [v1.0.0 stable release](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v1.0.0) was published as release ID 412475413 from tag v1.0.0 at commit c495a66b9059f561951ef09fdd880a6bbdb64309. PR #77 merged after final-head Tests run 38531184489 and Desktop builds run 38531184451 both passed. Windows and macOS bundled builds, source test matrices and packaged self-tests passed.
 
-On the tested Windows 11 x64 candidate, the user-reported Restore succeeded with
-7,035 portable files restored, 32 isolated for review, 0 legacy skips and 0
-inspection omissions. The supplied Test100.zip passed CRC and all 7,067 schema-2
-manifest SHA-256 comparisons. The user also reports the same successful Restore
-result on macOS, without a separate report/archive for independent count/hash checks.
-The candidate About screen still displays `VERSION 1.0.0 · BETA`; remove that label
-and rebuild the final stable package. These targeted profile tests do not complete
-clean-machine installation/first-launch or real-filesystem validation. No public
-1.0.0 release has been created.
+The release contains eight manually uploaded assets plus GitHub's automatic source archives. SHA256SUMS.txt matches GitHub's published digest for each of its seven listed assets. Application package digests: Windows x64 abd02dc625fe78ccc3807b83e09ff5cafe7a51f7de01044d48452be23c6caf5d; macOS Apple Silicon f74b5356602fd71a4598be8a429fba6c50c2b9de7717ee01b959f9c4ecfb3e6b. Both build manifests identify version 1.0.0, commit c495a66 and a successful synthetic bundled self-test. The ZIP CRC check passed for both app packages and both source ZIPs.
 
+Windows 11 x64 Intel real-profile Restore passed on a previous functionally equivalent 1.0.0 candidate: 7,035 portable files restored, 32 isolated for review, no legacy skips or inspection omissions. The supplied archive passed CRC and all 7,067 schema-2 manifest SHA-256 checks. The user reports the same GUI workflow succeeded on macOS, but supplied no separate report/archive for independent count/hash verification. The final release's exact binaries were not manually reinstalled after the About label and documentation update.
 
-## 1.0.0 stable publication snapshot — 2026-10-14
+Both app packages are unsigned; the user authorized the unsigned stable publication. Clean-machine installation/first launch and FAT/exFAT/network-volume validation remain NOT RUN and are documented release limitations. Issues #3 (MIDI toolbar/runtime) and #4 (active configuration apply/rollback) remain outside 1.0.0 scope. Full REAPER runtime integration, automatic plugin installation and license transfer are not claimed.
 
-The user authorized publishing the unsigned 1.0.0 stable release. PR #77 prepares
-application and package metadata, removes the candidate-only BETA marker, and aligns
-the English/Hungarian download pages and release notes. This candidate is not yet
-merged or published. The PR's final-head source tests and both packaged builds must
-pass before merge; the exact final package digests and release asset links should be
-recorded after publication.
-
-Windows 11 x64 Intel real-profile Restore passed on the prior 1.0.0 candidate build:
-7,035 portable files restored, 32 isolated for review, no legacy skips or inspection
-omissions; the supplied ZIP passed CRC and all 7,067 manifest SHA-256 checks. The
-user reports that the same GUI workflow succeeded on macOS, but supplied no separate
-macOS report or archive for independent count/hash verification. The exact final
-package (which changes the About text and documentation) has not had a new manual
-installation test.
-
-Clean-machine installation/first launch and FAT/exFAT/network-volume testing remain
-NOT RUN. Signing/notarization is not available for this release; the user authorized
-unsigned publication and the README/release notes disclose this. Issues #3 (MIDI
-toolbar/runtime) and #4 (active configuration apply/rollback) remain outside the
-1.0.0 scope. Full REAPER runtime integration and automatic plugin installation are
-not claimed.
