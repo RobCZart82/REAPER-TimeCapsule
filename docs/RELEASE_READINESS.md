@@ -135,8 +135,7 @@ Packaged clean-machine installation and real-volume validation remain without re
 Use [ROADMAP.md — Egyetlen végrehajtási sorrend](ROADMAP.md#egyetlen-végrehajtási-sorrend) for the current seven-step plan and acceptance criteria.
 A later limited beta may retain explicit static-audit/read-only migration limits.
 Issue #3 toolbar/runtime and issue #4 active apply/rollback remain separate milestones.
-Version selection, bilingual documentation, package contents/checksums and final
-candidate validation must precede a separate publication decision.
+The user selected 1.0.0 stable and authorized publication of unsigned packages. Bilingual README, final About label and 1.0.0 release notes are prepared on PR #77. Merge and publication remain contingent on green final-head tests/builds; clean-machine and real-volume validation are disclosed as outstanding limitations.
 
 
 ## 1.0.0 candidate snapshot — 2026-10-14
@@ -156,3 +155,28 @@ The candidate About screen still displays `VERSION 1.0.0 · BETA`; remove that l
 and rebuild the final stable package. These targeted profile tests do not complete
 clean-machine installation/first-launch or real-filesystem validation. No public
 1.0.0 release has been created.
+
+
+## 1.0.0 stable publication snapshot — 2026-10-14
+
+The user authorized publishing the unsigned 1.0.0 stable release. PR #77 prepares
+application and package metadata, removes the candidate-only BETA marker, and aligns
+the English/Hungarian download pages and release notes. This candidate is not yet
+merged or published. The PR's final-head source tests and both packaged builds must
+pass before merge; the exact final package digests and release asset links should be
+recorded after publication.
+
+Windows 11 x64 Intel real-profile Restore passed on the prior 1.0.0 candidate build:
+7,035 portable files restored, 32 isolated for review, no legacy skips or inspection
+omissions; the supplied ZIP passed CRC and all 7,067 manifest SHA-256 checks. The
+user reports that the same GUI workflow succeeded on macOS, but supplied no separate
+macOS report or archive for independent count/hash verification. The exact final
+package (which changes the About text and documentation) has not had a new manual
+installation test.
+
+Clean-machine installation/first launch and FAT/exFAT/network-volume testing remain
+NOT RUN. Signing/notarization is not available for this release; the user authorized
+unsigned publication and the README/release notes disclose this. Issues #3 (MIDI
+toolbar/runtime) and #4 (active configuration apply/rollback) remain outside the
+1.0.0 scope. Full REAPER runtime integration and automatic plugin installation are
+not claimed.
