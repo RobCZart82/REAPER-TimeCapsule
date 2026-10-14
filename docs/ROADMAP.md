@@ -42,7 +42,7 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
 | [#67](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/67) | ReaScript függőségfeloldás Custom Actionökben | 232 helyi teszt; REAPER runtime továbbra NOT RUN |
 | [#68](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/68) | Kis-/nagybetűs scriptútvonal-eltérés felülvizsgálatra jelölése | 234 helyi teszt; pontos fájlnévegyezés szükséges |
 | [#69](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/69) | Release readiness és roadmap frissítése `5fa9738` mainhez | Dokumentációs PR; PR CI és merge utáni main CI PASS |
-| [#70](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/70) | Windows >260 karakteres forrásútvonal-mentés és OneDrive-/lokalizált Asztal alapérték | Merge: `c1763a8`; PR CI Tests 6/6 és Desktop builds 2/2 PASS; kézi Windows 11 x64 smoke-test: Scan/Preview, MIDI Audit, ReaPack Audit és Backup PASS; külön Verify UI és Restore UI NOT RUN |
+| [#70](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/70) | Windows >260 karakteres forrásútvonal-mentés és OneDrive-/lokalizált Asztal alapérték | Merge: `c1763a8`; PR CI Tests 6/6 és Desktop builds 2/2 PASS; kézi Windows 11 x64 smoke-test: Scan/Preview, MIDI Audit, ReaPack Audit és Backup PASS; Verify UI PASS; Restore UI NOT RUN |
 
 Ezeket ne nyissuk újra reprodukció nélkül. Az összes egyszerű ciklus felsorolása,
 általános encoding-felismerés és teljes build-reprodukálhatóság nincs megvalósítva.
@@ -98,8 +98,7 @@ a OneDrive-ra átirányított, magyar nevű Asztal-mappát állítja be alapért
 visszaállítási célként. A PR Windows/macOS/Ubuntu CI és csomagolt alkalmazás-ellenőrzése PASS.
 A felhasználó visszajelzése szerint a PR #70 teszt-buildjén Windows 11 x64 alatt a Scan / Preview, MIDI Audit és ReaPack Audit sikeresen lefutott a tényleges REAPER settings mappán; a Backup és a Verify UI-művelet is sikeresen lefutott. A Verify teljes JSON-jelentése 7 035 keep és 32 review elemet jelez mind a mentett, mind a tárolt leltárban, policy-változás és inspection omission nélkül; 12 regenerate és 2 exclude elem kihagyottként szerepel. A Backupból kapott ZIP read-only ellenőrzése: schema 2, beta.2 app_version, 7 067 mentett fájl, 14 kihagyás, mind a 7 067 manifest SHA-256 egyezett, és a korábban problémás hosszú útvonalú Lua-fájl is szerepelt benne. Ez célzott, felhasználói gépen végzett smoke-test és archive-integritás ellenőrzés, nem teljes release-elfogadás. A Restore, tisztagépes telepítés és a publikált beta.2 installer újratesztje továbbra NOT RUN; a publikált beta.2 változatlan.
 
-Az aktuális `main` commit `c1763a8fdd2fc0612a3c5b71cbe6572b3dedf795` (#70). A nyitott PR-lista üres;
-a #3 és #4 továbbra nyitott. A PR #70 ellenőrzései: Tests run 38513240555 és Desktop beta
+A PR #70 utáni kód-main `c1763a8fdd2fc0612a3c5b71cbe6572b3dedf795`; PR #71 ezt követően csak dokumentációt módosított, és a main `3728a51dfd5406cae33fec468f57cd365fe3ec33` lett. A PR #72 jelen dokumentációfrissítésként nyitott; a #3 és #4 issue továbbra nyitott. A PR #70 ellenőrzései: Tests run 38513240555 és Desktop beta
 builds run 38513240558; mindkettő sikeres. A csomagolt CI-artefaktok nem kiadott vagy
 tisztagépen elfogadott release-csomagok. Kézi GUI/clean-machine, isolated REAPER-runtime
 és valódi FAT/exFAT/hálózati kötet tesztek továbbra sincsenek rögzítve.
