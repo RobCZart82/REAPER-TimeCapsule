@@ -2,7 +2,7 @@
 
 > Current execution order, release gates and audit status live in [ROADMAP.md](ROADMAP.md).
 > This document records technical guarantees and historical beta preparation, not a second task list.
-> Refreshed 2026-10-14 against main `5fa9738160cd7aad9b405d0b6f743287a99a8059`.
+> Refreshed 2026-10-14 against main `c62e3ec0fcfd419aca7711414b4287de192fa0eb`.
 
 Target scope: verified backup, read-only audits and recovery into a new external
 folder. Automatic active-configuration migration is outside the first beta scope.
@@ -122,11 +122,13 @@ README; later releases require their own clean validation.
 
 ## Remaining release validation
 
+Reported issue: on Windows 11 x64, Scan / Preview stopped with WinError 3 at a 263-character Lua-script path. This update proposes explicit extended-length path handling for source traversal and backup reads, with synthetic Windows CI coverage for scan and backup of a >260-character script path. Manual retest of the reported profile remains NOT RUN; the published beta.2 is unchanged. Restore destinations still use the conservative path-capacity preflight.
+
 Use [ROADMAP.md — Egyetlen végrehajtási sorrend](ROADMAP.md#egyetlen-végrehajtási-sorrend)
 for the current seven-step plan and acceptance criteria. Packaged clean-machine
 backup/verify/restore, manual GUI checks and real-volume validation remain without
-recorded acceptance evidence in this update. As of 2026-10-14, main `5fa9738` Tests run 38439260863 and Desktop beta builds run
-38439261012 succeeded; the latter produced temporary Windows/macOS Actions artifacts.
+recorded acceptance evidence in this update. As of 2026-10-14, main `c62e3ec` Tests run 38511229777 and Desktop beta builds run
+38511229809 succeeded; the latter produced temporary Windows/macOS Actions artifacts.
 This does not certify a new release. No local suite was run during this review; PR #68
 reports 234 local tests passed.
 

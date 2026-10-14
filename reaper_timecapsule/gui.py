@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from .inspection_limits import inspection_limits_text
 from .background import BackgroundTask
 from .operation import OperationControl
-from .core import NonPortableNames, VERSION, default_resource, make_backup, preview, preview_backup, restore_backup, scan
+from .core import NonPortableNames, VERSION, default_resource, default_restore_destination, make_backup, preview, preview_backup, restore_backup, scan
 from .midi_validation import validate_midi_workflow
 from .config_migration import preview_migration
 from .inventory import audit_reapack
@@ -77,7 +77,7 @@ class App(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.source = tk.StringVar(value=str(default_resource()))
         self.archive = tk.StringVar()
-        self.destination = tk.StringVar(value=str(Path.home() / "Desktop" / "TimeCapsule-Restored"))
+        self.destination = tk.StringVar(value=str(default_restore_destination()))
         body = ttk.Frame(self, padding=(25, 20))
         body.pack(fill="both", expand=True)
         header = ttk.Frame(body)

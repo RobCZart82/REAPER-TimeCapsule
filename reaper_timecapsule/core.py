@@ -23,7 +23,7 @@ from .resource_budget import preflight_zip, require_space
 from .publication import publish_directory, publish_file, require_path_capacity
 from .operation import checkpoint
 from .inventory import build_inventory, inventory_input_limit
-from .safe_paths import trusted_resource_file
+from .safe_paths import filesystem_path, trusted_resource_file
 
 VERSION = "0.9.0-beta.2"
 FORMAT = "reaper-timecapsule"
@@ -42,6 +42,48 @@ def default_resource() -> Path:
     if os.name == "nt":
         return Path(os.environ.get("APPDATA", str(Path.home() / "AppData" / "Roaming"))) / "REAPER"
     return Path.home() / ".config" / "REAPER"
+
+def _windows_desktop_directory() -> Path:
+    """Resolve the current user's redirected Windows Desktop known folder."""
+    import ctypes
+    from ctypes import wintypes
+    from uuid import UUID
+
+    class GUID(ctypes.Structure):
+        _fields_ = [
+            ("Data1", ctypes.c_uint32), ("Data2", ctypes.c_uint16),
+            ("Data3", ctypes.c_uint16), ("Data4", ctypes.c_ubyte * 8),
+        ]
+
+    folder = GUID.from_buffer_copy(UUID("B4BFCC3A-DB2C-424C-B029-7FE99A87C641").bytes_le)
+    output = ctypes.c_wchar_p()
+    shell32 = ctypes.WinDLL("shell32", use_last_error=True)
+    shell32.SHGetKnownFolderPath.argtypes = [
+        ctypes.POINTER(GUID), wintypes.DWORD, wintypes.HANDLE,
+        ctypes.POINTER(ctypes.c_wchar_p),
+    ]
+    shell32.SHGetKnownFolderPath.restype = ctypes.c_long
+    result = shell32.SHGetKnownFolderPath(ctypes.byref(folder), 0, None, ctypes.byref(output))
+    if result != 0 or not output.value:
+        raise OSError(result, "Cannot resolve the Windows Desktop folder")
+    try:
+        return Path(output.value)
+    finally:
+        ole32 = ctypes.WinDLL("ole32", use_last_error=True)
+        ole32.CoTaskMemFree.argtypes = [ctypes.c_void_p]
+        ole32.CoTaskMemFree(ctypes.cast(output, ctypes.c_void_p))
+
+
+def default_restore_destination() -> Path:
+    """Suggest a new recovery folder below the actual Desktop location."""
+    if os.name == "nt":
+        try:
+            desktop = _windows_desktop_directory()
+        except (OSError, AttributeError):
+            desktop = Path.home() / "Desktop"
+    else:
+        desktop = Path.home() / "Desktop"
+    return desktop / "TimeCapsule-Restored"
 
 
 def sha256_file(path: Path) -> str:
@@ -138,6 +180,10 @@ def scan(source: Path, *, control=None) -> list[dict]:
     if not source.is_dir():
         raise ValueError("Source must be a directory")
     result = []
+    # The normal Win32 path API rejects paths beyond MAX_PATH unless both the
+    # machine and executable opt in. The explicit extended prefix also works
+    # for the bundled app on systems where long-path awareness is not enabled.
+    walk_root = Path(filesystem_path(source, force=True))
 
     def append_record(record):
         # Every reported entry consumes budget, including directory links.
@@ -148,33 +194,35 @@ def scan(source: Path, *, control=None) -> list[dict]:
     def walk_error(error):
         raise OSError(error.errno, "Cannot scan source directory: " + str(error), error.filename) from error
 
-    def excluded_link(path, metadata):
+    def excluded_link(metadata, relative):
         # Windows junctions/reparse points are not reliably covered by is_symlink.
         linked = stat.S_ISLNK(metadata.st_mode) or bool(
             getattr(metadata, 'st_file_attributes', 0) & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0))
         if linked:
-            append_record({"path": path.relative_to(source).as_posix(), "size": 0,
+            append_record({"path": relative, "size": 0,
                            "policy": "exclude", "reason": "Link/reparse point omitted; target not read",
                            "kind": "link"})
         return linked
 
-    for base, folders, files in os.walk(source, followlinks=False, onerror=walk_error):
+    for base, folders, files in os.walk(walk_root, followlinks=False, onerror=walk_error):
         checkpoint(control, "Scanning")
         traversed = []
         for name in sorted(folders):
             checkpoint(control, "Scanning")
             path = Path(base) / name
-            metadata = path.lstat()  # Propagate permission/disappearance errors.
-            if not excluded_link(path, metadata) and name not in (".git", "__pycache__", ".svn"):
+            relative = Path(filesystem_path(path, force=True)).relative_to(walk_root).as_posix()
+            metadata = Path(filesystem_path(path)).lstat()  # Propagate permission/disappearance errors.
+            if not excluded_link(metadata, relative) and name not in (".git", "__pycache__", ".svn"):
                 traversed.append(name)
         folders[:] = traversed
         for filename in sorted(files):
             checkpoint(control, "Scanning")
             path = Path(base) / filename
-            metadata = path.lstat()
-            if excluded_link(path, metadata):
+            relative = Path(filesystem_path(path, force=True)).relative_to(walk_root).as_posix()
+            metadata = Path(filesystem_path(path)).lstat()
+            if excluded_link(metadata, relative):
                 continue
-            rel = path.relative_to(source).as_posix()
+            rel = relative
             if not stat.S_ISREG(metadata.st_mode):
                 append_record({"path": rel, "size": 0, "policy": "exclude",
                                "reason": "Special filesystem entry omitted; content not read",

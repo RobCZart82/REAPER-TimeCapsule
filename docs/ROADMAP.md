@@ -1,6 +1,6 @@
 # REAPER Time Capsule — egységes fejlesztési és kiadási terv
 
-Frissítve: **2026-10-14**. Ellenőrzött main: `5fa9738160cd7aad9b405d0b6f743287a99a8059`.
+Frissítve: **2026-10-14**. Ellenőrzött main: `c62e3ec0fcfd419aca7711414b4287de192fa0eb`.
 Ez az egyetlen végrehajtási terv. A [release readiness](RELEASE_READINESS.md)
 a megvalósított garanciák technikai háttéranyaga; a
 [korábbi audit](AUDIT_REVIEW_2026-10-11.md) történeti bizonyíték, nem párhuzamos feladatlista.
@@ -14,9 +14,9 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
   A későbbi main-javítások ettől még nem publikált release-ek.
 - A 2026-10-14-i felülvizsgálatkor nincs nyitott PR; issue [#3](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/3)
   és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
-- Main [`Tests` 38439260863](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38439260863)
-  (6 platform/Python mátrix-job) és [`Desktop beta builds` 38439261012](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38439261012)
-  (Windows és macOS csomagolt self-test): PASS, mindkettő a fenti `5fa9738` commiton.
+- Main [`Tests` 38511229777](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38511229777)
+  (6 platform/Python mátrix-job) és [`Desktop beta builds` 38511229809](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38511229809)
+  (Windows és macOS csomagolt self-test): PASS, mindkettő a fenti `c62e3ec` commiton.
 - Legutóbbi helyi Windows/Python 3.13 suite: **220 teszt OK, 13 skip**.
   Szintetikus adatok, dedikált munkamappa; sandboxon kívüli futás az ideiglenesútvonal-korlát miatt.
 - Tisztagépes telepítés, kézi GUI, valódi FAT/exFAT/hálózati kötet és izolált REAPER:
@@ -41,6 +41,7 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
 | [#66](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/66) | Read-only inspection-limit összegzés CLI-ben és GUI-ban | 229 helyi teszt; kézi GUI továbbra NOT RUN |
 | [#67](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/67) | ReaScript függőségfeloldás Custom Actionökben | 232 helyi teszt; REAPER runtime továbbra NOT RUN |
 | [#68](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/68) | Kis-/nagybetűs scriptútvonal-eltérés felülvizsgálatra jelölése | 234 helyi teszt; pontos fájlnévegyezés szükséges |
+| [#69](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/69) | Release readiness és roadmap frissítése `5fa9738` mainhez | Dokumentációs PR; PR CI és merge utáni main CI PASS |
 
 Ezeket ne nyissuk újra reprodukció nélkül. Az összes egyszerű ciklus felsorolása,
 általános encoding-felismerés és teljes build-reprodukálhatóság nincs megvalósítva.
@@ -89,7 +90,15 @@ Helyi suite: **234 teszt OK**. Platformfüggő runtime-feloldás nincs igazolva.
 
 ## 2026-10-14-i release-előkészítési pillanatkép
 
-Az aktuális `main` commit `5fa9738160cd7aad9b405d0b6f743287a99a8059` (#68). A PR-lista üres;
+A felhasználói Windows 11 x64 képernyőképen a Scripts alatti fájlútvonal 263 karakteres volt;
+a beta.2 `Scan / Preview` művelete `WinError 3`-mal leállt. A jelen PR explicit hosszú
+útvonalkezelést és >260 karakteres scan/backup regressziót javasol. A felhasználó jelezte,
+hogy az Asztal OneDrive-ra és magyar mappanévre van átirányítva; a GUI jelenlegi
+`~/Desktop` alapértékét Windows ismertmappa-lekérdezés váltja. Ezek a gépen és beta.2-ben
+még nincsenek kézzel újratesztelve; ez nem tekinthető elfogadási bizonyítéknak.
+
+
+Az aktuális `main` commit `c62e3ec0fcfd419aca7711414b4287de192fa0eb` (#69). A PR-lista üres;
 a #3 és #4 továbbra nyitott. A fenti CI futások ezen a commiton sikeresek;
 a desktop build run két nem lejárt, ideiglenes Actions-artifactot készített
 Windowsra és macOS-re. Ezek CI-eredmények, nem kiadott vagy tisztagépen elfogadott
@@ -187,7 +196,7 @@ nem minden profil/fájlrendszer általános tanúsítását. A státuszok a lent
 | TC-014 | Részben | `recovery_plan.py`: repositorysorrend, állapot, verzió/pin; `test_recovery_plan.py`. Elérhetőség, telepítés és szinkronizálás nincs. |
 | TC-015 | Részben | Hard-link után natív no-replace rename; `test_file_publication.py`. Valódi FAT/exFAT/hálózati validálás hiányzik. |
 | TC-016 | Részben | Verziózott jelentés, időpont, forrás, vizsgálati alap, teljes JSON-export már van. Hitelesített eredet/aláírás nincs. Az auditkövetés exportot jövőbeli feladatnak nevező mondata elavult. |
-| TC-017 | Részben | Névtér és végleges/ideiglenes path-capacity preflight; Windows UTF-16 teszt. Szokatlan FS/alias és hosszúútvonal-kompatibilitás korlátozott. |
+| TC-017 | Részben | A forrásbejárás és a mentés olvasása Windows extended-length úttal működik; szintetikus >260 karakteres CI-regresszió. A visszaállítás konzervatív célkapacitás-preflightja továbbra is elutasíthat hosszú célútvonalat; szokatlan fájlrendszer/alias még vizsgálandó. A 2026-10-14-i Windows 11 x64 felhasználói reprodukció kézi újratesztje release-kapu. |
 | TC-018 | Javított | SQLite read-only, méret/sor és 5 s query-budget, progress-handler; `test_audit_cancellation.py`. Ez nem általános OS I/O-deadline. |
 | TC-019 | Nyitott | Timestamp/mode információ mentett, restore friss fájlalapértékeket használ; ACL/owner/xattr/Finder nincs megőrizve. |
 | TC-020 | Részben | Helybecslés, kezelt hiba/interruption cleanup és read-only residue lista. Crash-durability és tranzakciós garancia nincs. |
