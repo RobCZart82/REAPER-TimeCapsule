@@ -1,6 +1,6 @@
 # REAPER Time Capsule — egységes fejlesztési és kiadási terv
 
-Frissítve: **2026-10-14**. Ellenőrzött main: `2d09b97090bfb2c6f8048bb6efbecbc244a8437e` (kiadásjelölt-ág alapja).
+Frissítve: **2026-10-14**. Ellenőrzött main a 1.0.0 kiadáskor: `c495a66b9059f561951ef09fdd880a6bbdb64309`.
 Ez az egyetlen végrehajtási terv. A [release readiness](RELEASE_READINESS.md)
 a megvalósított garanciák technikai háttéranyaga; a
 [korábbi audit](AUDIT_REVIEW_2026-10-11.md) történeti bizonyíték, nem párhuzamos feladatlista.
@@ -8,32 +8,21 @@ A korábbi audit chatben TC-014-nél csonkolódott; TC-014–024 azonosítása a
 auditkövetése alapján történt. Az eredeti teljes audit elfogadási feltételeivel való
 egyezés annak elérhetőségekor külön ellenőrzendő.
 
-## 1.0.0 stabil kiadási állapot — 2026-10-14
+## Legutóbbi stabil kiadás — v1.0.0 — 2026-10-14
 
-A felhasználó az 1.0.0 stabil, aláíratlan kiadás publikálását engedélyezte. A PR #77
-kiadási ága most eltávolítja az About ablak BETA jelzését, a két README letöltési
-hivatkozásait 1.0.0-ra igazítja, és hozzáadja a
-[kiadási megjegyzéseket](RELEASE_NOTES_1.0.0.md). Ez még nem publikált kiadás:
-a végső PR-headen futó teszteknek és mindkét platform csomagolt buildjének zöldnek
-kell lennie a merge és a tag/release létrehozása előtt.
+A [REAPER Time Capsule 1.0.0 stabil kiadás](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v1.0.0) 2026-10-14-én megjelent; a v1.0.0 tag a c495a66b9059f561951ef09fdd880a6bbdb64309 main commitra mutat. A release ID 412475413; a PR #77 squash merge-ként került a main ágba. A release nem előzetes kiadás, és a GitHub Latest címkével jelöli.
 
-Kézi teszt bizonyítéka az előző, azonos funkciójú 1.0.0 jelöltbuildről származik:
-Windows 11 x64 Intel gépen a valós profil Restore-ja sikerült (7 035 visszaállított,
-32 felülvizsgálatra különített, 0 legacy-kihagyás, 0 inspection omission); a ZIP CRC
-és 7 067 manifest-hash ellenőrzése is PASS. A felhasználó macOS-en is sikeres GUI
-munkafolyamatot jelentett, külön jelentés/archívum nélkül. A végső About-felirat és
-dokumentáció módosult a kézi teszt óta; a pontos végső artefaktumokon új kézi
-telepítési teszt nem futott.
+- PR #77 végső ellenőrzései PASS: [Tests run 38531184489](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38531184489) és [Desktop builds run 38531184451](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38531184451); a Windows/macOS forrásteszt, csomagolás és bundled self-test sikeres.
+- Nyolc release-asset van: két aláíratlan app ZIP, két pontos forrásarchívum, platformonkénti build-manifest, kiadási megjegyzés és összevont SHA256SUMS.txt. A checksums fájl mind a másik hét assethez egyező SHA-256 értéket tartalmaz.
+- App csomagok: Windows x64 SHA-256 abd02dc625fe78ccc3807b83e09ff5cafe7a51f7de01044d48452be23c6caf5d; macOS Apple Silicon SHA-256 f74b5356602fd71a4598be8a429fba6c50c2b9de7717ee01b959f9c4ecfb3e6b. Mindkét build-manifest 1.0.0 verziót, c495a66 commitot és sikeres szintetikus self-testet rögzít.
+- Windows 11 x64 Intel valós profilú Restore-próba egy korábbi, funkcionálisan azonos 1.0.0 jelöltbuilddel PASS: 7 035 hordozható fájl visszaállítva, 32 felülvizsgálatra elkülönítve, 0 legacy kihagyás, 0 inspection omission. A ZIP CRC- és mind a 7 067 manifest SHA-256 ellenőrzése PASS.
+- A felhasználó macOS-en is sikeres GUI-folyamatot jelentett; külön macOS jelentés/archívum nem érkezett a darabszámok és hash-ek független ellenőrzésére. A pontos végleges release fájlok telepítését külön nem tesztelték.
 
-Tisztagépes első indítás, FAT/exFAT és hálózati kötet validálása továbbra is NOT RUN.
-A csomagok aláíratlanok; a felhasználó az aláíratlan stabil publikálást választotta.
-Ezeket a korlátokat a kiadási megjegyzés feltünteti. A #3 toolbar/runtime és #4
-aktív konfiguráció alkalmazás/rollback issue-k az 1.0.0 vállalt scope-ján kívül maradnak.
+A csomagok aláíratlanok; a felhasználó elfogadta az aláíratlan stabil publikálást. Tisztagépes telepítés/első indítás, FAT/exFAT és hálózati kötet-validálás NOT RUN, a kiadási megjegyzés ezt jelzi. A #3 MIDI toolbar/runtime és #4 aktív konfiguráció-apply/rollback külön, 1.0.0 scope-on kívüli mérföldkő. Plugintelepítést vagy teljes REAPER runtime-integrációt nem ígérünk.
 
-## Korábbi jelöltellenőrzések és munkaterv
+## Történeti jelöltellenőrzések és auditkövetés
 
-- Publikált verzió: [v0.9.0-beta.2](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2).
-  A későbbi main-javítások ettől még nem publikált release-ek.
+- Korábbi publikált verzió: [v0.9.0-beta.2](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2); a fejlesztések azóta a v1.0.0 stabil kiadásban jelentek meg.
 - A PR #73 (`e4e25c8`) javítása beolvadt a main ágba; issue [#3](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/3) és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
 - A PR #73 [`Tests` run 38516327510](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38516327510) és [`Desktop beta builds` run 38516327518](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38516327518) PASS; a Windows és macOS build, valamint a tesztmátrix sikeres. A Windows futás tartalmazza a >259 karakteres végső helyreállított fájlra vonatkozó szintetikus backup→restore regressziót.
 - Windows 11 x64 gépen a PR #70 régi buildjén a Restore korábban FAIL volt; a PR #73 Windows Actions-buildjével végzett ismételt, valós REAPER-profilos próba **PASS**. A mentett Restore-jelentés: 7 035 visszaállított, 32 review alá elkülönített, 0 kihagyott legacy cache, 0 inspection omission. A File policies ablak és a privát JSON-export is PASS: 7 035 keep, 32 review, 12 regenerate, 2 exclude; 0 inspection omission. A felhasználó minden gombot és funkciót működőnek jelzett. A korábbi konkrét Scan / Preview, MIDI Audit, ReaPack Audit, Backup, Verify és az új Restore/File policies eredmények ezt alátámasztják.
@@ -154,8 +143,8 @@ Linux desktop-csomag külön későbbi munka; Linux jelenleg source-only.
 | 2 | **Következő kiadási kapu: kézi GUI — nyitott** (TC-011/021) | Scan, File policies, MIDI/ReaPack, Config Preview/staging, verify/restore, teljes export, fájlválasztók; nagy jelentések, görgetés, reagálás és macOS natív About. Tiszta támogatott környezetben kézi bizonyíték. |
 | 3 | **Fájlrendszer-validálás — nyitott** (TC-008/015/017/020) | A PR #73 szintetikus Windows CI-regressziója és a felhasználó PR #73 builddel végzett valós archívumos Restore-újratesztje (>259 karakteres restore-útvonal, PASS) elkészült. Továbbra is vizsgálandó a valódi FAT/exFAT és kiválasztott hálózati kötet, ENOSPC/jogosultsági hiba/megszakítás; nincs csendes kihagyás/felülírás, unsupported eset leáll. A nem validált köteteket a kiadási támogatási körből ki kell zárni vagy korlátként egyértelműen jelölni. |
 | 4 | **Célzott fejlesztés — részben kész** (TC-007/013/016/018, külső #8/#15/#16/#19) | MIDI-gráf, MIDI/ReaPack encoding-diagnosztika és config encoding-provenance kész. Következő: regisztrációformák és hibás/olvashatatlan bemenetek; GUI/CLI limitösszegzés kész. Nagy registry benchmark után döntsünk SQL-optimalizálásról; read-only/deadline/cancel megmarad. Csak reprodukált hibára algoritmusjavítás. |
-| 5 | **Dokumentáció és kiadásjelölt — nyitott** (TC-016/022/024) | Az 1.0.0 stabil verziót a felhasználó választotta; a jelölt verziómetaadatának felvétele önmagában nem teljesíti a kaput. Changelog/release notes, README EN/HU, PDF/képek és About egyezzen a csomaggal; az 1.0.0 jelölt About ablaka még BETA-t jelez, ezt a stabil kiadás buildje előtt módosítani és újratesztelni kell. GPL/runtime notice, csomagmanifest és ellenőrzőösszegek ellenőrzése; az aláírás/notarizálás vagy az aláíratlan stabil csomag elfogadása külön döntést igényel. Upstream licencek rögzítése külön reprodukálhatósági feladat. |
-| 6 | **Végső kiadási kapu — nyitott** | A pontos candidate teljes CI-mátrixa és csomagolt self-test PASS; letölthető csomagok tisztagépes install/first-launch/backup/restore PASS. Main szabályok/required checks/force-push védelem ellenőrzése. Nincs ismert kritikus/magas hiba a vállalt folyamatokban, nincs privát adat a csomagban; publikálás külön döntés. |
+| 5 | **1.0.0 dokumentáció és kiadás — kész; következő kiadásnál ismétlendő** (TC-016/022/024) | v1.0.0 2026-10-14-én publikálva. EN/HU README, About, release notes, GPL/runtime notice, platformmanifestek és 7 asset checksum egyeztetve. Upstream licencek rögzítése külön reprodukálhatósági feladat. |
+| 6 | **Következő kiadás fennmaradó validálása — nyitott** | A v1.0.0 CI és csomagolt self-test PASS; célzott Windows valósprofil-teszt PASS, macOS GUI-teszt felhasználói jelentése PASS. Tisztagépes telepítés/első indítás, valódi FAT/exFAT/hálózati kötet, jogosultsági/ENOSPC/megszakítási kör továbbra NOT RUN. Következő kiadás előtt ezekhez kézi bizonyíték vagy támogatási korlátozás szükséges. |
 | 7 | **Külön funkcionális mérföldkövek — nyitott** (TC-012/013/014) | #3: igazolt toolbar/icon formátum és izolált runtime próba. #4: explicit opt-in, teljes ellenőrzött rollback, target fingerprint/conflict, atomic apply/recovery és eldobhatóprofil-tesztek. ReaPack telepítés/elérhetőség külön specifikáció; audit nem állíthat működő telepítést. |
 
 A 4. lépés fejlesztése folytatható a kézi/platformpróbák mellett. A nyitott
