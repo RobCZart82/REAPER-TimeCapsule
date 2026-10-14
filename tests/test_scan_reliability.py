@@ -1,5 +1,6 @@
 """Synthetic traversal and destination-boundary regressions; no live profiles."""
 import errno
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +9,7 @@ import zipfile
 
 from reaper_timecapsule.core import make_backup, preview, scan, verify_backup
 from reaper_timecapsule.gui import App
+from reaper_timecapsule.safe_paths import filesystem_path
 
 
 class ScanReliabilityTests(unittest.TestCase):
@@ -94,6 +96,25 @@ class ScanReliabilityTests(unittest.TestCase):
         self.assertTrue((outside / 'backup.zip').is_file())
         self.assertFalse((self.source / 'backup.zip').exists())
         original_verify(outside / 'backup.zip')
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows extended-length paths')
+    def test_long_windows_script_path_is_scanned_and_backed_up(self):
+        scripts = self.source / 'Scripts'
+        scripts.mkdir()
+        name = 'x' * 240 + '.lua'  # One legal component; full path exceeds MAX_PATH.
+        source_file = scripts / name
+        self.assertGreater(len(str(source_file)), 260)
+        io_file = Path(filesystem_path(source_file))
+        io_file.write_bytes(b'-- synthetic long-path script\\n')
+        self.addCleanup(lambda: io_file.unlink(missing_ok=True))
+
+        relative = 'Scripts/' + name
+        items = scan(self.source)
+        self.assertIn(relative, {item['path'] for item in items})
+        archive = self.base / 'long-path.zip'
+        make_backup(self.source, archive)
+        manifest = verify_backup(archive)
+        self.assertIn(relative, {item['path'] for item in manifest['files']})
 
     def test_windows_reparse_entry_excluded_without_traversal(self):
         from types import SimpleNamespace

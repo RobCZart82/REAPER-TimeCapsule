@@ -23,7 +23,7 @@ from .resource_budget import preflight_zip, require_space
 from .publication import publish_directory, publish_file, require_path_capacity
 from .operation import checkpoint
 from .inventory import build_inventory, inventory_input_limit
-from .safe_paths import trusted_resource_file
+from .safe_paths import filesystem_path, trusted_resource_file
 
 VERSION = "0.9.0-beta.2"
 FORMAT = "reaper-timecapsule"
@@ -138,6 +138,10 @@ def scan(source: Path, *, control=None) -> list[dict]:
     if not source.is_dir():
         raise ValueError("Source must be a directory")
     result = []
+    # The normal Win32 path API rejects paths beyond MAX_PATH unless both the
+    # machine and executable opt in. The explicit extended prefix also works
+    # for the bundled app on systems where long-path awareness is not enabled.
+    walk_root = Path(filesystem_path(source, force=True))
 
     def append_record(record):
         # Every reported entry consumes budget, including directory links.
@@ -153,12 +157,12 @@ def scan(source: Path, *, control=None) -> list[dict]:
         linked = stat.S_ISLNK(metadata.st_mode) or bool(
             getattr(metadata, 'st_file_attributes', 0) & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0))
         if linked:
-            append_record({"path": path.relative_to(source).as_posix(), "size": 0,
+            append_record({"path": path.relative_to(walk_root).as_posix(), "size": 0,
                            "policy": "exclude", "reason": "Link/reparse point omitted; target not read",
                            "kind": "link"})
         return linked
 
-    for base, folders, files in os.walk(source, followlinks=False, onerror=walk_error):
+    for base, folders, files in os.walk(walk_root, followlinks=False, onerror=walk_error):
         checkpoint(control, "Scanning")
         traversed = []
         for name in sorted(folders):
@@ -174,7 +178,7 @@ def scan(source: Path, *, control=None) -> list[dict]:
             metadata = path.lstat()
             if excluded_link(path, metadata):
                 continue
-            rel = path.relative_to(source).as_posix()
+            rel = path.relative_to(walk_root).as_posix()
             if not stat.S_ISREG(metadata.st_mode):
                 append_record({"path": rel, "size": 0, "policy": "exclude",
                                "reason": "Special filesystem entry omitted; content not read",
