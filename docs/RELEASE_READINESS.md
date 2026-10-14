@@ -2,7 +2,7 @@
 
 > Current execution order, release gates and audit status live in [ROADMAP.md](ROADMAP.md).
 > This document records technical guarantees and historical beta preparation, not a second task list.
-> Refreshed 2026-10-14 against main `c1763a8fdd2fc0612a3c5b71cbe6572b3dedf795`.
+> Refreshed 2026-10-14 against code main `c1763a8fdd2fc0612a3c5b71cbe6572b3dedf795`; user smoke-test evidence added after PR #71's docs-only update.
 
 Target scope: verified backup, read-only audits and recovery into a new external
 folder. Automatic active-configuration migration is outside the first beta scope.
@@ -122,12 +122,11 @@ README; later releases require their own clean validation.
 
 ## Remaining release validation
 
-PR #70 merged as `c1763a8`: Windows source traversal and backup reads now use extended-length paths, with a passing synthetic >260-character scan/backup regression. The GUI resolves the redirected Windows Desktop known folder for its restore destination. Manual retest of the reported REAPER profile and published beta.2 installer remains NOT RUN; the release still has the conservative restore-path capacity preflight.
+PR #70 merged as `c1763a`: Windows source traversal and backup reads now use extended-length paths, with a passing synthetic >260-character scan/backup regression. The GUI resolves the redirected Windows Desktop known folder for its restore destination. On Windows 11 x64, the user ran the PR #70 build from [Actions artifact `desktop-beta-windows-latest`](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38513240558/artifacts/11870727714) (artifact ID `11870727714`, build commit `0a23f23e25fefd6d0e6dc6e95241ed1e5fd8a32f`, artifact-archive SHA-256 `5a8719d4e91272da6db3ccbe0d8748243751368ecac83ca2230011dd50318b5b`). Against the actual REAPER settings folder, Scan / Preview, MIDI Audit, ReaPack Audit, Backup to `testing-zip.zip`, and Verify all completed; the full Verify JSON report was saved. Its saved and stored inventories both show 7,035 keep and 32 review entries, with no policy changes or inspection omissions (12 regenerate and 2 exclude items). For the backup ZIP, `zipfile.testzip()` found no CRC error; all 7,067 schema-2 manifest file hashes matched, there were no unexpected ZIP entries, and the previously failing long-path Lua file was present. This is targeted user-machine evidence, not clean-machine or full release acceptance. Restore UI was attempted on the same archive and failed with `Recovery path exceeds conservative filesystem capacity`. The selected target was 49 characters; archive analysis found a maximum 254-character relative path and 13 final target paths (max 311 characters) and 85 temporary staging paths (max 344 characters) exceeding the 259-character preflight limit, matching the current Windows preflight limit. Clean-machine installation and published beta.2 installer retest remain NOT RUN. The release still has the conservative restore-path capacity preflight.
 
 Use [ROADMAP.md — Egyetlen végrehajtási sorrend](ROADMAP.md#egyetlen-végrehajtási-sorrend)
-for the current seven-step plan and acceptance criteria. Packaged clean-machine
-backup/verify/restore, manual GUI checks and real-volume validation remain without
-recorded acceptance evidence in this update. PR #70 checks Tests run 38513240555 (six platform/Python jobs) and Desktop beta builds run
+for the current seven-step plan and acceptance criteria. Packaged clean-machine installation and real-volume validation remain without
+recorded acceptance evidence in this update. Restore UI has a documented FAIL on this real profile/archive. The separate Verify UI action, three audit buttons and Backup have the targeted user smoke-test evidence above. PR #70 checks Tests run 38513240555 (six platform/Python jobs) and Desktop beta builds run
 38513240558 (Windows/macOS packaged self-tests) succeeded. These are candidate CI results, not manual or clean-machine acceptance.
 This does not certify a new release. No local suite was run during this review; PR #68
 reports 234 local tests passed.

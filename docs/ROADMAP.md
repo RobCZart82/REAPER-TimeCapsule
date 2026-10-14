@@ -16,7 +16,7 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
   és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
 - PR #70 [`Tests` 38513240555](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38513240555)
   (6 platform/Python mátrix-job) és [`Desktop beta builds` 38513240558](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38513240558)
-  (Windows és macOS csomagolt self-test): PASS a beolvasztott kódváltozáson. A felhasználói gépen és a beta.2 telepítővel kézi újrateszt még NOT RUN.
+  (Windows és macOS csomagolt self-test): PASS a beolvasztott kódváltozáson. A felhasználó Windows 11 x64 gépén a PR #70 teszt-buildjével a Scan / Preview, MIDI Audit és ReaPack Audit sikeresen lefutott a tényleges REAPER settings mappán; a Backup is elkészült. A Verify UI-út PASS (jelentés: 7 035 keep / 32 review, mentett és tárolt érték egyezik); a Restore UI-kísérlet **FAIL** (konzervatív útvonal-kapacitás elutasította).
 - Legutóbbi helyi Windows/Python 3.13 suite: **220 teszt OK, 13 skip**.
   Szintetikus adatok, dedikált munkamappa; sandboxon kívüli futás az ideiglenesútvonal-korlát miatt.
 - Tisztagépes telepítés, kézi GUI, valódi FAT/exFAT/hálózati kötet és izolált REAPER:
@@ -42,7 +42,7 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
 | [#67](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/67) | ReaScript függőségfeloldás Custom Actionökben | 232 helyi teszt; REAPER runtime továbbra NOT RUN |
 | [#68](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/68) | Kis-/nagybetűs scriptútvonal-eltérés felülvizsgálatra jelölése | 234 helyi teszt; pontos fájlnévegyezés szükséges |
 | [#69](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/69) | Release readiness és roadmap frissítése `5fa9738` mainhez | Dokumentációs PR; PR CI és merge utáni main CI PASS |
-| [#70](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/70) | Windows >260 karakteres forrásútvonal-mentés és OneDrive-/lokalizált Asztal alapérték | Merge: `c1763a8`; PR CI Tests 6/6 és Desktop builds 2/2 PASS; kézi béta.2 újrateszt NOT RUN |
+| [#70](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/70) | Windows >260 karakteres forrásútvonal-mentés és OneDrive-/lokalizált Asztal alapérték | Merge: `c1763a8`; PR CI Tests 6/6 és Desktop builds 2/2 PASS; kézi Windows 11 x64 smoke-test: Scan/Preview, MIDI Audit, ReaPack Audit és Backup PASS; Verify UI PASS; Restore UI FAIL — az útvonal-kapacitás előzetes ellenőrzése elutasította |
 
 Ezeket ne nyissuk újra reprodukció nélkül. Az összes egyszerű ciklus felsorolása,
 általános encoding-felismerés és teljes build-reprodukálhatóság nincs megvalósítva.
@@ -96,11 +96,9 @@ a beta.2 `Scan / Preview` művelete `WinError 3`-mal leállt. A PR #70 megoldott
 extended-length útvonalas forrásbejárást és mentésolvasást; a Windows known-folder API
 a OneDrive-ra átirányított, magyar nevű Asztal-mappát állítja be alapértelmezett
 visszaállítási célként. A PR Windows/macOS/Ubuntu CI és csomagolt alkalmazás-ellenőrzése PASS.
-A felhasználói gépen, valódi REAPER-profillal és a beta.2 telepítővel kézi újrateszt
-még NOT RUN; a publikált beta.2 változatlan.
+Kézi Windows-teszt (2026-10-14): Windows 11 x64, a tényleges REAPER settings mappán; a felhasználó a PR #70 kódját tartalmazó [desktop-beta-windows-latest Actions-artefaktumot](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38513240558/artifacts/11870727714) futtatta (artifact ID `11870727714`, build commit `0a23f23e25fefd6d0e6dc6e95241ed1e5fd8a32f`, letöltött Actions-artefaktum SHA-256 `5a8719d4e91272da6db3ccbe0d8748243751368ecac83ca2230011dd50318b5b`; ez az artefaktum-zip digestje). Lépések: Scan / Preview, MIDI Audit, ReaPack Audit, Backup a `testing-zip.zip` fájlba, majd Verify és a teljes JSON-jelentés mentése. Mindegyik művelet sikeresen lefutott. A Verify-jelentés mentett/tárolt leltára egyaránt 7 035 keep és 32 review; policy-változás és inspection omission nincs, 12 regenerate és 2 exclude elem kihagyottként szerepel. A Backup ZIP-tartalmának ellenőrzése: `zipfile.testzip()` hibát nem talált, a schema 2 / beta.2 manifest 7 067 bejegyzésének SHA-256 mind egyezett, váratlan ZIP-tétel nem volt, a korábban problémás hosszú útvonalú Lua-fájl jelen volt. Várt és tényleges eredmény: az öt UI-művelet befejeződik, a manifest és az archivált fájlhash-ek egyeznek; **PASS**. Ez célzott, felhasználói gépen végzett smoke-test és archive-integritás ellenőrzés, nem tisztagépes vagy teljes release-elfogadás. A Restore UI a rövid, 49 karakteres célmappa ellenére FAIL-lel leállt: `Recovery path exceeds conservative filesystem capacity`. A ZIP leghosszabb relatív útvonala 254 karakter; a végleges célútvonalon 13 fájlútvonal (max. 311 karakter), az ideiglenes staging-útvonalon pedig 85 (max. 344 karakter) meghaladja a 259 karakteres korlátot, ami a jelenlegi Windows preflight-korlátot reprodukálja. A tisztagépes telepítés és a publikált beta.2 installer újratesztje NOT RUN; a publikált beta.2 változatlan.
 
-Az aktuális `main` commit `c1763a8fdd2fc0612a3c5b71cbe6572b3dedf795` (#70). A nyitott PR-lista üres;
-a #3 és #4 továbbra nyitott. A PR #70 ellenőrzései: Tests run 38513240555 és Desktop beta
+A PR #70 utáni kód-main `c1763a8fdd2fc0612a3c5b71cbe6572b3dedf795`; PR #71 ezt követően csak dokumentációt módosított, és a main `3728a51dfd5406cae33fec468f57cd365fe3ec33` lett. A PR #72 jelen dokumentációfrissítésként nyitott; a #3 és #4 issue továbbra nyitott. A PR #70 ellenőrzései: Tests run 38513240555 és Desktop beta
 builds run 38513240558; mindkettő sikeres. A csomagolt CI-artefaktok nem kiadott vagy
 tisztagépen elfogadott release-csomagok. Kézi GUI/clean-machine, isolated REAPER-runtime
 és valódi FAT/exFAT/hálózati kötet tesztek továbbra sincsenek rögzítve.
