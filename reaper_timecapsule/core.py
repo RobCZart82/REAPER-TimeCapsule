@@ -194,12 +194,12 @@ def scan(source: Path, *, control=None) -> list[dict]:
     def walk_error(error):
         raise OSError(error.errno, "Cannot scan source directory: " + str(error), error.filename) from error
 
-    def excluded_link(path, metadata):
+    def excluded_link(metadata, relative):
         # Windows junctions/reparse points are not reliably covered by is_symlink.
         linked = stat.S_ISLNK(metadata.st_mode) or bool(
             getattr(metadata, 'st_file_attributes', 0) & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0))
         if linked:
-            append_record({"path": path.relative_to(walk_root).as_posix(), "size": 0,
+            append_record({"path": relative, "size": 0,
                            "policy": "exclude", "reason": "Link/reparse point omitted; target not read",
                            "kind": "link"})
         return linked
@@ -210,17 +210,19 @@ def scan(source: Path, *, control=None) -> list[dict]:
         for name in sorted(folders):
             checkpoint(control, "Scanning")
             path = Path(base) / name
-            metadata = path.lstat()  # Propagate permission/disappearance errors.
-            if not excluded_link(path, metadata) and name not in (".git", "__pycache__", ".svn"):
+            relative = path.relative_to(source).as_posix()
+            metadata = Path(filesystem_path(path)).lstat()  # Propagate permission/disappearance errors.
+            if not excluded_link(metadata, relative) and name not in (".git", "__pycache__", ".svn"):
                 traversed.append(name)
         folders[:] = traversed
         for filename in sorted(files):
             checkpoint(control, "Scanning")
             path = Path(base) / filename
-            metadata = path.lstat()
-            if excluded_link(path, metadata):
+            relative = path.relative_to(source).as_posix()
+            metadata = Path(filesystem_path(path)).lstat()
+            if excluded_link(metadata, relative):
                 continue
-            rel = path.relative_to(walk_root).as_posix()
+            rel = relative
             if not stat.S_ISREG(metadata.st_mode):
                 append_record({"path": rel, "size": 0, "policy": "exclude",
                                "reason": "Special filesystem entry omitted; content not read",
