@@ -76,7 +76,7 @@ class FilePublicationTests(unittest.TestCase):
 
     @unittest.skipUnless(os.name == 'nt', 'Windows extended-length filesystem behavior')
     def test_restore_publishes_files_above_legacy_max_path(self):
-        relative = Path('a' * 55) / ('b' * 55) / ('c' * 55) / 'long-path-test.lua'
+        relative = Path('Scripts') / ('a' * 55) / ('b' * 55) / ('c' * 55) / 'long-path-test.lua'
         source_file = self.source / relative
         if len(str(source_file)) >= 259:
             self.skipTest('Temporary root leaves no room for a long-path restore fixture')
