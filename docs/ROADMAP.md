@@ -8,7 +8,29 @@ A korábbi audit chatben TC-014-nél csonkolódott; TC-014–024 azonosítása a
 auditkövetése alapján történt. Az eredeti teljes audit elfogadási feltételeivel való
 egyezés annak elérhetőségekor külön ellenőrzendő.
 
-## Ellenőrzött állapot
+## 1.0.0 stabil kiadási állapot — 2026-10-14
+
+A felhasználó az 1.0.0 stabil, aláíratlan kiadás publikálását engedélyezte. A PR #77
+kiadási ága most eltávolítja az About ablak BETA jelzését, a két README letöltési
+hivatkozásait 1.0.0-ra igazítja, és hozzáadja a
+[kiadási megjegyzéseket](RELEASE_NOTES_1.0.0.md). Ez még nem publikált kiadás:
+a végső PR-headen futó teszteknek és mindkét platform csomagolt buildjének zöldnek
+kell lennie a merge és a tag/release létrehozása előtt.
+
+Kézi teszt bizonyítéka az előző, azonos funkciójú 1.0.0 jelöltbuildről származik:
+Windows 11 x64 Intel gépen a valós profil Restore-ja sikerült (7 035 visszaállított,
+32 felülvizsgálatra különített, 0 legacy-kihagyás, 0 inspection omission); a ZIP CRC
+és 7 067 manifest-hash ellenőrzése is PASS. A felhasználó macOS-en is sikeres GUI
+munkafolyamatot jelentett, külön jelentés/archívum nélkül. A végső About-felirat és
+dokumentáció módosult a kézi teszt óta; a pontos végső artefaktumokon új kézi
+telepítési teszt nem futott.
+
+Tisztagépes első indítás, FAT/exFAT és hálózati kötet validálása továbbra is NOT RUN.
+A csomagok aláíratlanok; a felhasználó az aláíratlan stabil publikálást választotta.
+Ezeket a korlátokat a kiadási megjegyzés feltünteti. A #3 toolbar/runtime és #4
+aktív konfiguráció alkalmazás/rollback issue-k az 1.0.0 vállalt scope-ján kívül maradnak.
+
+## Korábbi jelöltellenőrzések és munkaterv
 
 - Publikált verzió: [v0.9.0-beta.2](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2).
   A későbbi main-javítások ettől még nem publikált release-ek.
