@@ -2,7 +2,7 @@
 
 > Current execution order, release gates and audit status live in [ROADMAP.md](ROADMAP.md).
 > This document records technical guarantees and historical beta preparation, not a second task list.
-> Refreshed 2026-10-14 against code main `e4e25c82daec1316364669c312fddbdb370e0c9c`; PR #73 adds Windows extended-length restore staging and a synthetic long-path regression.
+> Refreshed 2026-10-14 against main `2d09b97090bfb2c6f8048bb6efbecbc244a8437e` (functional code baseline `e4e25c82daec1316364669c312fddbdb370e0c9c`); the current 1.0.0 candidate and release gates are summarized in [ROADMAP.md](ROADMAP.md).
 
 Target scope: verified backup, read-only audits and recovery into a new external
 folder. Automatic active-configuration migration is outside the first beta scope.
@@ -137,3 +137,22 @@ A later limited beta may retain explicit static-audit/read-only migration limits
 Issue #3 toolbar/runtime and issue #4 active apply/rollback remain separate milestones.
 Version selection, bilingual documentation, package contents/checksums and final
 candidate validation must precede a separate publication decision.
+
+
+## 1.0.0 candidate snapshot — 2026-10-14
+
+The current release checklist and execution order remain in [ROADMAP.md](ROADMAP.md).
+PR #77 is an unpublished draft candidate at head `f55339d01046b828cbccccc6b80de06198d57286`.
+Its Tests run 38525102808 and Desktop beta builds run 38525103039 passed; both native
+platform builds and packaged self-tests succeeded. The Windows and macOS artifacts
+are identified there by artifact ID and archive digest.
+
+On the tested Windows 11 x64 candidate, the user-reported Restore succeeded with
+7,035 portable files restored, 32 isolated for review, 0 legacy skips and 0
+inspection omissions. The supplied Test100.zip passed CRC and all 7,067 schema-2
+manifest SHA-256 comparisons. The user also reports the same successful Restore
+result on macOS, without a separate report/archive for independent count/hash checks.
+The candidate About screen still displays `VERSION 1.0.0 · BETA`; remove that label
+and rebuild the final stable package. These targeted profile tests do not complete
+clean-machine installation/first-launch or real-filesystem validation. No public
+1.0.0 release has been created.
