@@ -51,7 +51,9 @@ def require_path_capacity(parent, relatives):
     from pathlib import Path
     parent = Path(parent)
     if sys.platform == 'win32':
-        component_limit, path_limit = 255, 259
+        # Restore I/O uses extended-length paths, so retain component safety
+        # while allowing paths up to the Windows extended-length limit.
+        component_limit, path_limit = 255, 32760
         units = lambda value: len(value.encode('utf-16-le')) // 2
     else:
         component_limit = os.pathconf(parent, 'PC_NAME_MAX')
