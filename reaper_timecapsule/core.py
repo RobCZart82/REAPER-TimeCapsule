@@ -25,7 +25,7 @@ from .operation import checkpoint
 from .inventory import build_inventory, inventory_input_limit
 from .safe_paths import filesystem_path, trusted_resource_file
 
-VERSION = "0.9.0-beta.2"
+VERSION = "1.0.0"
 FORMAT = "reaper-timecapsule"
 SCHEMA = 2
 MAX_MANIFEST_BYTES = 16 * 1024 * 1024
