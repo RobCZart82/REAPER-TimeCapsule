@@ -43,6 +43,48 @@ def default_resource() -> Path:
         return Path(os.environ.get("APPDATA", str(Path.home() / "AppData" / "Roaming"))) / "REAPER"
     return Path.home() / ".config" / "REAPER"
 
+def _windows_desktop_directory() -> Path:
+    """Resolve the current user's redirected Windows Desktop known folder."""
+    import ctypes
+    from ctypes import wintypes
+    from uuid import UUID
+
+    class GUID(ctypes.Structure):
+        _fields_ = [
+            ("Data1", ctypes.c_uint32), ("Data2", ctypes.c_uint16),
+            ("Data3", ctypes.c_uint16), ("Data4", ctypes.c_ubyte * 8),
+        ]
+
+    folder = GUID.from_buffer_copy(UUID("B4BFCC3A-DB2C-424C-B029-7FE99A87C641").bytes_le)
+    output = ctypes.c_wchar_p()
+    shell32 = ctypes.WinDLL("shell32", use_last_error=True)
+    shell32.SHGetKnownFolderPath.argtypes = [
+        ctypes.POINTER(GUID), wintypes.DWORD, wintypes.HANDLE,
+        ctypes.POINTER(ctypes.c_wchar_p),
+    ]
+    shell32.SHGetKnownFolderPath.restype = ctypes.c_long
+    result = shell32.SHGetKnownFolderPath(ctypes.byref(folder), 0, None, ctypes.byref(output))
+    if result != 0 or not output.value:
+        raise OSError(result, "Cannot resolve the Windows Desktop folder")
+    try:
+        return Path(output.value)
+    finally:
+        ole32 = ctypes.WinDLL("ole32", use_last_error=True)
+        ole32.CoTaskMemFree.argtypes = [ctypes.c_void_p]
+        ole32.CoTaskMemFree(ctypes.cast(output, ctypes.c_void_p))
+
+
+def default_restore_destination() -> Path:
+    """Suggest a new recovery folder below the actual Desktop location."""
+    if os.name == "nt":
+        try:
+            desktop = _windows_desktop_directory()
+        except (OSError, AttributeError):
+            desktop = Path.home() / "Desktop"
+    else:
+        desktop = Path.home() / "Desktop"
+    return desktop / "TimeCapsule-Restored"
+
 
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
