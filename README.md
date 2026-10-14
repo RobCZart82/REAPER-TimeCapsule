@@ -1,7 +1,6 @@
 # REAPER Time Capsule
 
-Official application name: **REAPER Time Capsule**. Development builds use this
-name; the published beta download filenames below retain their original names.
+Official application name: **REAPER Time Capsule**. This page documents the 1.0.0 stable release.
 [Current audit review and priorities](docs/AUDIT_REVIEW_2026-10-11.md).
 
 **Preserve your REAPER setup. Restore with confidence.**
@@ -19,10 +18,10 @@ Scan / Preview lists a filename portability issue; this is not a completed backu
 
 ![REAPER Time Capsule About window on macOS](docs/screenshots/time-capsule-about-macos.png)
 
-*Development build About window with the new floppy icon, GYR logo and graphic signature. These UI changes are not yet included in the published beta download.*
+*Historical development screenshot of the branded About window. The 1.0.0 application now shows the stable version without a BETA marker.*
 
-> **[Download 0.9.0-beta.2](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2)**
-> — an unsigned public beta. This is a resource snapshot and recovery tool;
+> **[Download REAPER Time Capsule 1.0.0](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v1.0.0)**
+> — the unsigned stable release. This is a resource snapshot and recovery tool;
 > complete one-click REAPER reinstallation is not implemented. Keep an independent backup.
 
 ## Download
@@ -31,13 +30,13 @@ Download packages from this project's [GitHub Releases](https://github.com/RobCZ
 
 | Platform | Application |
 |---|---|
-| macOS · Apple Silicon (arm64) | [Unsigned application ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/REAPER-TimeCapsule-0.9.0-beta.2-Darwin-arm64-unsigned.zip) |
-| Windows · x64 | [Unsigned application ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/REAPER-TimeCapsule-0.9.0-beta.2-Windows-AMD64-unsigned.zip) |
-| Linux | [Source and release notes](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2) · Python 3.10+ |
+| macOS · Apple Silicon (arm64) | [Unsigned application ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v1.0.0/REAPER-TimeCapsule-1.0.0-Darwin-arm64-unsigned.zip) |
+| Windows · x64 | [Unsigned application ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v1.0.0/REAPER-TimeCapsule-1.0.0-Windows-AMD64-unsigned.zip) |
+| Linux | [Source and release notes](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v1.0.0) · Python 3.10+ |
 
 Both application ZIPs include matching source, GPL and runtime license notices,
 a bundled self-test report and documentation. The release also provides
-[SHA-256 checksums](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/SHA256SUMS.txt)
+[SHA-256 checksums](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v1.0.0/SHA256SUMS.txt)
 and platform build manifests. Windows source uses CRLF line endings.
 Development on `main` may differ from the published packages.
 
@@ -54,7 +53,7 @@ Backup resolves and pins the actual destination parent, rejects aliases into the
 source, and rechecks the parent before exclusive publication. This is not a
 transactional filesystem snapshot or protection against arbitrary hostile directory
 replacement. Snapshot-consistent inventory and inventory-reader boundaries remain
-separate fixes. These changes are on main, not in the published beta.
+separate fixes. These safeguards are included in 1.0.0.
 
 ### Development: archived inventory and restore preview
 
@@ -68,7 +67,7 @@ Inventory and the resource-based ReaPack/MIDI audits reject linked parent paths.
 Restore preview reports effective current policies, stored counts and explained
 policy changes. Older inventories are labelled as having an unverified source
 basis; their original files are preserved and current restore safety rules apply.
-These changes are on main and are not yet in the published beta.
+These safeguards are included in 1.0.0.
 
 ## Features
 
@@ -129,8 +128,7 @@ window, backup creation, verification and recovery:
 - [English user guide (PDF)](output/pdf/reaper-time-capsule-user-guide-en.pdf)
 - [Magyar felhasználói útmutató (PDF)](output/pdf/reaper-time-capsule-user-guide-hu.pdf)
 
-Both guides describe the published 0.9.0-beta.2 interface and include the same
-steps and safety notes in their respective languages.
+The PDF guides retain screenshots from the earlier 0.9.0-beta.2 interface; some screens differ from 1.0.0. This README documents the current release.
 
 1. Download the ZIP for your platform and extract the complete package. Keep the
    application's companion files together. Start the included `.app` on macOS or
@@ -242,9 +240,7 @@ python -m reaper_timecapsule verify-stage TimeCapsule-Staging/review.timecapsule
 
 Paths and REAPER versions above are examples; provide your actual selected inputs.
 Run automated tests with `python -m unittest discover -s tests -v`.
-The release passed 112 tests across macOS, Windows and Linux on Python 3.10/3.12;
-both bundled desktop executables passed synthetic backup/verify/recovery and Tk
-startup checks. This does not replace full REAPER integration testing.
+The release CI runs the cross-platform source tests and each bundled desktop executable's synthetic backup/verify/recovery and Tk startup checks. This does not replace full REAPER integration testing; see the 1.0.0 release notes for manual-test scope.
 
 ## About and license
 
