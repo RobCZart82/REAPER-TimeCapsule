@@ -16,7 +16,7 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
   és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
 - PR #70 [`Tests` 38513240555](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38513240555)
   (6 platform/Python mátrix-job) és [`Desktop beta builds` 38513240558](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38513240558)
-  (Windows és macOS csomagolt self-test): PASS a beolvasztott kódváltozáson. A felhasználó Windows 11 x64 gépén a PR #70 teszt-buildjével a Scan / Preview, MIDI Audit és ReaPack Audit sikeresen lefutott a tényleges REAPER settings mappán; a Backup is elkészült. A külön Verify-gomb és a Restore UI-út még NOT RUN.
+  (Windows és macOS csomagolt self-test): PASS a beolvasztott kódváltozáson. A felhasználó Windows 11 x64 gépén a PR #70 teszt-buildjével a Scan / Preview, MIDI Audit és ReaPack Audit sikeresen lefutott a tényleges REAPER settings mappán; a Backup is elkészült. A Verify UI-út PASS (jelentés: 7 035 keep / 32 review, mentett és tárolt érték egyezik); a Restore UI-út még NOT RUN.
 - Legutóbbi helyi Windows/Python 3.13 suite: **220 teszt OK, 13 skip**.
   Szintetikus adatok, dedikált munkamappa; sandboxon kívüli futás az ideiglenesútvonal-korlát miatt.
 - Tisztagépes telepítés, kézi GUI, valódi FAT/exFAT/hálózati kötet és izolált REAPER:
@@ -96,7 +96,7 @@ a beta.2 `Scan / Preview` művelete `WinError 3`-mal leállt. A PR #70 megoldott
 extended-length útvonalas forrásbejárást és mentésolvasást; a Windows known-folder API
 a OneDrive-ra átirányított, magyar nevű Asztal-mappát állítja be alapértelmezett
 visszaállítási célként. A PR Windows/macOS/Ubuntu CI és csomagolt alkalmazás-ellenőrzése PASS.
-A felhasználó visszajelzése szerint a PR #70 teszt-buildjén Windows 11 x64 alatt a Scan / Preview, MIDI Audit és ReaPack Audit sikeresen lefutott a tényleges REAPER settings mappán; a Backup is sikeres volt. A Backupból kapott ZIP read-only ellenőrzése: schema 2, beta.2 app_version, 7 067 mentett fájl, 14 kihagyás, mind a 7 067 manifest SHA-256 egyezett, és a korábban problémás hosszú útvonalú Lua-fájl is szerepelt benne. Ez célzott, felhasználói gépen végzett smoke-test és archive-integritás ellenőrzés, nem teljes release-elfogadás. A külön Verify UI-művelet, Restore, tisztagépes telepítés és a publikált beta.2 installer újratesztje továbbra NOT RUN; a publikált beta.2 változatlan.
+A felhasználó visszajelzése szerint a PR #70 teszt-buildjén Windows 11 x64 alatt a Scan / Preview, MIDI Audit és ReaPack Audit sikeresen lefutott a tényleges REAPER settings mappán; a Backup és a Verify UI-művelet is sikeresen lefutott. A Verify teljes JSON-jelentése 7 035 keep és 32 review elemet jelez mind a mentett, mind a tárolt leltárban, policy-változás és inspection omission nélkül; 12 regenerate és 2 exclude elem kihagyottként szerepel. A Backupból kapott ZIP read-only ellenőrzése: schema 2, beta.2 app_version, 7 067 mentett fájl, 14 kihagyás, mind a 7 067 manifest SHA-256 egyezett, és a korábban problémás hosszú útvonalú Lua-fájl is szerepelt benne. Ez célzott, felhasználói gépen végzett smoke-test és archive-integritás ellenőrzés, nem teljes release-elfogadás. A Restore, tisztagépes telepítés és a publikált beta.2 installer újratesztje továbbra NOT RUN; a publikált beta.2 változatlan.
 
 Az aktuális `main` commit `c1763a8fdd2fc0612a3c5b71cbe6572b3dedf795` (#70). A nyitott PR-lista üres;
 a #3 és #4 továbbra nyitott. A PR #70 ellenőrzései: Tests run 38513240555 és Desktop beta
