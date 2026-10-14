@@ -129,8 +129,7 @@ a főablakot, a mentés elkészítését, az ellenőrzést és a visszaállítá
 - [Angol felhasználói útmutató (PDF)](output/pdf/reaper-time-capsule-user-guide-en.pdf)
 - [Magyar felhasználói útmutató (PDF)](output/pdf/reaper-time-capsule-user-guide-hu.pdf)
 
-Mindkét útmutató a publikált 0.9.0-beta.2 felületet ismerteti, és azonos
-részletességgel tartalmazza a lépéseket és biztonsági tudnivalókat.
+A PDF-útmutatók a korábbi 0.9.0-beta.2 képernyőképeit tartalmazzák; egyes képernyők eltérnek az 1.0.0-tól. Ez a README a jelenlegi kiadást írja le.
 
 1. Töltsd le a platformodhoz tartozó ZIP-et, és bontsd ki a teljes csomagot.
    Az alkalmazás kísérőfájljait tartsd együtt. macOS-en indítsd a mellékelt `.app`-ot,
