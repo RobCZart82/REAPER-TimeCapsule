@@ -135,7 +135,7 @@ Packaged clean-machine installation and real-volume validation remain without re
 Use [ROADMAP.md — Egyetlen végrehajtási sorrend](ROADMAP.md#egyetlen-végrehajtási-sorrend) for the current seven-step plan and acceptance criteria.
 A later limited beta may retain explicit static-audit/read-only migration limits.
 Issue #3 toolbar/runtime and issue #4 active apply/rollback remain separate milestones.
-The user selected 1.0.0 stable and authorized publication of unsigned packages. Bilingual README, final About label and 1.0.0 release notes are prepared on PR #77. Merge and publication remain contingent on green final-head tests/builds; clean-machine and real-volume validation are disclosed as outstanding limitations.
+Historical candidate note: the user selected 1.0.0 stable and authorized unsigned publication; PR #77 then passed final-head tests/builds and merged. The actual published release evidence and current limitations are recorded in the latest-release section below.
 
 
 ## Latest stable release — v1.0.0 — 2026-10-14
