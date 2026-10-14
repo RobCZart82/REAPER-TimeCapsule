@@ -103,10 +103,7 @@ size without saving resized dimensions. Both directions are resizable, with a
 minimum width that keeps the action row visible. Shared columns align the resource
 fields and Browse buttons. Output lines do not wrap; horizontal and vertical
 scrollbars appear only when needed. The bottom ↓ handle expands the output area
-without changing the current width. These layout changes are not included in
-the published 0.9.0-beta.2 packages. Main also adds a floppy application icon
-with the REAPER symbol and a non-modal About window using the creator's GYR mark
-and handwritten signature, without a civil-name text credit.
+without changing the current width. The 1.0.0 packages include this layout and the branded About window.
 
 ## System requirements
 
@@ -128,7 +125,7 @@ window, backup creation, verification and recovery:
 - [English user guide (PDF)](output/pdf/reaper-time-capsule-user-guide-en.pdf)
 - [Magyar felhasználói útmutató (PDF)](output/pdf/reaper-time-capsule-user-guide-hu.pdf)
 
-The PDF guides retain screenshots from the earlier 0.9.0-beta.2 interface; some screens differ from 1.0.0. This README documents the current release.
+The PDF user guides retain screenshots from the earlier 0.9.0-beta.2 interface; some screens differ from 1.0.0. This README documents the current release.
 
 1. Download the ZIP for your platform and extract the complete package. Keep the
    application's companion files together. Start the included `.app` on macOS or
