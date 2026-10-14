@@ -2,7 +2,7 @@
 
 > Current execution order, release gates and audit status live in [ROADMAP.md](ROADMAP.md).
 > This document records technical guarantees and historical beta preparation, not a second task list.
-> Refreshed 2026-10-14 against main `c1763a8fdd2fc0612a3c5b71cbe6572b3dedf795`.
+> Refreshed 2026-10-14 against code main `c1763a8fdd2fc0612a3c5b71cbe6572b3dedf795`; user smoke-test evidence added after PR #71's docs-only update.
 
 Target scope: verified backup, read-only audits and recovery into a new external
 folder. Automatic active-configuration migration is outside the first beta scope.
@@ -122,12 +122,11 @@ README; later releases require their own clean validation.
 
 ## Remaining release validation
 
-PR #70 merged as `c1763a8`: Windows source traversal and backup reads now use extended-length paths, with a passing synthetic >260-character scan/backup regression. The GUI resolves the redirected Windows Desktop known folder for its restore destination. Manual retest of the reported REAPER profile and published beta.2 installer remains NOT RUN; the release still has the conservative restore-path capacity preflight.
+PR #70 merged as `c1763a`: Windows source traversal and backup reads now use extended-length paths, with a passing synthetic >260-character scan/backup regression. The GUI resolves the redirected Windows Desktop known folder for its restore destination. On the user's Windows 11 x64 machine, the PR #70 test build successfully ran Scan / Preview, MIDI Audit and ReaPack Audit against the actual REAPER settings folder; Backup also completed. A read-only check of the resulting ZIP found schema 2, app_version 0.9.0-beta.2, 7,067 saved files and 14 omitted items; all 7,067 file hashes matched the manifest, and the previously failing long-path Lua file was present. This is targeted smoke-test evidence, not full release acceptance. The separate Verify UI action, Restore UI flow, clean-machine installation and published beta.2 installer retest remain NOT RUN. The release still has the conservative restore-path capacity preflight.
 
 Use [ROADMAP.md — Egyetlen végrehajtási sorrend](ROADMAP.md#egyetlen-végrehajtási-sorrend)
-for the current seven-step plan and acceptance criteria. Packaged clean-machine
-backup/verify/restore, manual GUI checks and real-volume validation remain without
-recorded acceptance evidence in this update. PR #70 checks Tests run 38513240555 (six platform/Python jobs) and Desktop beta builds run
+for the current seven-step plan and acceptance criteria. Packaged clean-machine installation and backup/restore, the separate Verify UI action, and real-volume validation remain without
+recorded acceptance evidence in this update. The three audit buttons and Backup have the targeted user smoke-test evidence above. PR #70 checks Tests run 38513240555 (six platform/Python jobs) and Desktop beta builds run
 38513240558 (Windows/macOS packaged self-tests) succeeded. These are candidate CI results, not manual or clean-machine acceptance.
 This does not certify a new release. No local suite was run during this review; PR #68
 reports 234 local tests passed.
