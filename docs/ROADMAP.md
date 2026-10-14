@@ -1,6 +1,6 @@
 # REAPER Time Capsule — egységes fejlesztési és kiadási terv
 
-Frissítve: **2026-10-13**. Ellenőrzött main: `0c2627d8096560970538eb6d827ae792bec7c111`.
+Frissítve: **2026-10-14**. Ellenőrzött main: `5fa9738160cd7aad9b405d0b6f743287a99a8059`.
 Ez az egyetlen végrehajtási terv. A [release readiness](RELEASE_READINESS.md)
 a megvalósított garanciák technikai háttéranyaga; a
 [korábbi audit](AUDIT_REVIEW_2026-10-11.md) történeti bizonyíték, nem párhuzamos feladatlista.
@@ -12,10 +12,11 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
 
 - Publikált verzió: [v0.9.0-beta.2](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2).
   A későbbi main-javítások ettől még nem publikált release-ek.
-- E tervmódosítás előtti pillanatképben nincs nyitott PR; issue [#3](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/3)
+- A 2026-10-14-i felülvizsgálatkor nincs nyitott PR; issue [#3](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/3)
   és [#4](https://github.com/RobCZart82/REAPER-TimeCapsule/issues/4) nyitott.
-- Main [Tests 38437749952](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38437749952)
-  és [Desktop builds 38437750020](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38437750020): PASS.
+- Main [`Tests` 38439260863](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38439260863)
+  (6 platform/Python mátrix-job) és [`Desktop beta builds` 38439261012](https://github.com/RobCZart82/REAPER-TimeCapsule/actions/runs/38439261012)
+  (Windows és macOS csomagolt self-test): PASS, mindkettő a fenti `5fa9738` commiton.
 - Legutóbbi helyi Windows/Python 3.13 suite: **220 teszt OK, 13 skip**.
   Szintetikus adatok, dedikált munkamappa; sandboxon kívüli futás az ideiglenesútvonal-korlát miatt.
 - Tisztagépes telepítés, kézi GUI, valódi FAT/exFAT/hálózati kötet és izolált REAPER:
@@ -34,6 +35,12 @@ egyezés annak elérhetőségekor külön ellenőrzendő.
 | [#60](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/60) | ReaPack cp1252 fallback bizonytalanság jelzett, partial státusz | `test_reapack_encoding.py`; URL-titokszűrés megmarad |
 | [#61](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/61) | Egyetlen fejlesztési terv és összehangolt kiadási feltételek | ROADMAP és RELEASE_READINESS |
 | [#62](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/62) | Snapshot ZIP sor vessző előtti szóköze eltávolítva | Csak formázás; PR és main CI PASS |
+| [#63](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/63) | Main-SHA-hoz kötött roadmap-evidencia és dokumentációfrissítési szabály | README-k és terv egyeztetve |
+| [#64](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/64) | Szigorú UTF-8 config-preview provenancia | Tesztelt preview; általános encoding-felismerés továbbra sincs |
+| [#65](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/65) | Hibás ReaPack override partial státusza és növekvő INI-olvasáskorlát | 226 helyi teszt; két PR CI-folyamat PASS |
+| [#66](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/66) | Read-only inspection-limit összegzés CLI-ben és GUI-ban | 229 helyi teszt; kézi GUI továbbra NOT RUN |
+| [#67](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/67) | ReaScript függőségfeloldás Custom Actionökben | 232 helyi teszt; REAPER runtime továbbra NOT RUN |
+| [#68](https://github.com/RobCZart82/REAPER-TimeCapsule/pull/68) | Kis-/nagybetűs scriptútvonal-eltérés felülvizsgálatra jelölése | 234 helyi teszt; pontos fájlnévegyezés szükséges |
 
 Ezeket ne nyissuk újra reprodukció nélkül. Az összes egyszerű ciklus felsorolása,
 általános encoding-felismerés és teljes build-reprodukálhatóság nincs megvalósítva.
@@ -79,6 +86,22 @@ biztosan mentett fájlként jelent meg. A javítás pontos egyezést kér, elté
 kis-/nagybetűt `case-mismatch-requires-review` script-issue-ként jelez;
 relatív Scripts-bázis és Windows elválasztó továbbra támogatott.
 Helyi suite: **234 teszt OK**. Platformfüggő runtime-feloldás nincs igazolva.
+
+## 2026-10-14-i release-előkészítési pillanatkép
+
+Az aktuális `main` commit `5fa9738160cd7aad9b405d0b6f743287a99a8059` (#68). A PR-lista üres;
+a #3 és #4 továbbra nyitott. A fenti CI futások ezen a commiton sikeresek;
+a desktop build run két nem lejárt, ideiglenes Actions-artifactot készített
+Windowsra és macOS-re. Ezek CI-eredmények, nem kiadott vagy tisztagépen elfogadott
+release-csomagok. A legutóbbi PR #68 leírása 234 helyi teszt sikerét jelenti;
+ebben a felülvizsgálatban helyi tesztet nem futtattam.
+
+A kiadott legfrissebb verzió továbbra is v0.9.0-beta.2. A `pyproject.toml`
+verziója `0.9.0b2`, a felhasználói útmutatók és README-k is a beta.2
+felületet írják le; egy új release verzió, release notes, guide/PDF-egyeztetés és
+candidate-tag még nincs elkészítve. Kézi GUI/clean-machine, isolated REAPER-runtime
+és valódi FAT/exFAT/hálózati kötet tesztek nincsenek rögzítve. Ezért a main CI
+zöldsége önmagában nem teszi publikálhatóvá a következő release-t.
 
 ## Kiadási határ
 
