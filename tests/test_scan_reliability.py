@@ -129,7 +129,7 @@ class ScanReliabilityTests(unittest.TestCase):
         entry = self.source / 'junction'
         entry.mkdir()
         def attributes(path):
-            if path == entry:
+            if Path(filesystem_path(path, force=True)) == Path(filesystem_path(entry, force=True)):
                 value = real_lstat(path)
                 return SimpleNamespace(st_mode=value.st_mode, st_file_attributes=marker)
             return real_lstat(path)
