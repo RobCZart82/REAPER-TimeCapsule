@@ -142,10 +142,10 @@ candidate validation must precede a separate publication decision.
 ## 1.0.0 candidate snapshot — 2026-10-14
 
 The current release checklist and execution order remain in [ROADMAP.md](ROADMAP.md).
-PR #77 is an unpublished draft candidate at head `f55339d01046b828cbccccc6b80de06198d57286`.
-Its Tests run 38525102808 and Desktop beta builds run 38525103039 passed; both native
-platform builds and packaged self-tests succeeded. The Windows and macOS artifacts
-are identified there by artifact ID and archive digest.
+PR #77 was an unpublished draft candidate at tested revision `42ef450cb9b217ba01906ac4187696a72f1faf9b`.
+Its Tests run 38525955324 and Desktop beta builds run 38525955034 passed; both native
+platform builds and packaged self-tests succeeded. Current Windows and macOS artifact
+IDs and archive digests are recorded in ROADMAP.md.
 
 On the tested Windows 11 x64 candidate, the user-reported Restore succeeded with
 7,035 portable files restored, 32 isolated for review, 0 legacy skips and 0
