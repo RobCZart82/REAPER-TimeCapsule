@@ -2,7 +2,7 @@
 
 > Current execution order, release gates and audit status live in [ROADMAP.md](ROADMAP.md).
 > This document records technical guarantees and historical beta preparation, not a second task list.
-> Refreshed 2026-10-12 against main `c4e266f91398b04f4ae64da698e54c44032bb1c7`.
+> Refreshed 2026-10-14 against main `5fa9738160cd7aad9b405d0b6f743287a99a8059`.
 
 Target scope: verified backup, read-only audits and recovery into a new external
 folder. Automatic active-configuration migration is outside the first beta scope.
@@ -125,8 +125,10 @@ README; later releases require their own clean validation.
 Use [ROADMAP.md — Egyetlen végrehajtási sorrend](ROADMAP.md#egyetlen-végrehajtási-sorrend)
 for the current seven-step plan and acceptance criteria. Packaged clean-machine
 backup/verify/restore, manual GUI checks and real-volume validation remain without
-recorded acceptance evidence in this update. Current main CI is green; this does
-not certify a new release.
+recorded acceptance evidence in this update. As of 2026-10-14, main `5fa9738` Tests run 38439260863 and Desktop beta builds run
+38439261012 succeeded; the latter produced temporary Windows/macOS Actions artifacts.
+This does not certify a new release. No local suite was run during this review; PR #68
+reports 234 local tests passed.
 
 A later limited beta may retain explicit static-audit/read-only migration limits.
 Issue #3 toolbar/runtime and issue #4 active apply/rollback remain separate milestones.
