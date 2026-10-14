@@ -586,7 +586,8 @@ def restore_backup(archive: Path, destination: Path, *, control=None, portable_n
     require_path_capacity(parent, relative_targets)
     require_space(parent, sum(item["size"] for item in manifest["files"])
                   + len(manifest["files"]) * 4096 + MAX_MANIFEST_BYTES)
-    staging = Path(tempfile.mkdtemp(prefix=".timecapsule-restore-", dir=parent))
+    staging_parent = filesystem_path(parent, force=True)
+    staging = Path(tempfile.mkdtemp(prefix=".timecapsule-restore-", dir=staging_parent))
     counts = Counter()
     completed = 0
     progress_total = sum(item["size"] for item in manifest["files"])

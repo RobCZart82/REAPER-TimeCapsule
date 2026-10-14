@@ -1,5 +1,6 @@
 import errno
 import os
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,6 +8,7 @@ from unittest.mock import patch
 
 from reaper_timecapsule.core import make_backup, verify_backup, restore_backup
 from reaper_timecapsule.publication import publish_file, require_path_capacity
+from reaper_timecapsule.safe_paths import filesystem_path
 
 
 class FilePublicationTests(unittest.TestCase):
@@ -70,3 +72,23 @@ class FilePublicationTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 require_path_capacity(self.root, ['\U0001f3b9' * 128])
             require_path_capacity(self.root, ['NeedsReview/RecoveredResources/000000.bin'])
+            require_path_capacity(self.root, ['a' * 80 + '/' + 'b' * 80 + '/' + 'c' * 80])
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows extended-length filesystem behavior')
+    def test_restore_publishes_files_above_legacy_max_path(self):
+        relative = Path('Scripts') / ('a' * 55) / ('b' * 55) / ('c' * 55) / 'long-path-test.lua'
+        source_file = self.source / relative
+        if len(str(source_file)) >= 259:
+            self.skipTest('Temporary root leaves no room for a long-path restore fixture')
+        source_file.parent.mkdir(parents=True)
+        source_file.write_bytes(b'long-path payload')
+        destination = self.root / 'restored'
+        self.addCleanup(shutil.rmtree, filesystem_path(destination, force=True), ignore_errors=True)
+        self.addCleanup(shutil.rmtree, filesystem_path(self.source, force=True), ignore_errors=True)
+        make_backup(self.source, self.archive)
+
+        result = restore_backup(self.archive, destination)
+        restored_file = Path(filesystem_path(destination / 'REAPER' / relative, force=True))
+        self.assertEqual(restored_file.read_bytes(), b'long-path payload')
+        self.assertEqual(result['restored_portable'], 2)
+        self.assertGreater(len(str(restored_file)), 259)
