@@ -1,7 +1,6 @@
 # REAPER Time Capsule
 
-Hivatalos alkalmazásnév: **REAPER Time Capsule**. A fejlesztői build már ezt
-használja; a lent hivatkozott publikált bétafájlok eredeti neve megmarad.
+Hivatalos alkalmazásnév: **REAPER Time Capsule**. Ez az oldal az 1.0.0 stabil kiadást dokumentálja.
 [Az audit ellenőrzése és a javítási sorrend](docs/AUDIT_REVIEW_2026-10-11.md).
 
 **Őrizd meg a REAPER-beállításaidat. Állítsd vissza őket biztonsággal.**
@@ -19,10 +18,10 @@ A Scan / Preview egy fájlnév hordozhatósági problémáját jelzi; nem befeje
 
 ![REAPER Time Capsule About ablak macOS-en](docs/screenshots/time-capsule-about-macos.png)
 
-*A fejlesztői build About ablaka az új floppy ikonnal, GYR-logóval és grafikus szignóval. Ezek a felületi változtatások még nem szerepelnek a publikált béta letöltésében.*
+*A márkajelzett About ablak korábbi fejlesztői képernyőképe. Az 1.0.0 alkalmazás már a stabil verziószámot mutatja BETA jelölés nélkül.*
 
-> **[0.9.0-beta.2 letöltése](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2)**
-> — nyilvános, aláíratlan béta. Az eszköz erőforrásokat ment és állít vissza;
+> **[REAPER Time Capsule 1.0.0 letöltése](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v1.0.0)**
+> — aláíratlan stabil kiadás. Az eszköz erőforrásokat ment és állít vissza;
 > a teljes, egykattintásos REAPER-újratelepítés még nincs megvalósítva. Tarts külön biztonsági mentést is.
 
 ## Letöltés
@@ -31,13 +30,13 @@ A csomagokat a projekt [GitHub Releases](https://github.com/RobCZart82/REAPER-Ti
 
 | Platform | Alkalmazás |
 |---|---|
-| macOS · Apple Silicon (arm64) | [Aláíratlan alkalmazás ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/REAPER-TimeCapsule-0.9.0-beta.2-Darwin-arm64-unsigned.zip) |
-| Windows · x64 | [Aláíratlan alkalmazás ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/REAPER-TimeCapsule-0.9.0-beta.2-Windows-AMD64-unsigned.zip) |
-| Linux | [Forráskód és kiadási megjegyzések](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v0.9.0-beta.2) · Python 3.10+ |
+| macOS · Apple Silicon (arm64) | [Aláíratlan alkalmazás ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v1.0.0/REAPER-TimeCapsule-1.0.0-Darwin-arm64-unsigned.zip) |
+| Windows · x64 | [Aláíratlan alkalmazás ZIP](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v1.0.0/REAPER-TimeCapsule-1.0.0-Windows-AMD64-unsigned.zip) |
+| Linux | [Forráskód és kiadási megjegyzések](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/tag/v1.0.0) · Python 3.10+ |
 
 Mindkét alkalmazás ZIP tartalmazza a hozzá tartozó forráskódot, a GPL és a futtatókörnyezet
 licencszövegeit, a csomagolt alkalmazás öntesztjének jelentését és a dokumentációt.
-A kiadáshoz [SHA-256 ellenőrzőösszegek](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v0.9.0-beta.2/SHA256SUMS.txt)
+A kiadáshoz [SHA-256 ellenőrzőösszegek](https://github.com/RobCZart82/REAPER-TimeCapsule/releases/download/v1.0.0/SHA256SUMS.txt)
 és platformonkénti buildleírások is tartoznak. A Windows-forrás CRLF sorvégeket használ.
 A `main` ágon folyó fejlesztés eltérhet a már kiadott csomagoktól.
 
@@ -107,10 +106,7 @@ alapméretben nyílik meg, és nem menti az átméretezést. Mindkét irányban 
 a minimális szélesség láthatóan tartja a gombsort. Közös oszlopok igazítják az
 útvonalmezőket és a Browse gombokat. A kimeneti sorok nem tördelődnek; a vízszintes
 és függőleges görgetősáv csak szükség esetén jelenik meg. Az alsó ↓ fogantyú
-a jelenlegi szélesség megtartásával növeli a kiírás területét. Ezek az elrendezési
-változások még nincsenek benne a publikált 0.9.0-beta.2 csomagokban. A main ágon
-floppy alkalmazásikon is készül a REAPER jelével, valamint nem modális About ablak
-a készítő GYR-logójával és kézírásos szignójával, szöveges polgári név nélkül.
+a jelenlegi szélesség megtartásával növeli a kiírás területét. A 1.0.0 csomagok tartalmazzák ezt az elrendezést és a márkajelzett About ablakot.
 
 ## Rendszerkövetelmények
 
@@ -248,9 +244,7 @@ python -m reaper_timecapsule verify-stage TimeCapsule-Staging/review.timecapsule
 
 A fenti útvonalak és REAPER-verziók példák; a ténylegesen kiválasztott bemeneteidet add meg.
 Az automatikus tesztek parancsa: `python -m unittest discover -s tests -v`.
-A kiadás 112 tesztje sikeres macOS, Windows és Linux alatt Python 3.10/3.12-vel;
-mindkét csomagolt alkalmazás teljesítette a szintetikus mentési/ellenőrzési/visszaállítási
-és Tk-indítási próbákat. Ez nem helyettesíti a teljes REAPER-integráció tesztelését.
+A kiadás CI-folyamata többplatformos forrásteszteket és a csomagolt alkalmazások szintetikus mentési/ellenőrzési/visszaállítási, valamint Tk-indítási próbáit futtatja. Ez nem helyettesíti a teljes REAPER-integráció tesztelését; a kézi tesztek körét az 1.0.0 kiadási megjegyzés rögzíti.
 
 ## Névjegy és licenc
 
