@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 import zipfile
 
-from reaper_timecapsule.core import make_backup, preview, scan, verify_backup
+from reaper_timecapsule.core import _windows_desktop_directory, default_restore_destination, make_backup, preview, scan, verify_backup
 from reaper_timecapsule.gui import App
 from reaper_timecapsule.safe_paths import filesystem_path
 
@@ -96,6 +96,12 @@ class ScanReliabilityTests(unittest.TestCase):
         self.assertTrue((outside / 'backup.zip').is_file())
         self.assertFalse((self.source / 'backup.zip').exists())
         original_verify(outside / 'backup.zip')
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows known-folder API')
+    def test_restore_default_uses_redirected_windows_desktop(self):
+        desktop = _windows_desktop_directory()
+        self.assertTrue(desktop.is_absolute())
+        self.assertEqual(default_restore_destination(), desktop / 'TimeCapsule-Restored')
 
     @unittest.skipUnless(os.name == 'nt', 'Windows extended-length paths')
     def test_long_windows_script_path_is_scanned_and_backed_up(self):
