@@ -42,7 +42,7 @@ class AboutWindow(tk.Toplevel):
         self.title_label.pack()
         tk.Label(title, text='Preserve your REAPER setup.\nRestore with confidence.',
                  font=('Arial', 11), justify='center', foreground=muted, background=bg).pack(pady=(8, 0))
-        tk.Label(title, text=f'VERSION {VERSION}  ·  BETA', font=('Arial', 10, 'bold'),
+        tk.Label(title, text=f'VERSION {VERSION}', font=('Arial', 10, 'bold'),
                  foreground=accent, background=bg).pack(pady=(18, 0))
         tk.Frame(body, background='#35505e', height=1).grid(row=1, column=0, columnspan=2,
                                                           sticky='ew', pady=(18, 20))

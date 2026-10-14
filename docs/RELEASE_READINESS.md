@@ -2,7 +2,7 @@
 
 > Current execution order, release gates and audit status live in [ROADMAP.md](ROADMAP.md).
 > This document records technical guarantees and historical beta preparation, not a second task list.
-> Refreshed 2026-10-14 against code main `e4e25c82daec1316364669c312fddbdb370e0c9c`; PR #73 adds Windows extended-length restore staging and a synthetic long-path regression.
+> Refreshed 2026-10-14 against main `2d09b97090bfb2c6f8048bb6efbecbc244a8437e` (functional code baseline `e4e25c82daec1316364669c312fddbdb370e0c9c`); the current 1.0.0 candidate and release gates are summarized in [ROADMAP.md](ROADMAP.md).
 
 Target scope: verified backup, read-only audits and recovery into a new external
 folder. Automatic active-configuration migration is outside the first beta scope.
@@ -135,5 +135,48 @@ Packaged clean-machine installation and real-volume validation remain without re
 Use [ROADMAP.md — Egyetlen végrehajtási sorrend](ROADMAP.md#egyetlen-végrehajtási-sorrend) for the current seven-step plan and acceptance criteria.
 A later limited beta may retain explicit static-audit/read-only migration limits.
 Issue #3 toolbar/runtime and issue #4 active apply/rollback remain separate milestones.
-Version selection, bilingual documentation, package contents/checksums and final
-candidate validation must precede a separate publication decision.
+The user selected 1.0.0 stable and authorized publication of unsigned packages. Bilingual README, final About label and 1.0.0 release notes are prepared on PR #77. Merge and publication remain contingent on green final-head tests/builds; clean-machine and real-volume validation are disclosed as outstanding limitations.
+
+
+## 1.0.0 candidate snapshot — 2026-10-14
+
+The current release checklist and execution order remain in [ROADMAP.md](ROADMAP.md).
+PR #77 was an unpublished draft candidate at tested revision `42ef450cb9b217ba01906ac4187696a72f1faf9b`.
+Its Tests run 38525955324 and Desktop beta builds run 38525955034 passed; both native
+platform builds and packaged self-tests succeeded. Current Windows and macOS artifact
+IDs and archive digests are recorded in ROADMAP.md.
+
+On the tested Windows 11 x64 candidate, the user-reported Restore succeeded with
+7,035 portable files restored, 32 isolated for review, 0 legacy skips and 0
+inspection omissions. The supplied Test100.zip passed CRC and all 7,067 schema-2
+manifest SHA-256 comparisons. The user also reports the same successful Restore
+result on macOS, without a separate report/archive for independent count/hash checks.
+The candidate About screen still displays `VERSION 1.0.0 · BETA`; remove that label
+and rebuild the final stable package. These targeted profile tests do not complete
+clean-machine installation/first-launch or real-filesystem validation. No public
+1.0.0 release has been created.
+
+
+## 1.0.0 stable publication snapshot — 2026-10-14
+
+The user authorized publishing the unsigned 1.0.0 stable release. PR #77 prepares
+application and package metadata, removes the candidate-only BETA marker, and aligns
+the English/Hungarian download pages and release notes. This candidate is not yet
+merged or published. The PR's final-head source tests and both packaged builds must
+pass before merge; the exact final package digests and release asset links should be
+recorded after publication.
+
+Windows 11 x64 Intel real-profile Restore passed on the prior 1.0.0 candidate build:
+7,035 portable files restored, 32 isolated for review, no legacy skips or inspection
+omissions; the supplied ZIP passed CRC and all 7,067 manifest SHA-256 checks. The
+user reports that the same GUI workflow succeeded on macOS, but supplied no separate
+macOS report or archive for independent count/hash verification. The exact final
+package (which changes the About text and documentation) has not had a new manual
+installation test.
+
+Clean-machine installation/first launch and FAT/exFAT/network-volume testing remain
+NOT RUN. Signing/notarization is not available for this release; the user authorized
+unsigned publication and the README/release notes disclose this. Issues #3 (MIDI
+toolbar/runtime) and #4 (active configuration apply/rollback) remain outside the
+1.0.0 scope. Full REAPER runtime integration and automatic plugin installation are
+not claimed.
