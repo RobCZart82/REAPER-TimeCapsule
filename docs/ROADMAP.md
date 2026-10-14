@@ -91,10 +91,11 @@ Helyi suite: **234 teszt OK**. Platformfüggő runtime-feloldás nincs igazolva.
 ## 2026-10-14-i release-előkészítési pillanatkép
 
 A felhasználói Windows 11 x64 képernyőképen a Scripts alatti fájlútvonal 263 karakteres volt;
-a beta.2 `Scan / Preview` művelete `WinError 3`-mal leállt. A hiba reprodukciója alapján
-260 karakter feletti forrásútvonal-kezelés szükséges. A jelen PR javasolt kód- és
-szintetikus CI-regressziót tartalmaz; a felhasználói gépen és beta.2 csomagban való
-kézi megerősítés még nincs, ezért ez nem tekinthető elfogadási bizonyítéknak.
+a beta.2 `Scan / Preview` művelete `WinError 3`-mal leállt. A jelen PR explicit hosszú
+útvonalkezelést és >260 karakteres scan/backup regressziót javasol. A felhasználó jelezte,
+hogy az Asztal OneDrive-ra és magyar mappanévre van átirányítva; a GUI jelenlegi
+`~/Desktop` alapértékét Windows ismertmappa-lekérdezés váltja. Ezek a gépen és beta.2-ben
+még nincsenek kézzel újratesztelve; ez nem tekinthető elfogadási bizonyítéknak.
 
 
 Az aktuális `main` commit `c62e3ec0fcfd419aca7711414b4287de192fa0eb` (#69). A PR-lista üres;
