@@ -210,7 +210,7 @@ def scan(source: Path, *, control=None) -> list[dict]:
         for name in sorted(folders):
             checkpoint(control, "Scanning")
             path = Path(base) / name
-            relative = path.relative_to(source).as_posix()
+            relative = Path(filesystem_path(path, force=True)).relative_to(walk_root).as_posix()
             metadata = Path(filesystem_path(path)).lstat()  # Propagate permission/disappearance errors.
             if not excluded_link(metadata, relative) and name not in (".git", "__pycache__", ".svn"):
                 traversed.append(name)
@@ -218,7 +218,7 @@ def scan(source: Path, *, control=None) -> list[dict]:
         for filename in sorted(files):
             checkpoint(control, "Scanning")
             path = Path(base) / filename
-            relative = path.relative_to(source).as_posix()
+            relative = Path(filesystem_path(path, force=True)).relative_to(walk_root).as_posix()
             metadata = Path(filesystem_path(path)).lstat()
             if excluded_link(metadata, relative):
                 continue
