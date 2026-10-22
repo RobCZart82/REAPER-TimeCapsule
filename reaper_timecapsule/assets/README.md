@@ -1,9 +1,9 @@
 # Application branding
 
-The floppy artwork is an original vector composition for Time Capsule. Its label
-uses a vector interpretation of the REAPER symbol, following the owner-supplied
-floppy references and Cockos' public website header:
-https://www.reaper.fm/v5img/logo.jpg (retrieved 2026-10-11).
+The current floppy artwork was supplied and authorized by the project owner in
+`Reaper-Floppy-icon-pack.zip` on 2026-10-22. Its editable SVG and ready-made
+Windows ICO/macOS ICNS are used directly, along with the supplied PNG exports.
+The symbol is the supplied vector reconstruction, not an official REAPER logo source.
 REAPER name and logo remain the marks of their respective owner. Their use
 identifies compatibility; it does not imply endorsement or transfer their rights
 under Time Capsule's source-code license.
@@ -16,9 +16,12 @@ name. Signature light is a color-only adaptation; aspect ratios and path contour
 are preserved. No civil name is added as About-window text.
 
 SVG files are retained as editable artwork sources. PNGs are pre-rendered for Tk
-(no SVG rendering dependency at runtime). High-density images are downsampled 2:1
-for About. ICO includes 16–256px sizes; ICNS includes standard macOS sizes. The
-editable SVG is rendered independently at 16–1024px, with a blue shell, upper
-metal shutter and large symbol on the lower paper label. ICO and ICNS embed those
-individual PNG sizes, including Retina variants. Raster exports were made with
-resvg-js 2.6.2; it is not bundled in the application.
+(no SVG rendering dependency at runtime). Existing filenames and displayed sizes
+are retained: timecapsule.png is 1024px, timecapsule-128.png is the supplied 256px,
+and timecapsule-32.png is the supplied 64px export. About uses a 192px PNG resized
+from the supplied 256px export with macOS sips, then displays it at 96px through
+the existing 2:1 downsampling. Creator marks, signature and About layout are unchanged.
+ICO contains 16, 20, 24, 32, 40, 48, 64, 96, 128 and 256px entries; ICNS includes
+standard and Retina macOS variants up to 1024px. The supplied package checksums
+were verified before copying. Finder/Dock/Explorer icon-cache appearance still
+requires manual validation with the newly built application.

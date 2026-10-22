@@ -240,3 +240,11 @@ nem minden profil/fájlrendszer általános tanúsítását. A státuszok a lent
 | #18 | Nem igazolt Linux-default bug | A fix `~/.config/REAPER` alapútvonal létezik a kódban, de a jelentés nem igazol alternatív REAPER-konvenciót. Későbbi opt-in felderítéshez hivatalos/eldobható REAPER-bizonyíték, portable/XDG eset és explicit felhasználói forrásválasztás kell. |
 | #19 | Dokumentációban már megoldott, GUI/CLI javítható | `RESOURCE_BUDGETS.md` tartalmazza a 200000 rekord / 200001 ZIP-member / 8 GiB / 32 GiB / 16 MiB / 64 MiB limiteket. Egységes felhasználói limitösszegzés még hasznos. |
 
+
+## Kiadás utáni ikoncsere — 2026-10-22
+
+A felhasználó új Reaper-Floppy ikoncsomagja lecseréli az alkalmazás ICO/ICNS,
+Tk ablakikon és About floppy PNG erőforrásait; az SVG-forrás is frissül.
+Az About elrendezése, GYR-logója, szignója és szövege változatlan.
+Ez main-fejlesztés és tesztbuild, nem új publikált release. A Finder/Dock/Explorer
+megjelenés és ikoncache kézi ellenőrzése a friss csomaggal még szükséges.
