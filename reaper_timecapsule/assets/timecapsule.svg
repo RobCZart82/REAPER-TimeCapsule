@@ -1,39 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-<title>REAPER Time Capsule floppy application icon</title>
+<title>Reaper Floppy — editable vector reconstruction</title>
+<desc>Blue floppy disk, silver shutter, ruled white label and multicolour REAPER motif, reconstructed from the supplied reference.</desc>
 <defs>
- <linearGradient id="case" x2="0.9" y2="1"><stop stop-color="#258bd3"/><stop offset=".48" stop-color="#1766a7"/><stop offset="1" stop-color="#104878"/></linearGradient>
- <linearGradient id="steel" x2="1" y2=".7"><stop stop-color="#acbdc8"/><stop offset=".34" stop-color="#f4f8fb"/><stop offset=".49" stop-color="#c1ccd3"/><stop offset=".7" stop-color="#e9f0f4"/><stop offset="1" stop-color="#a5b5bf"/></linearGradient>
- <linearGradient id="paper" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#e1e9ec"/></linearGradient>
- <clipPath id="mark"><path d="M260 22 C385 -12 518 43 541 170 C563 300 457 449 334 531 C314 545 283 548 261 535 C154 474 34 326 27 205 C20 123 79 48 164 28 C195 21 229 20 260 22Z"/></clipPath>
+ <linearGradient id="case" x2=".8" y2="1"><stop stop-color="#176aab"/><stop offset=".5" stop-color="#145a9b"/><stop offset="1" stop-color="#104b87"/></linearGradient>
+ <linearGradient id="metal" x2="1" y2=".8"><stop stop-color="#b9c2c8"/><stop offset=".27" stop-color="#f7f8f9"/><stop offset=".32" stop-color="#d4d9dc"/><stop offset=".64" stop-color="#f3f5f6"/><stop offset=".7" stop-color="#b9c1c8"/><stop offset="1" stop-color="#e4e8eb"/></linearGradient>
+ <linearGradient id="paper" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#e7edf0"/></linearGradient>
+ <clipPath id="label"><rect x="135" y="443" width="754" height="544" rx="20"/></clipPath>
+ <clipPath id="pick"><path d="M281 617 C304 518 405 469 511 469 C629 468 749 548 758 644 C768 753 633 923 553 972 C529 987 508 987 485 976 C400 939 250 745 281 617Z"/></clipPath>
 </defs>
-<!-- Smooth vector shell; the shutter is above the large paper label. -->
-<path d="M96 40 H837 L984 180 V923 Q984 984 923 984 H101 Q40 984 40 923 V102 Q40 40 96 40Z" fill="#092e51"/>
-<path d="M98 51 H831 L972 185 V920 Q972 970 920 970 H102 Q54 970 54 920 V102 Q54 51 98 51Z" fill="url(#case)"/>
-<path d="M75 112 Q75 74 112 74 H819" fill="none" stroke="#65b5e7" stroke-width="9" opacity=".55"/>
-<path d="M150 52 V336 Q150 367 186 367 H786 Q820 367 820 333 V53" fill="#0c477d" stroke="#0a365f" stroke-width="10"/>
-<path d="M285 51 H816 V323 Q816 350 789 350 H312 Q285 350 285 323Z" fill="url(#steel)"/>
-<path d="M585 100 H720 V302 H585Z" fill="#174f7c" stroke="#94a6b3" stroke-width="10"/>
-<path d="M600 113 H707 V288 H600Z" fill="#1e6ca8"/>
-<path d="M107 128 V178 M88 147 L107 123 L126 147" fill="none" stroke="#73b8dd" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="144" y="407" width="736" height="533" rx="34" fill="#0a375c"/>
-<rect x="156" y="420" width="712" height="508" rx="24" fill="url(#paper)"/>
-<path d="M180 420 H844 Q868 420 868 444 V485 H156 V444 Q156 420 180 420Z" fill="#37c5d8"/>
-<path d="M176 571 H848 M176 674 H848 M176 777 H848 M176 880 H848" stroke="#42c0d0" stroke-width="7"/>
-<!-- Vector interpretation of the REAPER compatibility mark. -->
-<g transform="translate(257 447) scale(.94 .88)">
- <g clip-path="url(#mark)">
-  <path d="M0 0 H570 V550 H0Z" fill="#2395c5"/>
-  <path d="M0 0 H166 C152 92 182 160 229 214 L0 260Z" fill="#236a9f"/>
-  <path d="M0 55 L120 25 L176 181 L0 273Z" fill="#626f6a"/>
-  <path d="M0 181 L167 134 L237 250 L0 282Z" fill="#ae8618"/>
-  <path d="M0 236 C131 198 241 311 284 544 H0Z" fill="#56b816"/>
-  <path d="M85 294 C146 222 230 228 279 365 L303 550 H59Z" fill="#71c629"/>
-  <path d="M187 140 C323 105 466 123 552 231 C568 363 413 500 291 550 C348 402 286 247 187 140Z" fill="#ac6553"/>
-  <path d="M184 133 C300 107 450 129 541 219 C445 292 307 294 245 242Z" fill="#b57668" opacity=".6"/>
-  <path d="M163 119 C308 78 460 124 543 226 C453 162 348 121 255 165 C328 265 374 403 291 545 C355 371 231 236 163 119Z" fill="#fff"/>
+<g transform="translate(32 24) scale(.9375)">
+ <path d="M44 0 H938 L1000 57 V1000 Q1000 1024 976 1024 H48 Q24 1024 24 1000 V24Z" fill="url(#case)" stroke="#063765" stroke-width="8" stroke-linejoin="round"/>
+ <path d="M44 5 H932 L993 61" fill="none" stroke="#269bd0" stroke-width="12"/>
+ <path d="M112 4 V1009" stroke="#073c77" stroke-width="9"/>
+ <path d="M121 12 H789 V330 Q789 355 767 355 H143 Q121 355 121 333Z" fill="#0876b6"/>
+ <path d="M133 14 H247 V325 Q247 344 269 344 H767" fill="none" stroke="#0b4a8b" stroke-width="14" opacity=".65"/>
+ <path d="M258 4 H776 V320 Q776 338 757 338 H278 Q258 338 258 320Z" fill="url(#metal)" stroke="#e2e7e9" stroke-width="7"/>
+ <path d="M560 57 H686 V319 H560Z" fill="#0b447d"/>
+ <path d="M569 65 H679 V311 H569Z" fill="#1465a4"/>
+ <path d="M280 330 H757" stroke="#aab5bc" stroke-width="6"/>
+ <path d="M59 128 V81 L48 92 M59 81 L70 93" fill="none" stroke="#299ed1" stroke-width="9" stroke-linejoin="round"/>
+ <path d="M154 424 H855 L904 470 V991 Q904 1010 886 1010 H134 Q115 1010 115 991 V470Z" fill="#07376e"/>
+ <rect x="130" y="439" width="764" height="557" rx="23" fill="url(#paper)" stroke="#d4dfe5" stroke-width="5"/>
+ <g clip-path="url(#label)" stroke="#2fb9cd" stroke-width="8"><path d="M130 522H898 M130 603H898 M130 684H898 M130 765H898 M130 846H898 M130 927H898"/></g>
+ <g clip-path="url(#pick)">
+  <path d="M250 450H790V1000H250Z" fill="#2195c5"/>
+  <path d="M286 516 L402 482 Q397 577 446 638 L305 696Z" fill="#246598"/>
+  <path d="M265 592 L350 519 Q357 617 409 658 L268 705Z" fill="#62756f"/>
+  <path d="M269 635 L367 576 L437 698 L280 733Z" fill="#a77b18"/>
+  <path d="M284 634 Q372 604 448 682 L527 888 L483 994 Q347 916 277 749Z" fill="#4fba09"/>
+  <path d="M373 644 Q470 687 509 824 Q538 909 484 983 Q388 930 328 826 Q305 728 373 644Z" fill="#65c326"/>
+  <path d="M429 604 Q565 539 690 623 Q738 665 766 712 Q715 879 549 980 Q517 995 484 979 Q557 863 501 752 Q465 693 429 604Z" fill="#b56852"/>
+  <path d="M432 604 Q564 540 691 624 Q731 659 752 699 Q633 783 485 688Z" fill="#b1766b" opacity=".7"/>
+  <path d="M353 576 Q531 506 700 639 Q588 552 430 605 Q446 641 477 674 C550 754 559 861 506 948 C540 825 507 753 449 691 Q391 634 353 576Z" fill="#fff"/>
  </g>
+ <path d="M281 617 C304 518 405 469 511 469 C629 468 749 548 758 644 C768 753 633 923 553 972 C529 987 508 987 485 976 C400 939 250 745 281 617Z" fill="none" stroke="#25576a" stroke-opacity=".16" stroke-width="2"/>
+ <path d="M56 906 H94 V944 H56Z" fill="#052d58"/>
+ <path d="M62 951H96" stroke="#2083b9" stroke-width="7"/>
+ <path d="M32 974 V996 Q32 1015 51 1015 H974" fill="none" stroke="#1d79b2" stroke-width="6" opacity=".65"/>
 </g>
-<rect x="86" y="858" width="42" height="54" rx="5" fill="#092f50"/>
-<rect x="896" y="858" width="42" height="54" rx="5" fill="#092f50"/>
-<path d="M144 422 V942 M882 422 V942" stroke="#4b9bc7" stroke-width="5" opacity=".4"/>
 </svg>
