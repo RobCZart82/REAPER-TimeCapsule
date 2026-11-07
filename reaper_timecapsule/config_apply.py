@@ -57,8 +57,9 @@ def _render(raw, selections):
     """Replace approved literals only; keep BOM, comments and newline bytes."""
     edits = {(row['section'], row['key']): row for row in selections}
     section, found, output = '', set(), []
-    for line in raw.decode('utf-8').splitlines(keepends=True):
-        content = line.lstrip('\ufeff').strip()
+    bom = b'\xef\xbb\xbf' if raw.startswith(b'\xef\xbb\xbf') else b''
+    for line in raw.decode('utf-8-sig').splitlines(keepends=True):
+        content = line.strip()
         if content.startswith('[') and content.endswith(']'):
             section = content[1:-1].strip().casefold()
         elif '=' in content and not content.startswith((';', '#')):
@@ -76,7 +77,7 @@ def _render(raw, selections):
         output.append(line)
     if found != set(edits):
         raise ValueError('Selected preference is missing from target')
-    return ''.join(output).encode('utf-8')
+    return bom + ''.join(output).encode('utf-8')
 
 
 def _replace(target, expected, replacement):

@@ -44,6 +44,19 @@ class ApplyTests(unittest.TestCase):
         self.assertEqual(self.target.read_bytes(), self.original)
         self.assertTrue(self.rollback()['already_original'])
 
+    def test_embedded_bom_in_unknown_key_is_not_treated_as_approved_key(self):
+        self.original += b'\n[Other]\nkey=value\n[Unused]\nx=1'
+        # Same section, different exact key: only the document-leading BOM is special.
+        self.original = self.original.replace(b'peaksedges=0', b'\xef\xbb\xbftinttcp=1\r\npeaksedges=0')
+        self.target.write_bytes(self.original)
+        self.archive = self.archive.with_name('embedded.timecapsule-stage.zip')
+        export_preferences(self.source, self.target, self.archive, selections=['REAPER/tinttcp'],
+                           source_version='7.84', target_version='7.84', opt_in=True)
+        self.apply()
+        self.assertEqual(self.target.read_bytes(), self.original.replace(b'tinttcp = 1', b'tinttcp = 0'))
+        self.rollback()
+        self.assertEqual(self.target.read_bytes(), self.original)
+
     def test_consent_required(self):
         for options in ({'opt_in': False}, {'reaper_closed': False}):
             with self.assertRaises(ValueError):
