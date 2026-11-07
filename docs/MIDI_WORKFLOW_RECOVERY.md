@@ -43,19 +43,24 @@ are recorded as **unverified**, not assumed available. Script presence does
 not imply the script runs correctly, and matching Custom Action IDs do not
 prove the toolbar/menu has been activated by REAPER.
 
-The JSON report states `toolbar_icon_dependencies.status` as
-`not-checked` and `runtime_validation.status` as `not-performed`. The saved
-toolbar button-to-icon mapping is not currently parsed, so an icon directory or
-matching action ID must not be treated as proof that every toolbar icon resolves.
-The audit remains static and never executes scripts or loads extensions.
+The report includes static `toolbar_icon_dependencies` for floating MIDI and
+MIDI piano-roll toolbars. Matching `icon_N`/`item_N` entries resolve to saved
+`Data/toolbar_icons/*.png` files without following links. Absent files require
+review because REAPER or the installed theme may supply them. Duplicate/orphan
+bindings and unsafe references are reported, with bounded details and full counts.
+No decoded image or rendered toolbar is claimed by a presence check.
+
+`runtime_validation.status` remains `not-performed` in every static audit. Use the
+separate [isolated smoke workflow](REAPER_SMOKE_TEST.md) for a repeatable synthetic
+REAPER check. It is never run automatically against the audited profile.
 
 ## Scope / known limitations
 
 - No automatic import or action-ID remapping in this release.
-- Other REAPER action sections beyond the MIDI piano-roll context are not
+- Other REAPER action sections beyond MIDI section 32060 are not
   automatically linked to context 32060.
 - Dynamic scripts that construct commands at runtime are not analyzed.
-- Toolbar button-to-icon references and missing icon files are not yet analyzed.
+- Installed/theme-provided icons and visual rendering require manual REAPER validation.
 - Old absolute script paths are reported, not rewritten.
 - Some REAPER custom-action formats could require additional parsing.
 - A user-supplied Chords/Scales/Arps menu and matching KeyMap were validated

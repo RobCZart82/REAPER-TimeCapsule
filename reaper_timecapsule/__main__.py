@@ -13,6 +13,7 @@ from .inventory import audit_reapack
 from .config_migration import preview_migration
 from .theme_migration import preview_themes
 from .config_staging import export_preferences, verify_staging
+from .config_apply import apply_preferences, rollback_preferences
 
 
 def main():
@@ -56,6 +57,14 @@ def main():
     staging_verify = commands.add_parser("verify-stage", help="Read-only staging integrity and policy check")
     staging_verify.add_argument("archive", type=Path)
     staging_verify.add_argument("--target", type=Path)
+    for name, first in (("config-apply", "archive"), ("config-rollback", "recovery")):
+        cmd = commands.add_parser(name, help="Offline opt-in configuration apply/recovery; close REAPER first")
+        cmd.add_argument(first, type=Path)
+        cmd.add_argument("target", type=Path)
+        if name == "config-apply":
+            cmd.add_argument("recovery", type=Path)
+        cmd.add_argument("--opt-in", action="store_true")
+        cmd.add_argument("--reaper-closed", action="store_true")
     commands.add_parser("config-catalog", help="Inspect exact approved preference evidence and review candidates")
     recovery_cmd = commands.add_parser("recovery-plan", help="Read-only MIDI/ReaPack plan from a verified capsule")
     recovery_cmd.add_argument("archive", type=Path)
@@ -73,6 +82,12 @@ def main():
             result = plan_recovery(args.archive)
         elif args.command == "staging-residues":
             result = inspect_residues(args.parent)
+        elif args.command == "config-apply":
+            result = apply_preferences(args.archive, args.target, args.recovery,
+                                       opt_in=args.opt_in, reaper_closed=args.reaper_closed)
+        elif args.command == "config-rollback":
+            result = rollback_preferences(args.recovery, args.target,
+                                          opt_in=args.opt_in, reaper_closed=args.reaper_closed)
         elif args.command == "config-stage":
             result = export_preferences(args.source, args.target, args.archive,
                                         selections=args.select, source_version=args.source_version,

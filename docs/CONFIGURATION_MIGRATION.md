@@ -78,4 +78,4 @@ Factory theme identity comparison and preservation of customized variants, expli
 conflict resolution, rollback snapshots and an actual configuration merge remain
 unimplemented. Issue #4 must remain open. The later 0.7/0.8 [staging commands](CONFIGURATION_STAGING.md) export selected
 preference DATA only, with separate destination protections and verification.
-There is still no staged INI or active configuration writer. Never use this preview as a replacement for a backup.
+The preview remains read-only. Separate [offline apply/recovery](OFFLINE_CONFIGURATION_APPLY.md) requires REAPER closed and explicit consent. Never use this preview as a replacement for a backup.

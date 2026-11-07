@@ -276,3 +276,17 @@ A Config Preview most már a pontos bizonyítékkatalógust is tartalmazza. Két
 A GitHub Actions-műveletek hivatalos kiadások teljes commitazonosítóihoz vannak rögzítve. A Dependabot hetente ellenőrzi a frissítéseket; a változtatásokat merge előtt PR-ban és CI-vel kell ellenőrizni.
 
 A GUI **Inspection limits…** gombja és a `python -m reaper_timecapsule inspection-limits` parancs megmutatja az aktuális build rögzített archívum-, MIDI-, ReaPack- és konfigurációvizsgálati korlátait. Nem olvasnak erőforrásfájlokat és nem módosítanak beállítást. A jelentésrészletek csonkolása eltér a bemenet elutasításától; ezek nem általános memória-/CPU-garanciák.
+
+## Fejlesztői újdonság: offline beállítások és MIDI-eszköztár
+
+A `config-apply` és `config-rollback` CLI-parancs bezárt REAPER mellett, külön
+jóváhagyással, a teljes célfájl külső mentésével és ütközésellenőrzéssel működik.
+Csak a két korábban engedélyezett megjelenési kulcs módosítható. Részletes menet:
+[offline alkalmazás és visszaállítás](docs/OFFLINE_CONFIGURATION_APPLY.md).
+A kapszula normál visszaállítása és a GUI meglévő működése megmarad.
+
+A MIDI Audit ellenőrzi a MIDI-eszköztár gomb–ikon párosítását és a mentett PNG-k
+jelenlétét. A hiányzó, bizonytalan vagy veszélyes hivatkozás felülvizsgálatot kér;
+nem követ hivatkozásokat és nem futtat felhasználói scripteket. A külön
+[izolált REAPER-próba](docs/REAPER_SMOKE_TEST.md) szintetikus MIDI-műveletet és egy
+alkalmazott beállítást ellenőriz. A statikus audit nem állít futásidejű validálást.

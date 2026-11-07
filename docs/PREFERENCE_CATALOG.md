@@ -11,7 +11,7 @@ The read-only catalog currently lists exactly two keys:
 
 The [official reference](https://www.reaper.fm/sdk/walter/images.php) also documents names such as `tcp_folderindent`, `tcp_heights` and `transport_showborders` as theme `rtconfig.txt` directives. Similar wording is not evidence that those settings are `reaper.ini` keys, so they remain review-only. The code restricts candidates to exact identities and values and still requires caller-supplied, matching REAPER 5+ versions. A candidate is not automatically copied, even in the separate staging export.
 
-Inspect the catalog with `python -m reaper_timecapsule config-catalog`; Configuration Preview embeds the same evidence. Unknown keys, machine/platform/audio devices, hardware, plugin caches, paths and secrets stay excluded or under review according to the diff policy. No active configuration writer exists. Version provenance supplied to the preview is user-provided and is not independently verified.
+Inspect the catalog with `python -m reaper_timecapsule config-catalog`; Configuration Preview embeds the same evidence. Unknown keys, machine/platform/audio devices, hardware, plugin caches, paths and secrets stay excluded or under review according to the diff policy. Running-profile writes remain unsupported; separate offline apply requires explicit consent, REAPER closed and a verified full-file recovery bundle. Version provenance supplied to the preview is user-provided and is not independently verified.
 
 ## Magyar
 
