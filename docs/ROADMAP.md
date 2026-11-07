@@ -248,3 +248,20 @@ Tk ablakikon és About floppy PNG erőforrásait; az SVG-forrás is frissül.
 Az About elrendezése, GYR-logója, szignója és szövege változatlan.
 Ez main-fejlesztés és tesztbuild, nem új publikált release. A Finder/Dock/Explorer
 megjelenés és ikoncache kézi ellenőrzése a friss csomaggal még szükséges.
+
+
+## 2026-11-07 — offline preference recovery and MIDI toolbar milestone
+
+Development after 1.0.0 adds explicit CLI-only offline apply/rollback for the
+existing two approved binary appearance keys. A full external target-file recovery
+bundle is flushed and verified before atomic replacement; stale baselines and
+later edits fail closed. See OFFLINE_CONFIGURATION_APPLY.md for the closed-REAPER
+requirement, private recovery data, crash/manual-recovery and filesystem limits.
+
+MIDI Audit parses native MIDI toolbar item/icon bindings and checks saved icon
+presence without following links. Installation/theme icons remain review findings.
+A disposable REAPER 7.84/macOS-arm64 run validated native toolbar loading, synthetic
+MIDI script registration/dispatch and loading the applied appearance preference.
+See REAPER_SMOKE_TEST.md for reproducible steps and provenance. Static audits do
+not execute scripts or inherit that synthetic runtime result. No installer,
+plugin/license migration, GUI apply or full user-workflow validation is claimed.

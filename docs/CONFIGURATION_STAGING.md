@@ -48,7 +48,7 @@ rejects it. No automatic REAPER-folder writes exist.
 No raw unknown values, passwords, license material, input paths, DMGs or theme
 assets are included. Fingerprints are hashes of input bytes, not copies of those
 bytes. Reports/packages still expose selected preferences and should remain private.
-There is no command that applies either preference payload or reverse payload.
+The separate opt-in [offline apply/recovery commands](OFFLINE_CONFIGURATION_APPLY.md) consume verified selections after creating a complete target-file recovery bundle. The reverse payload alone is never a complete backup.
 
 ## Verify
 
@@ -66,7 +66,7 @@ returns `target_baseline_matches=null`, not a claim that the target is unchanged
 
 Checksums are integrity evidence, not signatures or origin authentication. A wholly
 rewritten but policy-valid package can pass verification. Baseline matching does
-not authorize application, and no application mechanism is implemented. ZIP input
+not authorize application, and requires separate explicit offline-apply consent. ZIP input
 is bounded to 128 KiB; each member is bounded to 128 KiB. Configuration parsing keeps
 its existing 4 MiB limit. Symlink archive inputs are rejected.
 
@@ -78,6 +78,4 @@ values, stale target detection, forged keys, duplicate members/JSON fields, size
 limits, partial-write cleanup and CLI opt-in behavior. Existing CI runs on macOS,
 Windows and Linux with Python 3.10/3.12. No user configuration or license is uploaded.
 
-Issue #4 remains open for full rollback and actual merge. GUI staging, native
-REAPER runtime validation, and complete portable-resource identification remain
-future work. The staging bundle is reviewable DATA, not a ready-to-install recovery.
+The development CLI now provides full target-file rollback and offline selective apply; see the linked procedure. GUI apply and complete portable-resource identification remain outside this milestone. The staging bundle is reviewable DATA, not a ready-to-install recovery.

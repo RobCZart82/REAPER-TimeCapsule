@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from .operation import checkpoint
 from .safe_paths import trusted_resource_file
+from .toolbar_icons import MIDI_TOOLBAR, audit_toolbar_icons
 
 import re
 from pathlib import Path, PurePosixPath, PureWindowsPath
@@ -139,7 +140,7 @@ def _menu_records(text: str, filename: str, control=None) -> list[dict]:
         command = m.group(1)
         # Action-section 32060 is the MIDI Editor piano roll. Other sections
         # cannot be mapped to 32060 safely without additional context.
-        if not section_name.lower().startswith("midi piano roll"):
+        if not (section_name.lower().startswith("midi piano roll") or MIDI_TOOLBAR.fullmatch(section_name)):
             continue
         if command.startswith("_") or command.isdecimal() and int(command) > 0:
             entries.append({"file": filename, "section": 32060, "command": command.lower()})
@@ -206,10 +207,12 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
                 all_records.append((key, record))
 
     references = []
+    menu_contents = []
     for filename in menu_files:
         checkpoint(control, "Reading MIDI menus")
         contents = _text(source, filename, problems, problem_count)
         if contents is not None:
+            menu_contents.append((filename, contents))
             references.extend(_menu_records(contents, filename, control))
 
     external = set()
@@ -259,22 +262,20 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
                 else:
                     unverified.add(token)
 
+    icons = audit_toolbar_icons(source, menu_contents, saved, control=control)
     cycles, cycle_count = _action_cycles(graph, control)
     if cycle_count or any(x["conflicting"] for x in duplicates):
         status = "invalid-action-graph"
     elif missing or script_problems:
         status = "missing-dependencies"
-    elif problems or unverified or external or numeric or duplicates or not references:
+    elif problems or unverified or external or numeric or duplicates or not references or icons["issue_count"]:
         status = "needs-review"
     else:
         status = "ok"
 
     return {
         "status": status,
-        "toolbar_icon_dependencies": {
-            "status": "not-checked",
-            "reason": "Toolbar button-to-icon bindings are not parsed; icon-file presence does not prove that referenced icons resolve.",
-        },
+        "toolbar_icon_dependencies": icons,
         "runtime_validation": {
             "status": "not-performed",
             "reason": "No REAPER action registration, extension loading, script execution or toolbar activation was tested.",
@@ -310,6 +311,6 @@ def validate_midi_workflow(source: Path, items: list[dict], *, control=None) -> 
             {"command": a, "reason": why} for a, why in sorted(script_problems)[:MAX_ISSUES]
         ],
         "parse_problems": problems[:MAX_ISSUES],
-        "note": "Static inspection only. Toolbar/icon bindings are not checked; verify action registration, icons and native extensions in REAPER after installing.",
+        "note": "Static inspection only. Toolbar bindings receive static presence checks only; verify action registration, icon rendering and native extensions in REAPER after installing.",
     }
 

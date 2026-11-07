@@ -13,6 +13,8 @@ def preference_catalog():
             'approval_scope': 'exact section/key and restricted values only',
             'version_rule': 'caller-supplied identical REAPER 5+ versions',
             'active_writes_supported': False,
+            'offline_apply_supported': True,
+            'offline_apply_requires': ['Explicit opt-in', 'REAPER closed', 'Verified external full-file recovery bundle'],
             'preferences': [{'section': section, 'key': key,
                              'accepted_values': sorted(values), 'minimum_documented_version': '5.0',
                              'status': 'approved-subset-manual-review-required',

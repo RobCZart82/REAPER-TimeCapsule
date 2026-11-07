@@ -269,3 +269,17 @@ Configuration Preview now includes its exact evidence catalog. Only two binary a
 GitHub Actions are pinned to full commit IDs from verified upstream releases. Dependabot checks weekly for action updates; review updates through a pull request and CI before merging.
 
 The GUI **Inspection limits…** button and `python -m reaper_timecapsule inspection-limits` show the fixed archive, MIDI, ReaPack and configuration inspection budgets for the current build. They read no resource files and change no settings. Report-detail truncation is distinct from input rejection; these budgets are not general memory/CPU guarantees.
+
+## Development: offline preferences and MIDI toolbar audit
+
+The CLI now supports reviewed `config-apply` / `config-rollback` with REAPER
+closed, explicit opt-in, a complete external target-file recovery bundle and
+conflict detection. Only the two existing approved appearance keys are eligible.
+See [offline apply and recovery](docs/OFFLINE_CONFIGURATION_APPLY.md). The normal
+capsule restore and GUI retain their existing behavior.
+
+MIDI Audit now checks MIDI toolbar item/icon bindings and saved PNG presence,
+reporting absent/ambiguous/unsafe references for review without following links.
+A separate [isolated REAPER smoke workflow](docs/REAPER_SMOKE_TEST.md) verifies a
+synthetic MIDI action and an applied preference. Static audits never execute user
+scripts and do not claim runtime or visual validation.

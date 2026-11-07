@@ -124,7 +124,7 @@ def _unique_object(pairs):
     return result
 
 
-def verify_staging(archive, *, target=None):
+def _load_staging(archive):
     """Read-only integrity and allowlist checks; never extracts or applies data."""
     path = Path(archive)
     if path.is_symlink() or not path.is_file():
@@ -179,11 +179,17 @@ def verify_staging(archive, *, target=None):
             raise ValueError('Staging content does not match approved selections')
     except (zipfile.BadZipFile, UnicodeError, json.JSONDecodeError, TypeError, KeyError, RuntimeError, NotImplementedError, EOFError, zlib.error):
         raise ValueError('Invalid staging archive') from None
+    return manifest
+
+
+def verify_staging(archive, *, target=None):
+    """Read-only integrity and allowlist checks; never extracts or applies data."""
+    manifest = _load_staging(archive)
     matches = None
     if target is not None:
         _, digest = _read(target, with_digest=True)
         matches = digest == manifest['target_sha256']
         if not matches:
             raise ValueError('Target configuration differs from staged baseline')
-    return dict(schema=1, valid=True, apply_supported=False, staged_preferences=len(selections),
+    return dict(schema=1, valid=True, apply_supported=False, staged_preferences=len(manifest['selections']),
                 target_baseline_matches=matches)
