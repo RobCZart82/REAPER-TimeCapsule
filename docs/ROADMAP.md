@@ -274,3 +274,10 @@ Ellenőrzések: opt-in hiányának elutasítása, bájtpontos BOM/CRLF/komment
 megőrzés, későbbi szerkesztés miatti rollback-tiltás, teljes visszaállítás,
 ismételhetőség és kezelt lock/temp takarítás. A build a jelentésben igazolt
 sikert megköveteli. Ez nem személyes profilon és nem REAPER-runtime-ban fut.
+
+## INI Unicode értékmegőrzés — 2026-11-08
+
+A staging/apply negatív kontrollja igazolta, hogy a Python általános `splitlines()`
+a nem kiválasztott értékben lévő U+2028 karaktert fizikai INI-sorként kezelheti.
+A preview és apply most CRLF/CR/LF határokon dolgozik; a regression ellenőrzi
+a preview/staging, apply és bájtpontos rollback útvonalat.

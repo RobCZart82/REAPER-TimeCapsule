@@ -29,7 +29,7 @@ def _read(path, *, with_digest=False, with_provenance=False):
     section = None
     sections = set()
     entries = {}
-    for number, line in enumerate(text.splitlines(), 1):
+    for number, line in enumerate(re.split(r"\r\n|\r|\n", text), 1):
         original = line
         line = line.strip()
         if not line or line.startswith((';', '#')):
