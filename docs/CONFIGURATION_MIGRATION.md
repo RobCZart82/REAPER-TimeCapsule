@@ -79,3 +79,7 @@ conflict resolution, rollback snapshots and an actual configuration merge remain
 unimplemented. Issue #4 must remain open. The later 0.7/0.8 [staging commands](CONFIGURATION_STAGING.md) export selected
 preference DATA only, with separate destination protections and verification.
 The preview remains read-only. Separate [offline apply/recovery](OFFLINE_CONFIGURATION_APPLY.md) requires REAPER closed and explicit consent. Never use this preview as a replacement for a backup.
+
+INI physical lines are separated only by CRLF, CR or LF bytes after UTF-8 decoding.
+Other Unicode separators inside an unselected value are preserved as ordinary data
+through preview, apply and rollback; they are not reinterpreted as INI line breaks.

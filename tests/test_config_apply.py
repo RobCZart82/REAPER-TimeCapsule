@@ -57,6 +57,19 @@ class ApplyTests(unittest.TestCase):
         self.rollback()
         self.assertEqual(self.target.read_bytes(), self.original)
 
+    def test_apply_preserves_unicode_line_separator_in_unselected_value(self):
+        separator = '\u2028'.encode('utf-8')
+        self.original += b'\r\ncustom_note=first' + separator + b'second\r\n'
+        self.target.write_bytes(self.original)
+        self.archive = self.archive.with_name('unicode-separator.timecapsule-stage.zip')
+        export_preferences(self.source, self.target, self.archive, selections=['REAPER/tinttcp'],
+                           source_version='7.84', target_version='7.84', opt_in=True)
+        self.apply()
+        expected = self.original.replace(b'tinttcp = 1', b'tinttcp = 0')
+        self.assertEqual(self.target.read_bytes(), expected)
+        self.rollback()
+        self.assertEqual(self.target.read_bytes(), self.original)
+
     def test_consent_required(self):
         for options in ({'opt_in': False}, {'reaper_closed': False}):
             with self.assertRaises(ValueError):

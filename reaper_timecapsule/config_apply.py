@@ -58,7 +58,7 @@ def _render(raw, selections):
     edits = {(row['section'], row['key']): row for row in selections}
     section, found, output = '', set(), []
     bom = b'\xef\xbb\xbf' if raw.startswith(b'\xef\xbb\xbf') else b''
-    for line in raw.decode('utf-8-sig').splitlines(keepends=True):
+    for line in re.findall(r'[^\r\n]*(?:\r\n|\r|\n|$)', raw.decode('utf-8-sig')):
         content = line.strip()
         if content.startswith('[') and content.endswith(']'):
             section = content[1:-1].strip().casefold()
