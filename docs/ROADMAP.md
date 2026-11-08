@@ -265,3 +265,12 @@ MIDI script registration/dispatch and loading the applied appearance preference.
 See REAPER_SMOKE_TEST.md for reproducible steps and provenance. Static audits do
 not execute scripts or inherit that synthetic runtime result. No installer,
 plugin/license migration, GUI apply or full user-workflow validation is claimed.
+
+## Csomagolt offline recovery önteszt — 2026-11-08
+
+A #81 után következő lépés a tényleges csomagolt futtatható állomány
+konfigurációs stage/apply/rollback próbája szintetikus ideiglenes profilon.
+Ellenőrzések: opt-in hiányának elutasítása, bájtpontos BOM/CRLF/komment
+megőrzés, későbbi szerkesztés miatti rollback-tiltás, teljes visszaállítás,
+ismételhetőség és kezelt lock/temp takarítás. A build a jelentésben igazolt
+sikert megköveteli. Ez nem személyes profilon és nem REAPER-runtime-ban fut.

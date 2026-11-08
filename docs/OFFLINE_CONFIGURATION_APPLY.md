@@ -84,3 +84,10 @@ write/replace failures, symlinks/hardlinks, corruption and later-edit rejection.
 The separate [REAPER smoke workflow](REAPER_SMOKE_TEST.md) loads an applied
 `tinttcp=0` in an isolated real REAPER instance. Windows/Linux/macOS source checks
 are run by the existing PR CI; real REAPER validation is recorded separately.
+
+Desktop builds also exercise the actual bundled executable with a disposable
+configuration: staging, consent refusal, apply, rejection of rollback after later
+edits, exact full-file rollback and already-original idempotence. The JSON
+self-test report records these under `offline_configuration_recovery`; packaging
+requires those checks to pass. This synthetic check does not validate REAPER
+runtime behavior, clean-machine installation or power-loss durability.

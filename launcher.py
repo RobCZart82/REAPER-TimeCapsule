@@ -53,9 +53,56 @@ def verify_bounded_report_preview(app, export_root):
     app.update()
 
 
+def verify_offline_configuration_recovery(root):
+    """Exercise bundled imports and writes only inside disposable synthetic data."""
+    from reaper_timecapsule.config_staging import export_preferences
+    from reaper_timecapsule.config_apply import apply_preferences, rollback_preferences
+    inputs = root / 'config-inputs'
+    inputs.mkdir()
+    source, target = inputs / 'source.ini', inputs / 'target.ini'
+    source.write_bytes(b'[REAPER]\ntinttcp=0\n')
+    original = b'\xef\xbb\xbf; synthetic private comment\r\n[REAPER]\r\ntinttcp = 1  \r\nunknown=synthetic\r\n'
+    target.write_bytes(original)
+    staging = root / 'TimeCapsule-Staging'
+    staging.mkdir()
+    archive, recovery = staging / 'preferences.timecapsule-stage.zip', staging / 'recovery'
+    export_preferences(source, target, archive, selections=['REAPER/tinttcp'],
+                       source_version='7.84', target_version='7.84', opt_in=True)
+    try:
+        apply_preferences(archive, target, recovery)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('Apply accepted without consent')
+    assert target.read_bytes() == original and not recovery.exists()
+    result = apply_preferences(archive, target, recovery, opt_in=True, reaper_closed=True)
+    assert result['applied'] and not result['reaper_runtime_validated']
+    applied = original.replace(b'tinttcp = 1', b'tinttcp = 0')
+    assert target.read_bytes() == applied
+    assert (recovery / 'original.ini').read_bytes() == original
+    changed = applied + b'; later synthetic edit\r\n'
+    target.write_bytes(changed)
+    try:
+        rollback_preferences(recovery, target, opt_in=True, reaper_closed=True)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('Rollback overwrote later edits')
+    assert target.read_bytes() == changed
+    target.write_bytes(applied)
+    assert rollback_preferences(recovery, target, opt_in=True, reaper_closed=True)['restored']
+    assert target.read_bytes() == original
+    assert rollback_preferences(recovery, target, opt_in=True, reaper_closed=True)['already_original']
+    assert not list(inputs.glob('.timecapsule-config-*'))
+    assert not target.with_name(target.name + '.timecapsule-lock').exists()
+    return {'roundtrip': True, 'consent_guard': True, 'later_edits_preserved': True,
+            'synthetic_only': True, 'reaper_runtime_validated': False}
+
+
 def self_test(report):
     with tempfile.TemporaryDirectory(prefix='timecapsule-selftest-') as temporary:
         root = Path(temporary).resolve()
+        config_recovery = verify_offline_configuration_recovery(root)
         source = root / 'synthetic-source'
         source.mkdir()
         (source / 'reaper-kb.ini').write_text('synthetic action', encoding='utf-8')
@@ -202,7 +249,8 @@ def self_test(report):
         assert fresh.winfo_width() == width - 80 and fresh.winfo_height() == height
         fresh.destroy()
     Path(report).write_text(json.dumps(dict(valid=True, version=VERSION, python=sys.version,
-                                          tcl=tcl_version, tk=tk_version, synthetic_only=True)), encoding='utf-8')
+                                          tcl=tcl_version, tk=tk_version, synthetic_only=True,
+                                          offline_configuration_recovery=config_recovery)), encoding='utf-8')
 
 
 if __name__ == '__main__':

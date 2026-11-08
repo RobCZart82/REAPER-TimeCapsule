@@ -56,6 +56,12 @@ def main():
     result = json.loads(report.read_text(encoding='utf-8'))
     if not result.get('valid') or not result.get('synthetic_only'):
         raise SystemExit('Bundled self-test did not pass')
+    recovery_test = result.get('offline_configuration_recovery', {})
+    if not all(recovery_test.get(key) is True for key in
+               ('roundtrip', 'consent_guard', 'later_edits_preserved', 'synthetic_only')):
+        raise SystemExit('Bundled configuration recovery self-test did not pass')
+    if recovery_test.get('reaper_runtime_validated') is not False:
+        raise SystemExit('Synthetic test must not claim REAPER runtime validation')
     output = ROOT / 'release-artifacts'
     output.mkdir(exist_ok=True)
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
